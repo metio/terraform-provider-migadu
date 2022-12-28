@@ -25,16 +25,17 @@ data "migadu_identity" "identity" {
 
 ### Required
 
-- `address` (String)
 - `domain_name` (String) The domain to fetch identities of.
+- `identity` (String) The local part of the identity to fetch.
 - `local_part` (String) The local part to fetch identities of.
 
 ### Read-Only
 
+- `address` (String)
 - `footer_active` (Boolean)
 - `footer_html_body` (String)
 - `footer_plain_body` (String)
-- `id` (String) Contains the value `local_part@domain_name/address`.
+- `id` (String) Contains the value `local_part@domain_name/identity`.
 - `may_access_imap` (Boolean)
 - `may_access_managesieve` (Boolean)
 - `may_access_pop3` (Boolean)
