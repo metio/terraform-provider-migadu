@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: The terraform-provider-migadu Authors
+ * SPDX-License-Identifier: 0BSD
+ */
+
 package provider_test
 
 import (
