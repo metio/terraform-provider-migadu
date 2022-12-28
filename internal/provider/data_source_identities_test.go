@@ -130,7 +130,10 @@ func TestIdentitiesDataSource_Read(t *testing.T) {
 				if err != nil {
 					t.Errorf("Could not serialize data")
 				}
-				w.Write(bytes)
+				_, err = w.Write(bytes)
+				if err != nil {
+					t.Errorf("Could not write data")
+				}
 			}))
 			defer server.Close()
 
