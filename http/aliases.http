@@ -1,0 +1,7 @@
+GET https://api.migadu.com/v1/domains/xn--ho-hia.de/aliases
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+
+###
+
+GET https://api.migadu.com/v1/domains/xn--ho-hia.de/aliases/postmaster
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}

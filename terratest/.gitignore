@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: The terraform-provider-migadu Authors
+# SPDX-License-Identifier: 0BSD
+
+.terraform/
+.terraform.lock.hcl

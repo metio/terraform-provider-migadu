@@ -1,0 +1,129 @@
+# SPDX-FileCopyrightText: The terraform-provider-migadu Authors
+# SPDX-License-Identifier: 0BSD
+
+name: Verify Commits
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - .github/workflows/verify.yml
+      - go.mod
+      - go.sum
+      - main.go
+      - docs/**
+      - examples/**
+      - internal/**
+      - terratest/**
+  pull_request:
+    branches: [ main ]
+    paths:
+      - .github/workflows/verify.yml
+      - go.mod
+      - go.sum
+      - main.go
+      - docs/**
+      - examples/**
+      - internal/**
+      - terratest/**
+jobs:
+  build:
+    name: Build Project
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout
+        uses: actions/checkout@v3
+      - id: setup_go
+        name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+          cache: true
+      - id: lint
+        name: Lint Go Code
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+      - id: generate_docs
+        name: Generate Documentation
+        run: go generate
+      - id: verify_docs
+        name: Verify Documentation
+        run: |
+          git diff --compact-summary --exit-code || \
+            (echo "*** Unexpected differences after code generation. Run 'make docs' and commit."; exit 1)
+      - id: build
+        name: Build Provider
+        run: go build -v ./...
+        env:
+          CGO_ENABLED: 0
+  test:
+    name: Tests on ${{ matrix.os }} with TF ${{ matrix.terraform }}
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - windows-latest
+          - ubuntu-latest
+        terraform:
+          - 1.0.*
+          - 1.1.*
+          - 1.2.*
+          - 1.3.*
+    steps:
+      - id: checkout
+        name: Checkout
+        uses: actions/checkout@v3
+      - id: setup_go
+        name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+          cache: true
+      - id: setup_terraform
+        name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ matrix.terraform }}
+          terraform_wrapper: false
+      - id: tests
+        name: Run Tests
+        run: go test -v -cover -parallel=4 -timeout=240s -tags testing ./internal/provider/
+        env:
+          TF_ACC: "1"
+  terratest:
+    name: Terratest Tests with TF ${{ matrix.terraform }}
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        terraform:
+          - 1.0.*
+          - 1.1.*
+          - 1.2.*
+          - 1.3.*
+    steps:
+      - id: checkout
+        name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - id: setup_go
+        name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+          cache: true
+      - id: setup_terraform
+        name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ matrix.terraform }}
+          terraform_wrapper: false
+      - id: terratest
+        name: Run Terratest Tests
+        run: make terratests

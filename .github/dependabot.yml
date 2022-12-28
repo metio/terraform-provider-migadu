@@ -1,0 +1,17 @@
+# SPDX-FileCopyrightText: The terraform-provider-migadu Authors
+# SPDX-License-Identifier: 0BSD
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    assignees:
+      - sebhoss
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: daily
+    assignees:
+      - sebhoss

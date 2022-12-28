@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: The terraform-provider-migadu Authors
+# SPDX-License-Identifier: 0BSD
+
+run:
+  timeout: 5m
+  build-tags:
+    - testing

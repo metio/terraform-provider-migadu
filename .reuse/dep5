@@ -1,0 +1,16 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: terraform-provider-migadu
+Upstream-Contact: Sebastian Hoß <seb@hoß.de>
+Source: https://github.com/metio/terraform-provider-migadu
+
+Files: .idea/*
+Copyright: The terraform-provider-migadu Authors
+License: 0BSD
+
+Files: docs/*
+Copyright: The terraform-provider-migadu Authors
+License: 0BSD
+
+Files: examples/*
+Copyright: The terraform-provider-migadu Authors
+License: 0BSD
