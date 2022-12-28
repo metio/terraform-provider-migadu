@@ -162,7 +162,7 @@ func TestMailboxesDataSource_Read(t *testing.T) {
 							Check: resource.ComposeAggregateTestCheckFunc(
 								resource.TestCheckResourceAttr("data.migadu_mailboxes.test", "domain_name", tt.domain),
 								resource.TestCheckResourceAttr("data.migadu_mailboxes.test", "mailboxes.#", fmt.Sprintf("%v", len(tt.want.Mailboxes))),
-								resource.TestCheckResourceAttr("data.migadu_mailboxes.test", "id", fmt.Sprintf("%s", tt.domain)),
+								resource.TestCheckResourceAttr("data.migadu_mailboxes.test", "id", tt.domain),
 							),
 						},
 					},

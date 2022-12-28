@@ -149,7 +149,7 @@ func TestRewritesDataSource_Read(t *testing.T) {
 							Check: resource.ComposeAggregateTestCheckFunc(
 								resource.TestCheckResourceAttr("data.migadu_rewrites.test", "domain_name", tt.domain),
 								resource.TestCheckResourceAttr("data.migadu_rewrites.test", "rewrites.#", fmt.Sprintf("%v", len(tt.want.Rewrites))),
-								resource.TestCheckResourceAttr("data.migadu_rewrites.test", "id", fmt.Sprintf("%s", tt.domain)),
+								resource.TestCheckResourceAttr("data.migadu_rewrites.test", "id", tt.domain),
 							),
 						},
 					},
