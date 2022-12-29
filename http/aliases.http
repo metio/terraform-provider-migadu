@@ -1,7 +1,36 @@
-GET https://api.migadu.com/v1/domains/xn--ho-hia.de/aliases
+GET https://api.migadu.com/v1/domains/{{DOMAIN}}/aliases
 Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
 
 ###
 
-GET https://api.migadu.com/v1/domains/xn--ho-hia.de/aliases/postmaster
+GET https://api.migadu.com/v1/domains/{{DOMAIN}}/aliases/test
 Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
+
+###
+
+POST https://api.migadu.com/v1/domains/{{DOMAIN}}/aliases
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
+
+{
+  "local_part": "test",
+  "destinations": ["one@{{DOMAIN}}", "two@{{DOMAIN}}"]
+}
+
+###
+
+PUT https://api.migadu.com/v1/domains/{{DOMAIN}}/aliases/test
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
+
+{
+  "destinations": ["three@{{DOMAIN}}", "four@{{DOMAIN}}"]
+}
+
+###
+
+DELETE https://api.migadu.com/v1/domains/{{DOMAIN}}/aliases/test
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json

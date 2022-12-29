@@ -57,7 +57,7 @@ func (c *MigaduClient) GetMailboxes(domain string) (*Mailboxes, error) {
 		return nil, err
 	}
 	url := fmt.Sprintf("%s/domains/%s/mailboxes", c.Endpoint, ascii)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (c *MigaduClient) GetMailbox(domain string, localPart string) (*Mailbox, er
 		return nil, err
 	}
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s", c.Endpoint, ascii, localPart)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

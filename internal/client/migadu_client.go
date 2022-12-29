@@ -44,6 +44,7 @@ func New(endpoint, username, token *string, timeout time.Duration) (*MigaduClien
 
 func (c *MigaduClient) doRequest(req *http.Request) ([]byte, error) {
 	req.SetBasicAuth(c.Username, c.Token)
+	req.Header.Add("Content-Type", "application/json")
 
 	res, err := c.HTTPClient.Do(req)
 	if err != nil {

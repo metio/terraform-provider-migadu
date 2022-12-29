@@ -39,7 +39,7 @@ func (c *MigaduClient) GetIdentities(domain string, localPart string) (*Identiti
 		return nil, err
 	}
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities", c.Endpoint, ascii, localPart)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c *MigaduClient) GetIdentity(domain string, localPart string, id string) (
 		return nil, err
 	}
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities/%s", c.Endpoint, ascii, localPart, id)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

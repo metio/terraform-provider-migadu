@@ -31,7 +31,7 @@ func (c *MigaduClient) GetRewrites(domain string) (*Rewrites, error) {
 		return nil, err
 	}
 	url := fmt.Sprintf("%s/domains/%s/rewrites", c.Endpoint, ascii)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (c *MigaduClient) GetRewrite(domain string, slug string) (*Rewrite, error) 
 		return nil, err
 	}
 	url := fmt.Sprintf("%s/domains/%s/rewrites/%s", c.Endpoint, ascii, slug)
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
