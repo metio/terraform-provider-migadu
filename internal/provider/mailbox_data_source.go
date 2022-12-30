@@ -28,7 +28,7 @@ type MailboxDataSource struct {
 }
 
 type MailboxDataSourceModel struct {
-	Id                    types.String  `tfsdk:"id"`
+	ID                    types.String  `tfsdk:"id"`
 	LocalPart             types.String  `tfsdk:"local_part"`
 	DomainName            types.String  `tfsdk:"domain_name"`
 	Address               types.String  `tfsdk:"address"`
@@ -251,7 +251,7 @@ func (d *MailboxDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	data.Delegations = delegations
 	data.Identities = identities
 
-	data.Id = types.StringValue(fmt.Sprintf("%s@%s", data.LocalPart.ValueString(), data.DomainName.ValueString()))
+	data.ID = types.StringValue(fmt.Sprintf("%s@%s", data.LocalPart.ValueString(), data.DomainName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	if resp.Diagnostics.HasError() {

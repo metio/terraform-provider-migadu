@@ -28,7 +28,7 @@ type AliasesDataSource struct {
 }
 
 type AliasesDataSourceModel struct {
-	Id         types.String `tfsdk:"id"`
+	ID         types.String `tfsdk:"id"`
 	DomainName types.String `tfsdk:"domain_name"`
 	Aliases    []AliasModel `tfsdk:"address_aliases"`
 }
@@ -155,7 +155,7 @@ func (d *AliasesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		data.Aliases = append(data.Aliases, aliasModel)
 	}
 
-	data.Id = data.DomainName
+	data.ID = data.DomainName
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	if resp.Diagnostics.HasError() {

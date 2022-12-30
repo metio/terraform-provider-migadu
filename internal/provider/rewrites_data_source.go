@@ -28,7 +28,7 @@ type RewritesDataSource struct {
 }
 
 type RewritesDataSourceModel struct {
-	Id         types.String   `tfsdk:"id"`
+	ID         types.String   `tfsdk:"id"`
 	DomainName types.String   `tfsdk:"domain_name"`
 	Rewrites   []RewriteModel `tfsdk:"rewrites"`
 }
@@ -140,7 +140,7 @@ func (d *RewritesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		data.Rewrites = append(data.Rewrites, aliasModel)
 	}
 
-	data.Id = data.DomainName
+	data.ID = data.DomainName
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	if resp.Diagnostics.HasError() {

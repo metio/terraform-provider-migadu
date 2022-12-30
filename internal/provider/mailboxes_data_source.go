@@ -28,7 +28,7 @@ type MailboxesDataSource struct {
 }
 
 type MailboxesDataSourceModel struct {
-	Id         types.String   `tfsdk:"id"`
+	ID         types.String   `tfsdk:"id"`
 	DomainName types.String   `tfsdk:"domain_name"`
 	Mailboxes  []MailboxModel `tfsdk:"mailboxes"`
 }
@@ -272,7 +272,7 @@ func (d *MailboxesDataSource) Read(ctx context.Context, req datasource.ReadReque
 		data.Mailboxes = append(data.Mailboxes, mailboxModel)
 	}
 
-	data.Id = data.DomainName
+	data.ID = data.DomainName
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	if resp.Diagnostics.HasError() {

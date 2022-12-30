@@ -28,7 +28,7 @@ type IdentitiesDataSource struct {
 }
 
 type IdentitiesDataSourceModel struct {
-	Id         types.String    `tfsdk:"id"`
+	ID         types.String    `tfsdk:"id"`
 	DomainName types.String    `tfsdk:"domain_name"`
 	LocalPart  types.String    `tfsdk:"local_part"`
 	Identities []IdentityModel `tfsdk:"identities"`
@@ -172,7 +172,7 @@ func (d *IdentitiesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		data.Identities = append(data.Identities, identityModel)
 	}
 
-	data.Id = types.StringValue(fmt.Sprintf("%s@%s", data.LocalPart.ValueString(), data.DomainName.ValueString()))
+	data.ID = types.StringValue(fmt.Sprintf("%s@%s", data.LocalPart.ValueString(), data.DomainName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	if resp.Diagnostics.HasError() {

@@ -28,7 +28,7 @@ type RewriteDataSource struct {
 }
 
 type RewriteDataSourceModel struct {
-	Id            types.String `tfsdk:"id"`
+	ID            types.String `tfsdk:"id"`
 	DomainName    types.String `tfsdk:"domain_name"`
 	Name          types.String `tfsdk:"name"`
 	LocalPartRule types.String `tfsdk:"local_part_rule"`
@@ -117,7 +117,7 @@ func (d *RewriteDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	data.Destinations = destinations
 
-	data.Id = types.StringValue(fmt.Sprintf("%s@%s", data.Name.ValueString(), data.DomainName.ValueString()))
+	data.ID = types.StringValue(fmt.Sprintf("%s@%s", data.Name.ValueString(), data.DomainName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	if resp.Diagnostics.HasError() {

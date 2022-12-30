@@ -74,6 +74,8 @@ func (p *MigaduProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 }
 
 func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	tflog.Info(ctx, "Configuring Migadu client")
+
 	var config MigaduProviderModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
@@ -204,6 +206,8 @@ func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 	resp.DataSourceData = c
 	resp.ResourceData = c
+
+	tflog.Info(ctx, "Configured Migadu client")
 }
 
 func (p *MigaduProvider) DataSources(_ context.Context) []func() datasource.DataSource {
@@ -220,5 +224,7 @@ func (p *MigaduProvider) DataSources(_ context.Context) []func() datasource.Data
 }
 
 func (p *MigaduProvider) Resources(_ context.Context) []func() resource.Resource {
-	return []func() resource.Resource{}
+	return []func() resource.Resource{
+		NewAliasResource,
+	}
 }
