@@ -99,14 +99,14 @@ func TestAliasesDataSource_Read(t *testing.T) {
 			domain:     "example.com",
 			statusCode: http.StatusUnauthorized,
 			want:       nil,
-			error:      "Request failed with: status: 401",
+			error:      "status: 401",
 		},
 		{
 			name:       "error-404",
 			domain:     "example.com",
 			statusCode: http.StatusNotFound,
 			want:       nil,
-			error:      "Request failed with: status: 404",
+			error:      "status: 404",
 		},
 	}
 	for _, tt := range tests {
