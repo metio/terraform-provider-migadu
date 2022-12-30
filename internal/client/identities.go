@@ -104,7 +104,7 @@ func (c *MigaduClient) CreateIdentity(ctx context.Context, domain string, localP
 		return nil, fmt.Errorf("CreateIdentity: %w", err)
 	}
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, bytes.NewBuffer(requestBody))
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, fmt.Errorf("CreateIdentity: %w", err)
 	}

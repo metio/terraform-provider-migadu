@@ -97,9 +97,12 @@ func (c *MigaduClient) CreateRewrite(ctx context.Context, domain string, rewrite
 
 	url := fmt.Sprintf("%s/domains/%s/rewrites", c.Endpoint, ascii)
 
-	requestBody, err := json.Marshal(rewriteJson{Rewrite: rewrite, Destinations: strings.Join(rewrite.Destinations, ",")})
-	if err != nil {
-		return nil, fmt.Errorf("CreateRewrite: %w", err)
+	var requestBody []byte
+	if rewrite != nil {
+		requestBody, err = json.Marshal(rewriteJson{Rewrite: rewrite, Destinations: strings.Join(rewrite.Destinations, ",")})
+		if err != nil {
+			return nil, fmt.Errorf("CreateRewrite: %w", err)
+		}
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
@@ -130,9 +133,12 @@ func (c *MigaduClient) UpdateRewrite(ctx context.Context, domain string, slug st
 
 	url := fmt.Sprintf("%s/domains/%s/rewrites/%s", c.Endpoint, ascii, slug)
 
-	requestBody, err := json.Marshal(rewriteJson{Rewrite: rewrite, Destinations: strings.Join(rewrite.Destinations, ",")})
-	if err != nil {
-		return nil, fmt.Errorf("UpdateRewrite: %w", err)
+	var requestBody []byte
+	if rewrite != nil {
+		requestBody, err = json.Marshal(rewriteJson{Rewrite: rewrite, Destinations: strings.Join(rewrite.Destinations, ",")})
+		if err != nil {
+			return nil, fmt.Errorf("UpdateRewrite: %w", err)
+		}
 	}
 
 	request, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewBuffer(requestBody))
