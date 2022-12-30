@@ -6,6 +6,7 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -37,54 +38,148 @@ type Identity struct {
 func (c *MigaduClient) GetIdentities(ctx context.Context, domain string, localPart string) (*Identities, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetIdentities: %w", err)
 	}
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities", c.Endpoint, ascii, localPart)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetIdentities: %w", err)
 	}
 
-	body, err := c.doRequest(req)
+	responseBody, err := c.doRequest(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetIdentities: %w", err)
 	}
 
-	identities := Identities{}
-	err = json.Unmarshal(body, &identities)
+	response := Identities{}
+	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetIdentities: %w", err)
 	}
 
-	return &identities, nil
+	return &response, nil
 }
 
-// GetIdentity - Returns specific identity
+// GetIdentity - Returns a specific identity
 func (c *MigaduClient) GetIdentity(ctx context.Context, domain string, localPart string, id string) (*Identity, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetIdentity: %w", err)
 	}
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities/%s", c.Endpoint, ascii, localPart, id)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetIdentity: %w", err)
 	}
 
-	body, err := c.doRequest(req)
+	responseBody, err := c.doRequest(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetIdentity: %w", err)
 	}
 
-	identity := Identity{}
-	err = json.Unmarshal(body, &identity)
+	response := Identity{}
+	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetIdentity: %w", err)
 	}
 
-	return &identity, nil
+	return &response, nil
+}
+
+// CreateIdentity - Creates a new identity
+func (c *MigaduClient) CreateIdentity(ctx context.Context, domain string, localPart string, identity *Identity) (*Identity, error) {
+	ascii, err := idna.ToASCII(domain)
+	if err != nil {
+		return nil, fmt.Errorf("CreateIdentity: %w", err)
+	}
+
+	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities", c.Endpoint, ascii, localPart)
+
+	requestBody, err := json.Marshal(identity)
+	if err != nil {
+		return nil, fmt.Errorf("CreateIdentity: %w", err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, fmt.Errorf("CreateIdentity: %w", err)
+	}
+
+	responseBody, err := c.doRequest(request)
+	if err != nil {
+		return nil, fmt.Errorf("CreateIdentity: %w", err)
+	}
+
+	response := Identity{}
+	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return nil, fmt.Errorf("CreateIdentity: %w", err)
+	}
+
+	return &response, nil
+}
+
+// UpdateIdentity - Updates an existing identity
+func (c *MigaduClient) UpdateIdentity(ctx context.Context, domain string, localPart string, id string, identity *Identity) (*Identity, error) {
+	ascii, err := idna.ToASCII(domain)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateIdentity: %w", err)
+	}
+
+	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities/%s", c.Endpoint, ascii, localPart, id)
+
+	requestBody, err := json.Marshal(identity)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateIdentity: %w", err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, fmt.Errorf("UpdateIdentity: %w", err)
+	}
+
+	responseBody, err := c.doRequest(request)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateIdentity: %w", err)
+	}
+
+	response := Identity{}
+	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateIdentity: %w", err)
+	}
+
+	return &response, nil
+}
+
+// DeleteIdentity - Deletes an existing identity
+func (c *MigaduClient) DeleteIdentity(ctx context.Context, domain string, localPart string, id string) (*Identity, error) {
+	ascii, err := idna.ToASCII(domain)
+	if err != nil {
+		return nil, fmt.Errorf("DeleteIdentity: %w", err)
+	}
+
+	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities/%s", c.Endpoint, ascii, localPart, id)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("DeleteIdentity: %w", err)
+	}
+
+	responseBody, err := c.doRequest(request)
+	if err != nil {
+		return nil, fmt.Errorf("DeleteIdentity: %w", err)
+	}
+
+	response := Identity{}
+	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return nil, fmt.Errorf("DeleteIdentity: %w", err)
+	}
+
+	return &response, nil
 }

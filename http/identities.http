@@ -1,0 +1,31 @@
+GET https://api.migadu.com/v1/domains/{{DOMAIN}}/mailboxes/test/identities
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
+
+###
+
+POST https://api.migadu.com/v1/domains/{{DOMAIN}}/mailboxes/test/identities
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
+
+{
+  "name": "Test Name",
+  "local_part": "test",
+  "password": "Sup3r_s3cr3T"
+}
+
+###
+
+PUT https://api.migadu.com/v1/domains/{{DOMAIN}}/mailboxes/test/identities/other
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
+
+{
+  "name": "New Test Name"
+}
+
+###
+
+DELETE https://api.migadu.com/v1/domains/{{DOMAIN}}/mailboxes/test/identities/other
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json

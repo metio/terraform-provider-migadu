@@ -1,7 +1,33 @@
-GET https://api.migadu.com/v1/domains/metio.wtf/rewrites
+GET https://api.migadu.com/v1/domains/{{DOMAIN}}/rewrites
 Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
 
 ###
 
-GET https://api.migadu.com/v1/domains/metio.wtf/rewrites/sec
+GET https://api.migadu.com/v1/domains/{{DOMAIN}}/rewrites/test
 Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
+
+###
+
+POST https://api.migadu.com/v1/domains/{{DOMAIN}}/rewrites
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
+
+{
+  "name": "test",
+  "local_part_rule": "test-*",
+  "destinations": "one@{{DOMAIN}},two@{{DOMAIN}}"
+}
+
+###
+
+PUT https://api.migadu.com/v1/domains/{{DOMAIN}}/rewrites/test
+Authorization: Basic {{MIGADU_USERNAME}} {{MIGADU_API_KEY}}
+Content-Type: application/json
+
+{
+  "name": "test",
+  "local_part_rule": "test-*",
+  "destinations": "three@{{DOMAIN}},four@{{DOMAIN}}"
+}

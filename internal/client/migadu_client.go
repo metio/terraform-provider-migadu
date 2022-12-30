@@ -58,8 +58,17 @@ func (c *MigaduClient) doRequest(req *http.Request) ([]byte, error) {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("status: %d, body: %s", res.StatusCode, body)
+		return nil, &RequestError{StatusCode: res.StatusCode, ResponseBody: body}
 	}
 
 	return body, err
+}
+
+type RequestError struct {
+	StatusCode   int
+	ResponseBody []byte
+}
+
+func (e *RequestError) Error() string {
+	return fmt.Sprintf("status: %d, body: %s", e.StatusCode, e.ResponseBody)
 }

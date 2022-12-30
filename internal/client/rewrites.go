@@ -6,11 +6,13 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/idna"
 	"net/http"
+	"strings"
 )
 
 type Rewrites struct {
@@ -25,58 +27,157 @@ type Rewrite struct {
 	Destinations  []string `json:"destinations"`
 }
 
+type rewriteJson struct {
+	*Rewrite
+	Destinations string `json:"destinations"`
+}
+
 // GetRewrites - Returns rewrite rules for a single domain
 func (c *MigaduClient) GetRewrites(ctx context.Context, domain string) (*Rewrites, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRewrites: %w", err)
 	}
 
 	url := fmt.Sprintf("%s/domains/%s/rewrites", c.Endpoint, ascii)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRewrites: %w", err)
 	}
 
-	body, err := c.doRequest(req)
+	responseBody, err := c.doRequest(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRewrites: %w", err)
 	}
 
-	rewrites := Rewrites{}
-	err = json.Unmarshal(body, &rewrites)
+	response := Rewrites{}
+	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRewrites: %w", err)
 	}
 
-	return &rewrites, nil
+	return &response, nil
 }
 
-// GetRewrite - Returns specific rewrite rule
+// GetRewrite - Returns a specific rewrite rule
 func (c *MigaduClient) GetRewrite(ctx context.Context, domain string, slug string) (*Rewrite, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRewrite: %w", err)
 	}
 
 	url := fmt.Sprintf("%s/domains/%s/rewrites/%s", c.Endpoint, ascii, slug)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRewrite: %w", err)
 	}
 
-	body, err := c.doRequest(req)
+	responseBody, err := c.doRequest(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRewrite: %w", err)
 	}
 
-	rewrite := Rewrite{}
-	err = json.Unmarshal(body, &rewrite)
+	response := Rewrite{}
+	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRewrite: %w", err)
 	}
 
-	return &rewrite, nil
+	return &response, nil
+}
+
+// CreateRewrite - Creates a new rewrite rule
+func (c *MigaduClient) CreateRewrite(ctx context.Context, domain string, rewrite *Rewrite) (*Rewrite, error) {
+	ascii, err := idna.ToASCII(domain)
+	if err != nil {
+		return nil, fmt.Errorf("CreateRewrite: %w", err)
+	}
+
+	url := fmt.Sprintf("%s/domains/%s/rewrites", c.Endpoint, ascii)
+
+	requestBody, err := json.Marshal(rewriteJson{Rewrite: rewrite, Destinations: strings.Join(rewrite.Destinations, ",")})
+	if err != nil {
+		return nil, fmt.Errorf("CreateRewrite: %w", err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, fmt.Errorf("CreateRewrite: %w", err)
+	}
+
+	responseBody, err := c.doRequest(request)
+	if err != nil {
+		return nil, fmt.Errorf("CreateRewrite: %w", err)
+	}
+
+	response := Rewrite{}
+	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return nil, fmt.Errorf("CreateRewrite: %w", err)
+	}
+
+	return &response, nil
+}
+
+// UpdateRewrite - Updates an existing rewrite rule
+func (c *MigaduClient) UpdateRewrite(ctx context.Context, domain string, slug string, rewrite *Rewrite) (*Rewrite, error) {
+	ascii, err := idna.ToASCII(domain)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateRewrite: %w", err)
+	}
+
+	url := fmt.Sprintf("%s/domains/%s/rewrites/%s", c.Endpoint, ascii, slug)
+
+	requestBody, err := json.Marshal(rewriteJson{Rewrite: rewrite, Destinations: strings.Join(rewrite.Destinations, ",")})
+	if err != nil {
+		return nil, fmt.Errorf("UpdateRewrite: %w", err)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodPut, url, bytes.NewBuffer(requestBody))
+	if err != nil {
+		return nil, fmt.Errorf("UpdateRewrite: %w", err)
+	}
+
+	responseBody, err := c.doRequest(request)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateRewrite: %w", err)
+	}
+
+	response := Rewrite{}
+	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return nil, fmt.Errorf("UpdateRewrite: %w", err)
+	}
+
+	return &response, nil
+}
+
+// DeleteRewrite - Deletes an existing rewrite rule
+func (c *MigaduClient) DeleteRewrite(ctx context.Context, domain string, slug string) (*Rewrite, error) {
+	ascii, err := idna.ToASCII(domain)
+	if err != nil {
+		return nil, fmt.Errorf("DeleteRewrite: %w", err)
+	}
+
+	url := fmt.Sprintf("%s/domains/%s/rewrites/%s", c.Endpoint, ascii, slug)
+
+	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("DeleteRewrite: %w", err)
+	}
+
+	responseBody, err := c.doRequest(request)
+	if err != nil {
+		return nil, fmt.Errorf("DeleteRewrite: %w", err)
+	}
+
+	response := Rewrite{}
+	err = json.Unmarshal(responseBody, &response)
+	if err != nil {
+		return nil, fmt.Errorf("DeleteRewrite: %w", err)
+	}
+
+	return &response, nil
 }
