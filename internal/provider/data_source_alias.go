@@ -111,7 +111,7 @@ func (d *AliasDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	alias, err := d.migaduClient.GetAlias(data.DomainName.ValueString(), data.LocalPart.ValueString())
+	alias, err := d.migaduClient.GetAlias(ctx, data.DomainName.ValueString(), data.LocalPart.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Migadu Client Error", "Request failed with: "+err.Error())
 		return

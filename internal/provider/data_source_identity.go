@@ -132,7 +132,7 @@ func (d *IdentityDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	identity, err := d.migaduClient.GetIdentity(data.DomainName.ValueString(), data.LocalPart.ValueString(), data.Identity.ValueString())
+	identity, err := d.migaduClient.GetIdentity(ctx, data.DomainName.ValueString(), data.LocalPart.ValueString(), data.Identity.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Migadu Client Error", "Request failed with: "+err.Error())
 		return

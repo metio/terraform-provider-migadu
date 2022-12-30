@@ -6,6 +6,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -118,7 +119,7 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.GetRewrites(tt.domain)
+			got, err := c.GetRewrites(context.Background(), tt.domain)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetRewrites() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -204,7 +205,7 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.GetRewrite(tt.domain, tt.slug)
+			got, err := c.GetRewrite(context.Background(), tt.domain, tt.slug)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetRewrite() error = %v, wantErr %v", err, tt.wantErr)
 				return

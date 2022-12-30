@@ -114,7 +114,7 @@ func (d *RewritesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	rewrites, err := d.migaduClient.GetRewrites(data.DomainName.ValueString())
+	rewrites, err := d.migaduClient.GetRewrites(ctx, data.DomainName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Migadu Client Error", "Request failed with: "+err.Error())
 		return

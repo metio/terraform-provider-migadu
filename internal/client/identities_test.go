@@ -6,6 +6,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -141,7 +142,7 @@ func TestMigaduClient_GetIdentities(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.GetIdentities(tt.domain, tt.localPart)
+			got, err := c.GetIdentities(context.Background(), tt.domain, tt.localPart)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetIdentities() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -234,7 +235,7 @@ func TestMigaduClient_GetIdentity(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.GetIdentity(tt.domain, tt.localPart, tt.identity)
+			got, err := c.GetIdentity(context.Background(), tt.domain, tt.localPart, tt.identity)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetIdentity() error = %v, wantErr %v", err, tt.wantErr)
 				return

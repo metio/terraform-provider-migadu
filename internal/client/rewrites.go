@@ -6,6 +6,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/idna"
@@ -25,13 +26,15 @@ type Rewrite struct {
 }
 
 // GetRewrites - Returns rewrite rules for a single domain
-func (c *MigaduClient) GetRewrites(domain string) (*Rewrites, error) {
+func (c *MigaduClient) GetRewrites(ctx context.Context, domain string) (*Rewrites, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, err
 	}
+
 	url := fmt.Sprintf("%s/domains/%s/rewrites", c.Endpoint, ascii)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -51,13 +54,15 @@ func (c *MigaduClient) GetRewrites(domain string) (*Rewrites, error) {
 }
 
 // GetRewrite - Returns specific rewrite rule
-func (c *MigaduClient) GetRewrite(domain string, slug string) (*Rewrite, error) {
+func (c *MigaduClient) GetRewrite(ctx context.Context, domain string, slug string) (*Rewrite, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, err
 	}
+
 	url := fmt.Sprintf("%s/domains/%s/rewrites/%s", c.Endpoint, ascii, slug)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

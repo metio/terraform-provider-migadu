@@ -6,6 +6,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/idna"
@@ -33,13 +34,15 @@ type Identity struct {
 }
 
 // GetIdentities - Returns identities for a single mailbox
-func (c *MigaduClient) GetIdentities(domain string, localPart string) (*Identities, error) {
+func (c *MigaduClient) GetIdentities(ctx context.Context, domain string, localPart string) (*Identities, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, err
 	}
+
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities", c.Endpoint, ascii, localPart)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -59,13 +62,15 @@ func (c *MigaduClient) GetIdentities(domain string, localPart string) (*Identiti
 }
 
 // GetIdentity - Returns specific identity
-func (c *MigaduClient) GetIdentity(domain string, localPart string, id string) (*Identity, error) {
+func (c *MigaduClient) GetIdentity(ctx context.Context, domain string, localPart string, id string) (*Identity, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, err
 	}
+
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities/%s", c.Endpoint, ascii, localPart, id)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

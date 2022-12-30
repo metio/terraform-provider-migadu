@@ -6,6 +6,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -122,7 +123,7 @@ func TestMigaduClient_GetAliases(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.GetAliases(tt.domain)
+			got, err := c.GetAliases(context.Background(), tt.domain)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetAliases() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -229,7 +230,7 @@ func TestMigaduClient_GetAlias(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.GetAlias(tt.domain, tt.localPart)
+			got, err := c.GetAlias(context.Background(), tt.domain, tt.localPart)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetAlias() error = %v, wantErr %v", err, tt.wantErr)
 				return

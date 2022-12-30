@@ -30,7 +30,7 @@ type Alias struct {
 }
 
 // GetAliases - Returns aliases for a single domain
-func (c *MigaduClient) GetAliases(domain string) (*Aliases, error) {
+func (c *MigaduClient) GetAliases(ctx context.Context, domain string) (*Aliases, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func (c *MigaduClient) GetAliases(domain string) (*Aliases, error) {
 
 	url := fmt.Sprintf("%s/domains/%s/aliases", c.Endpoint, ascii)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (c *MigaduClient) GetAliases(domain string) (*Aliases, error) {
 }
 
 // GetAlias - Returns specific alias
-func (c *MigaduClient) GetAlias(domain string, localPart string) (*Alias, error) {
+func (c *MigaduClient) GetAlias(ctx context.Context, domain string, localPart string) (*Alias, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (c *MigaduClient) GetAlias(domain string, localPart string) (*Alias, error)
 
 	url := fmt.Sprintf("%s/domains/%s/aliases/%s", c.Endpoint, ascii, localPart)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

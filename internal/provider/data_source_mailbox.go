@@ -199,7 +199,7 @@ func (d *MailboxDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	mailbox, err := d.migaduClient.GetMailbox(data.DomainName.ValueString(), data.LocalPart.ValueString())
+	mailbox, err := d.migaduClient.GetMailbox(ctx, data.DomainName.ValueString(), data.LocalPart.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Migadu Client Error", "Request failed with: "+err.Error())
 		return

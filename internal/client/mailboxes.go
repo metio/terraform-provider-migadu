@@ -6,6 +6,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"golang.org/x/net/idna"
@@ -51,13 +52,15 @@ type Mailbox struct {
 }
 
 // GetMailboxes - Returns mailboxes for a single domain
-func (c *MigaduClient) GetMailboxes(domain string) (*Mailboxes, error) {
+func (c *MigaduClient) GetMailboxes(ctx context.Context, domain string) (*Mailboxes, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, err
 	}
+
 	url := fmt.Sprintf("%s/domains/%s/mailboxes", c.Endpoint, ascii)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -77,13 +80,15 @@ func (c *MigaduClient) GetMailboxes(domain string) (*Mailboxes, error) {
 }
 
 // GetMailbox - Returns specific mailbox
-func (c *MigaduClient) GetMailbox(domain string, localPart string) (*Mailbox, error) {
+func (c *MigaduClient) GetMailbox(ctx context.Context, domain string, localPart string) (*Mailbox, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, err
 	}
+
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s", c.Endpoint, ascii, localPart)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}

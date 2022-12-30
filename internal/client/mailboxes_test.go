@@ -6,6 +6,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -160,7 +161,7 @@ func TestMigaduClient_GetMailboxes(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.GetMailboxes(tt.domain)
+			got, err := c.GetMailboxes(context.Background(), tt.domain)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetIdentities() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -267,7 +268,7 @@ func TestMigaduClient_GetMailbox(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.GetMailbox(tt.domain, tt.localPart)
+			got, err := c.GetMailbox(context.Background(), tt.domain, tt.localPart)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetMailbox() error = %v, wantErr %v", err, tt.wantErr)
 				return
