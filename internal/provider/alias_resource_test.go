@@ -177,9 +177,9 @@ func TestAliasResource_IDN_ASCII(t *testing.T) {
 			{
 				Config: providerConfig(server.URL) + `
 					resource "migadu_alias" "test" {
-						domain_name      = "hoß.de"
-						local_part       = "test"
-						destinations_idn = ["third@xn--ho-hia.de"]
+						domain_name  = "hoß.de"
+						local_part   = "test"
+						destinations = ["third@xn--ho-hia.de"]
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
