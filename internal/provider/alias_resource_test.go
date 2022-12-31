@@ -422,6 +422,10 @@ func handleCreateAlias(w http.ResponseWriter, r *http.Request, t *testing.T, ali
 	*aliases = append(*aliases, alias)
 
 	responseBody, err := json.Marshal(alias)
+	if err != nil {
+		t.Errorf("Could not marshall alias")
+	}
+
 	_, err = w.Write(responseBody)
 	if err != nil {
 		t.Errorf("Could not write data")
