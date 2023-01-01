@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -22,7 +23,7 @@ func TestMigaduClient_GetIdentities(t *testing.T) {
 		localPart    string
 		wantedDomain string
 		statusCode   int
-		want         *Identities
+		want         *model.Identities
 		wantErr      bool
 	}{
 		{
@@ -31,7 +32,7 @@ func TestMigaduClient_GetIdentities(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want:         &Identities{},
+			want:         &model.Identities{},
 			wantErr:      false,
 		},
 		{
@@ -40,8 +41,8 @@ func TestMigaduClient_GetIdentities(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Identities{
-				[]Identity{
+			want: &model.Identities{
+				[]model.Identity{
 					{
 						LocalPart:            "test",
 						DomainName:           "example.com",
@@ -67,8 +68,8 @@ func TestMigaduClient_GetIdentities(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Identities{
-				[]Identity{
+			want: &model.Identities{
+				[]model.Identity{
 					{
 						LocalPart:            "test",
 						DomainName:           "example.com",
@@ -118,7 +119,7 @@ func TestMigaduClient_GetIdentities(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want:         &Identities{},
+			want:         &model.Identities{},
 			wantErr:      false,
 		},
 	}
@@ -165,7 +166,7 @@ func TestMigaduClient_GetIdentity(t *testing.T) {
 		identity     string
 		wantedDomain string
 		statusCode   int
-		want         *Identity
+		want         *model.Identity
 		wantErr      bool
 	}{
 		{
@@ -175,7 +176,7 @@ func TestMigaduClient_GetIdentity(t *testing.T) {
 			identity:     "other",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Identity{
+			want: &model.Identity{
 				LocalPart:            "other",
 				DomainName:           "example.com",
 				Address:              "other@example.com",
@@ -209,7 +210,7 @@ func TestMigaduClient_GetIdentity(t *testing.T) {
 			identity:     "other",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Identity{
+			want: &model.Identity{
 				LocalPart:  "other",
 				DomainName: "xn--ho-hia.de",
 				Address:    "other@xn--ho-hia.de",
@@ -260,7 +261,7 @@ func TestMigaduClient_CreateIdentity(t *testing.T) {
 		localPart    string
 		wantedDomain string
 		statusCode   int
-		want         *Identity
+		want         *model.Identity
 		wantErr      bool
 	}{
 		{
@@ -269,7 +270,7 @@ func TestMigaduClient_CreateIdentity(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Identity{
+			want: &model.Identity{
 				LocalPart:            "other",
 				DomainName:           "example.com",
 				Address:              "other@example.com",
@@ -301,7 +302,7 @@ func TestMigaduClient_CreateIdentity(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Identity{
+			want: &model.Identity{
 				LocalPart:  "other",
 				DomainName: "xn--ho-hia.de",
 				Address:    "other@xn--ho-hia.de",
@@ -353,7 +354,7 @@ func TestMigaduClient_UpdateIdentity(t *testing.T) {
 		identity     string
 		wantedDomain string
 		statusCode   int
-		want         *Identity
+		want         *model.Identity
 		wantErr      bool
 	}{
 		{
@@ -363,7 +364,7 @@ func TestMigaduClient_UpdateIdentity(t *testing.T) {
 			identity:     "other",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Identity{
+			want: &model.Identity{
 				LocalPart:            "other",
 				DomainName:           "example.com",
 				Address:              "other@example.com",
@@ -397,7 +398,7 @@ func TestMigaduClient_UpdateIdentity(t *testing.T) {
 			identity:     "other",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Identity{
+			want: &model.Identity{
 				LocalPart:  "other",
 				DomainName: "xn--ho-hia.de",
 				Address:    "other@xn--ho-hia.de",
@@ -449,7 +450,7 @@ func TestMigaduClient_DeleteIdentity(t *testing.T) {
 		identity     string
 		wantedDomain string
 		statusCode   int
-		want         *Identity
+		want         *model.Identity
 		wantErr      bool
 	}{
 		{
@@ -459,7 +460,7 @@ func TestMigaduClient_DeleteIdentity(t *testing.T) {
 			identity:     "other",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Identity{
+			want: &model.Identity{
 				LocalPart:            "other",
 				DomainName:           "example.com",
 				Address:              "other@example.com",
@@ -493,7 +494,7 @@ func TestMigaduClient_DeleteIdentity(t *testing.T) {
 			identity:     "other",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Identity{
+			want: &model.Identity{
 				LocalPart:  "other",
 				DomainName: "xn--ho-hia.de",
 				Address:    "other@xn--ho-hia.de",

@@ -10,30 +10,20 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/metio/terraform-provider-migadu/internal/idn"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"golang.org/x/net/idna"
 	"net/http"
 	"strings"
 )
 
-type Rewrites struct {
-	Rewrites []Rewrite `json:"rewrites"`
-}
-
-type Rewrite struct {
-	DomainName    string   `json:"domain_name"`
-	Name          string   `json:"name"`
-	LocalPartRule string   `json:"local_part_rule"`
-	OrderNum      int64    `json:"order_num"`
-	Destinations  []string `json:"destinations"`
-}
-
 type rewriteJson struct {
-	*Rewrite
+	*model.Rewrite
 	Destinations string `json:"destinations"`
 }
 
 // GetRewrites - Returns rewrite rules for a single domain
-func (c *MigaduClient) GetRewrites(ctx context.Context, domain string) (*Rewrites, error) {
+func (c *MigaduClient) GetRewrites(ctx context.Context, domain string) (*model.Rewrites, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("GetRewrites: %w", err)
@@ -51,7 +41,7 @@ func (c *MigaduClient) GetRewrites(ctx context.Context, domain string) (*Rewrite
 		return nil, fmt.Errorf("GetRewrites: %w", err)
 	}
 
-	response := Rewrites{}
+	response := model.Rewrites{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("GetRewrites: %w", err)
@@ -61,7 +51,7 @@ func (c *MigaduClient) GetRewrites(ctx context.Context, domain string) (*Rewrite
 }
 
 // GetRewrite - Returns a specific rewrite rule
-func (c *MigaduClient) GetRewrite(ctx context.Context, domain string, slug string) (*Rewrite, error) {
+func (c *MigaduClient) GetRewrite(ctx context.Context, domain string, slug string) (*model.Rewrite, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("GetRewrite: %w", err)
@@ -79,7 +69,7 @@ func (c *MigaduClient) GetRewrite(ctx context.Context, domain string, slug strin
 		return nil, fmt.Errorf("GetRewrite: %w", err)
 	}
 
-	response := Rewrite{}
+	response := model.Rewrite{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("GetRewrite: %w", err)
@@ -89,7 +79,7 @@ func (c *MigaduClient) GetRewrite(ctx context.Context, domain string, slug strin
 }
 
 // CreateRewrite - Creates a new rewrite rule
-func (c *MigaduClient) CreateRewrite(ctx context.Context, domain string, rewrite *Rewrite) (*Rewrite, error) {
+func (c *MigaduClient) CreateRewrite(ctx context.Context, domain string, rewrite *model.Rewrite) (*model.Rewrite, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("CreateRewrite: %w", err)
@@ -99,6 +89,12 @@ func (c *MigaduClient) CreateRewrite(ctx context.Context, domain string, rewrite
 
 	var requestBody []byte
 	if rewrite != nil {
+		asciiEmails, err := idn.ConvertEmailsToASCII(rewrite.Destinations)
+		if err != nil {
+			return nil, err
+		}
+		rewrite.Destinations = asciiEmails
+
 		requestBody, err = json.Marshal(rewriteJson{Rewrite: rewrite, Destinations: strings.Join(rewrite.Destinations, ",")})
 		if err != nil {
 			return nil, fmt.Errorf("CreateRewrite: %w", err)
@@ -115,7 +111,7 @@ func (c *MigaduClient) CreateRewrite(ctx context.Context, domain string, rewrite
 		return nil, fmt.Errorf("CreateRewrite: %w", err)
 	}
 
-	response := Rewrite{}
+	response := model.Rewrite{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("CreateRewrite: %w", err)
@@ -125,7 +121,7 @@ func (c *MigaduClient) CreateRewrite(ctx context.Context, domain string, rewrite
 }
 
 // UpdateRewrite - Updates an existing rewrite rule
-func (c *MigaduClient) UpdateRewrite(ctx context.Context, domain string, slug string, rewrite *Rewrite) (*Rewrite, error) {
+func (c *MigaduClient) UpdateRewrite(ctx context.Context, domain string, slug string, rewrite *model.Rewrite) (*model.Rewrite, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateRewrite: %w", err)
@@ -135,6 +131,12 @@ func (c *MigaduClient) UpdateRewrite(ctx context.Context, domain string, slug st
 
 	var requestBody []byte
 	if rewrite != nil {
+		asciiEmails, err := idn.ConvertEmailsToASCII(rewrite.Destinations)
+		if err != nil {
+			return nil, err
+		}
+		rewrite.Destinations = asciiEmails
+
 		requestBody, err = json.Marshal(rewriteJson{Rewrite: rewrite, Destinations: strings.Join(rewrite.Destinations, ",")})
 		if err != nil {
 			return nil, fmt.Errorf("UpdateRewrite: %w", err)
@@ -151,7 +153,7 @@ func (c *MigaduClient) UpdateRewrite(ctx context.Context, domain string, slug st
 		return nil, fmt.Errorf("UpdateRewrite: %w", err)
 	}
 
-	response := Rewrite{}
+	response := model.Rewrite{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateRewrite: %w", err)
@@ -161,7 +163,7 @@ func (c *MigaduClient) UpdateRewrite(ctx context.Context, domain string, slug st
 }
 
 // DeleteRewrite - Deletes an existing rewrite rule
-func (c *MigaduClient) DeleteRewrite(ctx context.Context, domain string, slug string) (*Rewrite, error) {
+func (c *MigaduClient) DeleteRewrite(ctx context.Context, domain string, slug string) (*model.Rewrite, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteRewrite: %w", err)
@@ -179,7 +181,7 @@ func (c *MigaduClient) DeleteRewrite(ctx context.Context, domain string, slug st
 		return nil, fmt.Errorf("DeleteRewrite: %w", err)
 	}
 
-	response := Rewrite{}
+	response := model.Rewrite{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteRewrite: %w", err)

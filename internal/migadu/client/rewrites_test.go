@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -21,7 +22,7 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 		domain       string
 		wantedDomain string
 		statusCode   int
-		want         *Rewrites
+		want         *model.Rewrites
 		wantErr      bool
 	}{
 		{
@@ -29,7 +30,7 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want:         &Rewrites{},
+			want:         &model.Rewrites{},
 			wantErr:      false,
 		},
 		{
@@ -37,8 +38,8 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Rewrites{
-				[]Rewrite{
+			want: &model.Rewrites{
+				[]model.Rewrite{
 					{
 						DomainName:    "example.com",
 						Name:          "test",
@@ -57,8 +58,8 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Rewrites{
-				[]Rewrite{
+			want: &model.Rewrites{
+				[]model.Rewrite{
 					{
 						DomainName:    "example.com",
 						Name:          "test",
@@ -95,7 +96,7 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 			domain:       "hoß.de",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want:         &Rewrites{},
+			want:         &model.Rewrites{},
 			wantErr:      false,
 		},
 	}
@@ -141,7 +142,7 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 		slug         string
 		wantedDomain string
 		statusCode   int
-		want         *Rewrite
+		want         *model.Rewrite
 		wantErr      bool
 	}{
 		{
@@ -150,7 +151,7 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 			slug:         "slug",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Rewrite{
+			want: &model.Rewrite{
 				DomainName:    "example.com",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
@@ -167,7 +168,7 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 			slug:         "slug",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Rewrite{
+			want: &model.Rewrite{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
@@ -229,7 +230,7 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 		domain       string
 		wantedDomain string
 		statusCode   int
-		want         *Rewrite
+		want         *model.Rewrite
 		wantErr      bool
 	}{
 		{
@@ -237,7 +238,7 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Rewrite{
+			want: &model.Rewrite{
 				DomainName:    "example.com",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
@@ -253,7 +254,7 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 			domain:       "hoß.de",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Rewrite{
+			want: &model.Rewrite{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
@@ -315,7 +316,7 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 		slug         string
 		wantedDomain string
 		statusCode   int
-		want         *Rewrite
+		want         *model.Rewrite
 		wantErr      bool
 	}{
 		{
@@ -324,7 +325,7 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 			slug:         "slug",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Rewrite{
+			want: &model.Rewrite{
 				DomainName:    "example.com",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
@@ -341,7 +342,7 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 			slug:         "slug",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Rewrite{
+			want: &model.Rewrite{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
@@ -404,7 +405,7 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 		slug         string
 		wantedDomain string
 		statusCode   int
-		want         *Rewrite
+		want         *model.Rewrite
 		wantErr      bool
 	}{
 		{
@@ -413,7 +414,7 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 			slug:         "slug",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Rewrite{
+			want: &model.Rewrite{
 				DomainName:    "example.com",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
@@ -430,7 +431,7 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 			slug:         "slug",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Rewrite{
+			want: &model.Rewrite{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "sec",
 				LocalPartRule: "sec-*",

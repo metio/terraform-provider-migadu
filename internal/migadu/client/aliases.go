@@ -10,27 +10,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/metio/terraform-provider-migadu/internal/idn"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"golang.org/x/net/idna"
 	"net/http"
 )
 
-type Aliases struct {
-	Aliases []Alias `json:"address_aliases"`
-}
-
-type Alias struct {
-	LocalPart        string   `json:"local_part"`
-	DomainName       string   `json:"domain_name"`
-	Address          string   `json:"address"`
-	Destinations     []string `json:"destinations"`
-	IsInternal       bool     `json:"is_internal"`
-	Expirable        bool     `json:"expireable"`
-	ExpiresOn        string   `json:"expires_on"`
-	RemoveUponExpiry bool     `json:"remove_upon_expiry"`
-}
-
 // GetAliases - Returns aliases for a single domain
-func (c *MigaduClient) GetAliases(ctx context.Context, domain string) (*Aliases, error) {
+func (c *MigaduClient) GetAliases(ctx context.Context, domain string) (*model.Aliases, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("GetAliases: %w", err)
@@ -48,7 +35,7 @@ func (c *MigaduClient) GetAliases(ctx context.Context, domain string) (*Aliases,
 		return nil, fmt.Errorf("GetAliases: %w", err)
 	}
 
-	response := Aliases{}
+	response := model.Aliases{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("GetAliases: %w", err)
@@ -58,7 +45,7 @@ func (c *MigaduClient) GetAliases(ctx context.Context, domain string) (*Aliases,
 }
 
 // GetAlias - Returns specific alias
-func (c *MigaduClient) GetAlias(ctx context.Context, domain string, localPart string) (*Alias, error) {
+func (c *MigaduClient) GetAlias(ctx context.Context, domain string, localPart string) (*model.Alias, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("GetAlias: %w", err)
@@ -76,7 +63,7 @@ func (c *MigaduClient) GetAlias(ctx context.Context, domain string, localPart st
 		return nil, fmt.Errorf("GetAlias: %w", err)
 	}
 
-	response := Alias{}
+	response := model.Alias{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("GetAlias: %w", err)
@@ -86,13 +73,19 @@ func (c *MigaduClient) GetAlias(ctx context.Context, domain string, localPart st
 }
 
 // CreateAlias - Creates a new alias
-func (c *MigaduClient) CreateAlias(ctx context.Context, domain string, alias *Alias) (*Alias, error) {
+func (c *MigaduClient) CreateAlias(ctx context.Context, domain string, alias *model.Alias) (*model.Alias, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("CreateAlias: %w", err)
 	}
 
 	url := fmt.Sprintf("%s/domains/%s/aliases", c.Endpoint, ascii)
+
+	asciiEmails, err := idn.ConvertEmailsToASCII(alias.Destinations)
+	if err != nil {
+		return nil, err
+	}
+	alias.Destinations = asciiEmails
 
 	requestBody, err := json.Marshal(alias)
 	if err != nil {
@@ -109,7 +102,7 @@ func (c *MigaduClient) CreateAlias(ctx context.Context, domain string, alias *Al
 		return nil, fmt.Errorf("CreateAlias: %w", err)
 	}
 
-	response := Alias{}
+	response := model.Alias{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("CreateAlias: %w", err)
@@ -119,13 +112,19 @@ func (c *MigaduClient) CreateAlias(ctx context.Context, domain string, alias *Al
 }
 
 // UpdateAlias - Updates an existing alias
-func (c *MigaduClient) UpdateAlias(ctx context.Context, domain string, localPart string, alias *Alias) (*Alias, error) {
+func (c *MigaduClient) UpdateAlias(ctx context.Context, domain string, localPart string, alias *model.Alias) (*model.Alias, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateAlias: %w", err)
 	}
 
 	url := fmt.Sprintf("%s/domains/%s/aliases/%s", c.Endpoint, ascii, localPart)
+
+	asciiEmails, err := idn.ConvertEmailsToASCII(alias.Destinations)
+	if err != nil {
+		return nil, err
+	}
+	alias.Destinations = asciiEmails
 
 	requestBody, err := json.Marshal(alias)
 	if err != nil {
@@ -142,7 +141,7 @@ func (c *MigaduClient) UpdateAlias(ctx context.Context, domain string, localPart
 		return nil, fmt.Errorf("UpdateAlias: %w", err)
 	}
 
-	response := Alias{}
+	response := model.Alias{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateAlias: %w", err)
@@ -152,7 +151,7 @@ func (c *MigaduClient) UpdateAlias(ctx context.Context, domain string, localPart
 }
 
 // DeleteAlias - Deletes an existing alias
-func (c *MigaduClient) DeleteAlias(ctx context.Context, domain string, localPart string) (*Alias, error) {
+func (c *MigaduClient) DeleteAlias(ctx context.Context, domain string, localPart string) (*model.Alias, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteAlias: %w", err)
@@ -170,7 +169,7 @@ func (c *MigaduClient) DeleteAlias(ctx context.Context, domain string, localPart
 		return nil, fmt.Errorf("DeleteAlias: %w", err)
 	}
 
-	response := Alias{}
+	response := model.Alias{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteAlias: %w", err)

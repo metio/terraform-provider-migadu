@@ -10,50 +10,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/metio/terraform-provider-migadu/internal/idn"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"golang.org/x/net/idna"
 	"net/http"
 )
 
-type Mailboxes struct {
-	Mailboxes []Mailbox `json:"mailboxes"`
-}
-
-type Mailbox struct {
-	LocalPart             string   `json:"local_part"`
-	DomainName            string   `json:"domain_name"`
-	Address               string   `json:"address"`
-	Name                  string   `json:"name"`
-	IsInternal            bool     `json:"is_internal"`
-	MaySend               bool     `json:"may_send"`
-	MayReceive            bool     `json:"may_receive"`
-	MayAccessImap         bool     `json:"may_access_imap"`
-	MayAccessPop3         bool     `json:"may_access_pop3"`
-	MayAccessManageSieve  bool     `json:"may_access_managesieve"`
-	PasswordMethod        string   `json:"password_method"`
-	Password              string   `json:"password"`
-	PasswordRecoveryEmail string   `json:"password_recovery_email"`
-	SpamAction            string   `json:"spam_action"`
-	SpamAggressiveness    string   `json:"spam_aggressiveness"`
-	Expirable             bool     `json:"expireable"`
-	ExpiresOn             string   `json:"expires_on"`
-	RemoveUponExpiry      bool     `json:"remove_upon_expiry"`
-	SenderDenyList        []string `json:"sender_denylist"`
-	SenderAllowList       []string `json:"sender_allowlist"`
-	RecipientDenyList     []string `json:"recipient_denylist"`
-	AutoRespondActive     bool     `json:"autorespond_active"`
-	AutoRespondSubject    string   `json:"autorespond_subject"`
-	AutoRespondBody       string   `json:"autorespond_body"`
-	AutoRespondExpiresOn  string   `json:"autorespond_expires_on"`
-	FooterActive          bool     `json:"footer_active"`
-	FooterPlainBody       string   `json:"footer_plain_body"`
-	FooterHtmlBody        string   `json:"footer_html_body"`
-	StorageUsage          float64  `json:"storage_usage"`
-	Delegations           []string `json:"delegations"`
-	Identities            []string `json:"identities"`
-}
-
 // GetMailboxes - Returns mailboxes for a single domain
-func (c *MigaduClient) GetMailboxes(ctx context.Context, domain string) (*Mailboxes, error) {
+func (c *MigaduClient) GetMailboxes(ctx context.Context, domain string) (*model.Mailboxes, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("GetMailboxes: %w", err)
@@ -71,7 +35,7 @@ func (c *MigaduClient) GetMailboxes(ctx context.Context, domain string) (*Mailbo
 		return nil, fmt.Errorf("GetMailboxes: %w", err)
 	}
 
-	response := Mailboxes{}
+	response := model.Mailboxes{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("GetMailboxes: %w", err)
@@ -81,7 +45,7 @@ func (c *MigaduClient) GetMailboxes(ctx context.Context, domain string) (*Mailbo
 }
 
 // GetMailbox - Returns specific mailbox
-func (c *MigaduClient) GetMailbox(ctx context.Context, domain string, localPart string) (*Mailbox, error) {
+func (c *MigaduClient) GetMailbox(ctx context.Context, domain string, localPart string) (*model.Mailbox, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("GetMailbox: %w", err)
@@ -99,7 +63,7 @@ func (c *MigaduClient) GetMailbox(ctx context.Context, domain string, localPart 
 		return nil, fmt.Errorf("GetMailbox: %w", err)
 	}
 
-	response := Mailbox{}
+	response := model.Mailbox{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("GetMailbox: %w", err)
@@ -109,13 +73,29 @@ func (c *MigaduClient) GetMailbox(ctx context.Context, domain string, localPart 
 }
 
 // CreateMailbox - Creates a new mailbox
-func (c *MigaduClient) CreateMailbox(ctx context.Context, domain string, mailbox *Mailbox) (*Mailbox, error) {
+func (c *MigaduClient) CreateMailbox(ctx context.Context, domain string, mailbox *model.Mailbox) (*model.Mailbox, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("CreateMailbox: %w", err)
 	}
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes", c.Endpoint, ascii)
+
+	senderDenyListASCII, err := idn.ConvertEmailsToASCII(mailbox.SenderDenyList)
+	if err != nil {
+		return nil, err
+	}
+	mailbox.SenderDenyList = senderDenyListASCII
+	senderAllowListASCII, err := idn.ConvertEmailsToASCII(mailbox.SenderAllowList)
+	if err != nil {
+		return nil, err
+	}
+	mailbox.SenderAllowList = senderAllowListASCII
+	recipientDenyListASCII, err := idn.ConvertEmailsToASCII(mailbox.RecipientDenyList)
+	if err != nil {
+		return nil, err
+	}
+	mailbox.RecipientDenyList = recipientDenyListASCII
 
 	requestBody, err := json.Marshal(mailbox)
 	if err != nil {
@@ -132,7 +112,7 @@ func (c *MigaduClient) CreateMailbox(ctx context.Context, domain string, mailbox
 		return nil, fmt.Errorf("CreateMailbox: %w", err)
 	}
 
-	response := Mailbox{}
+	response := model.Mailbox{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("CreateMailbox: %w", err)
@@ -142,7 +122,7 @@ func (c *MigaduClient) CreateMailbox(ctx context.Context, domain string, mailbox
 }
 
 // UpdateMailbox - Updates an existing mailbox
-func (c *MigaduClient) UpdateMailbox(ctx context.Context, domain string, localPart string, mailbox *Mailbox) (*Mailbox, error) {
+func (c *MigaduClient) UpdateMailbox(ctx context.Context, domain string, localPart string, mailbox *model.Mailbox) (*model.Mailbox, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateMailbox: %w", err)
@@ -165,7 +145,7 @@ func (c *MigaduClient) UpdateMailbox(ctx context.Context, domain string, localPa
 		return nil, fmt.Errorf("UpdateMailbox: %w", err)
 	}
 
-	response := Mailbox{}
+	response := model.Mailbox{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateMailbox: %w", err)
@@ -175,7 +155,7 @@ func (c *MigaduClient) UpdateMailbox(ctx context.Context, domain string, localPa
 }
 
 // DeleteMailbox - Deletes an existing mailbox
-func (c *MigaduClient) DeleteMailbox(ctx context.Context, domain string, localPart string) (*Mailbox, error) {
+func (c *MigaduClient) DeleteMailbox(ctx context.Context, domain string, localPart string) (*model.Mailbox, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteMailbox: %w", err)
@@ -193,7 +173,7 @@ func (c *MigaduClient) DeleteMailbox(ctx context.Context, domain string, localPa
 		return nil, fmt.Errorf("DeleteMailbox: %w", err)
 	}
 
-	response := Mailbox{}
+	response := model.Mailbox{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteMailbox: %w", err)

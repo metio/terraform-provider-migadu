@@ -17,7 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/metio/terraform-provider-migadu/internal/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"strings"
 )
 
@@ -270,7 +271,21 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	mailbox := &client.Mailbox{
+	var senderDenyList []string
+	if !plan.SenderDenyList.IsUnknown() {
+		resp.Diagnostics.Append(plan.SenderDenyList.ElementsAs(ctx, &senderDenyList, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	if !plan.SenderDenyListPunycode.IsUnknown() {
+		resp.Diagnostics.Append(plan.SenderDenyListPunycode.ElementsAs(ctx, &senderDenyList, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	mailbox := &model.Mailbox{
 		LocalPart:             plan.LocalPart.ValueString(),
 		Name:                  plan.Name.ValueString(),
 		IsInternal:            plan.IsInternal.ValueBool(),
@@ -287,7 +302,7 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 		Expirable:             plan.Expirable.ValueBool(),
 		ExpiresOn:             plan.ExpiresOn.ValueString(),
 		RemoveUponExpiry:      plan.RemoveUponExpiry.ValueBool(),
-		SenderDenyList:        nil,
+		SenderDenyList:        senderDenyList,
 		SenderAllowList:       nil,
 		RecipientDenyList:     nil,
 		AutoRespondActive:     plan.AutoRespondActive.ValueBool(),
@@ -397,7 +412,7 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	mailbox := &client.Mailbox{
+	mailbox := &model.Mailbox{
 		Name:                  plan.Name.ValueString(),
 		IsInternal:            plan.IsInternal.ValueBool(),
 		MaySend:               plan.MaySend.ValueBool(),

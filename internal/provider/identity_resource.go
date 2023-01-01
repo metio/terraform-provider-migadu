@@ -17,7 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/metio/terraform-provider-migadu/internal/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"strings"
 )
 
@@ -176,7 +177,7 @@ func (r *identityResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	identity := &client.Identity{
+	identity := &model.Identity{
 		LocalPart:            plan.Identity.ValueString(),
 		Name:                 plan.Name.ValueString(),
 		MaySend:              plan.MaySend.ValueBool(),
@@ -264,7 +265,7 @@ func (r *identityResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	identity := &client.Identity{
+	identity := &model.Identity{
 		Name:                 plan.Name.ValueString(),
 		MaySend:              plan.MaySend.ValueBool(),
 		MayReceive:           plan.MayReceive.ValueBool(),

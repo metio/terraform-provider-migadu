@@ -9,6 +9,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/simulator"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -17,111 +19,162 @@ import (
 
 func TestMigaduClient_GetAliases(t *testing.T) {
 	tests := []struct {
-		name         string
-		domain       string
-		wantedDomain string
-		statusCode   int
-		want         *Aliases
-		wantErr      bool
+		name    string
+		domain  string
+		state   []model.Alias
+		want    *model.Aliases
+		wantErr bool
 	}{
 		{
-			name:         "empty",
-			domain:       "example.com",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusOK,
-			want:         &Aliases{Aliases: []Alias{}},
-			wantErr:      false,
-		},
-		{
-			name:         "single",
-			domain:       "example.com",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusOK,
-			want: &Aliases{
-				Aliases: []Alias{
-					{
-						LocalPart:        "local",
-						DomainName:       "example.com",
-						Address:          "another",
-						Destinations:     []string{},
-						IsInternal:       false,
-						Expirable:        false,
-						ExpiresOn:        "",
-						RemoveUponExpiry: true,
-					},
+			name:   "single",
+			domain: "example.com",
+			state: []model.Alias{
+				{
+					LocalPart:        "some",
+					DomainName:       "example.com",
+					Address:          "some@example.com",
+					Destinations:     []string{"other@example"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
 				},
 			},
+			want: &model.Aliases{Aliases: []model.Alias{
+				{
+					LocalPart:        "some",
+					DomainName:       "example.com",
+					Address:          "some@example.com",
+					Destinations:     []string{"other@example"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
+				},
+			}},
 			wantErr: false,
 		},
 		{
-			name:         "multiple",
-			domain:       "example.com",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusOK,
-			want: &Aliases{
-				Aliases: []Alias{
-					{
-						LocalPart:        "local",
-						DomainName:       "example.com",
-						Address:          "another",
-						Destinations:     []string{},
-						IsInternal:       false,
-						Expirable:        false,
-						ExpiresOn:        "",
-						RemoveUponExpiry: true,
-					},
-					{
-						LocalPart:  "test",
-						DomainName: "example.com",
-						Address:    "address",
-						Destinations: []string{
-							"destination@example.com",
-						},
-						IsInternal:       true,
-						Expirable:        true,
-						ExpiresOn:        "",
-						RemoveUponExpiry: false,
-					},
+			name:   "multiple",
+			domain: "example.com",
+			state: []model.Alias{
+				{
+					LocalPart:        "some",
+					DomainName:       "example.com",
+					Address:          "some@example.com",
+					Destinations:     []string{"other@example"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
+				},
+				{
+					LocalPart:        "other",
+					DomainName:       "example.com",
+					Address:          "other@example.com",
+					Destinations:     []string{"different@example"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
 				},
 			},
+			want: &model.Aliases{Aliases: []model.Alias{
+				{
+					LocalPart:        "some",
+					DomainName:       "example.com",
+					Address:          "some@example.com",
+					Destinations:     []string{"other@example"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
+				},
+				{
+					LocalPart:        "other",
+					DomainName:       "example.com",
+					Address:          "other@example.com",
+					Destinations:     []string{"different@example"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
+				},
+			}},
 			wantErr: false,
 		},
 		{
-			name:         "error-404",
-			domain:       "example.com",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusNotFound,
-			want:         nil,
-			wantErr:      true,
+			name:   "mixed",
+			domain: "example.com",
+			state: []model.Alias{
+				{
+					LocalPart:        "some",
+					DomainName:       "other.com",
+					Address:          "some@other.com",
+					Destinations:     []string{"other@other"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
+				},
+				{
+					LocalPart:        "other",
+					DomainName:       "example.com",
+					Address:          "other@example.com",
+					Destinations:     []string{"different@example"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
+				},
+			},
+			want: &model.Aliases{Aliases: []model.Alias{
+				{
+					LocalPart:        "other",
+					DomainName:       "example.com",
+					Address:          "other@example.com",
+					Destinations:     []string{"different@example"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
+				},
+			}},
+			wantErr: false,
 		},
 		{
-			name:         "idna",
-			domain:       "hoß.de",
-			wantedDomain: "xn--ho-hia.de",
-			statusCode:   http.StatusOK,
-			want:         &Aliases{Aliases: []Alias{}},
-			wantErr:      false,
+			name:   "idna",
+			domain: "hoß.de",
+			state: []model.Alias{
+				{
+					LocalPart:        "test",
+					DomainName:       "xn--ho-hia.de",
+					Address:          "test@xn--ho-hia.de",
+					Destinations:     []string{"other@example"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
+				},
+			},
+			want: &model.Aliases{Aliases: []model.Alias{
+				{
+					LocalPart:        "test",
+					DomainName:       "xn--ho-hia.de",
+					Address:          "test@xn--ho-hia.de",
+					Destinations:     []string{"other@example"},
+					IsInternal:       true,
+					Expirable:        false,
+					ExpiresOn:        "",
+					RemoveUponExpiry: false,
+				},
+			}},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != http.MethodGet {
-					t.Errorf("Expected GET request, got: %s", r.Method)
-				}
-				if r.URL.Path != fmt.Sprintf("/domains/%s/aliases", tt.wantedDomain) {
-					t.Errorf("Expected to request '/domains/%s/aliases', got: %s", tt.wantedDomain, r.URL.Path)
-				}
-				w.WriteHeader(tt.statusCode)
-				bytes, err := json.Marshal(tt.want)
-				if err != nil {
-					t.Errorf("Could not serialize data")
-				}
-				_, err = w.Write(bytes)
-				if err != nil {
-					t.Errorf("Could not write data")
-				}
-			}))
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Aliases: tt.state}))
 			defer server.Close()
 
 			c := newTestClient(server.URL)
@@ -145,7 +198,7 @@ func TestMigaduClient_GetAlias(t *testing.T) {
 		localPart    string
 		wantedDomain string
 		statusCode   int
-		want         *Alias
+		want         *model.Alias
 		wantErr      bool
 	}{
 		{
@@ -154,7 +207,7 @@ func TestMigaduClient_GetAlias(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want:         &Alias{},
+			want:         &model.Alias{},
 			wantErr:      false,
 		},
 		{
@@ -163,7 +216,7 @@ func TestMigaduClient_GetAlias(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Alias{
+			want: &model.Alias{
 				LocalPart:  "other",
 				DomainName: "example.com",
 				Address:    "other@example.com",
@@ -183,7 +236,7 @@ func TestMigaduClient_GetAlias(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Alias{
+			want: &model.Alias{
 				LocalPart:  "other",
 				DomainName: "example.com",
 				Address:    "other@example.com",
@@ -209,7 +262,7 @@ func TestMigaduClient_GetAlias(t *testing.T) {
 			localPart:    "seb",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want:         &Alias{},
+			want:         &model.Alias{},
 			wantErr:      false,
 		},
 	}
@@ -254,7 +307,7 @@ func TestMigaduClient_CreateAlias(t *testing.T) {
 		domain       string
 		wantedDomain string
 		statusCode   int
-		want         *Alias
+		want         *model.Alias
 		wantErr      bool
 	}{
 		{
@@ -262,7 +315,7 @@ func TestMigaduClient_CreateAlias(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want:         &Alias{},
+			want:         &model.Alias{},
 			wantErr:      false,
 		},
 		{
@@ -270,7 +323,7 @@ func TestMigaduClient_CreateAlias(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Alias{
+			want: &model.Alias{
 				LocalPart:  "other",
 				DomainName: "example.com",
 				Address:    "other@example.com",
@@ -289,7 +342,7 @@ func TestMigaduClient_CreateAlias(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Alias{
+			want: &model.Alias{
 				LocalPart:  "other",
 				DomainName: "example.com",
 				Address:    "other@example.com",
@@ -313,7 +366,7 @@ func TestMigaduClient_CreateAlias(t *testing.T) {
 			domain:       "hoß.de",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want:         &Alias{},
+			want:         &model.Alias{},
 			wantErr:      false,
 		},
 	}
@@ -359,7 +412,7 @@ func TestMigaduClient_UpdateAlias(t *testing.T) {
 		localPart    string
 		wantedDomain string
 		statusCode   int
-		want         *Alias
+		want         *model.Alias
 		wantErr      bool
 	}{
 		{
@@ -368,7 +421,7 @@ func TestMigaduClient_UpdateAlias(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want:         &Alias{},
+			want:         &model.Alias{},
 			wantErr:      false,
 		},
 		{
@@ -377,7 +430,7 @@ func TestMigaduClient_UpdateAlias(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Alias{
+			want: &model.Alias{
 				LocalPart:  "other",
 				DomainName: "example.com",
 				Address:    "other@example.com",
@@ -397,7 +450,7 @@ func TestMigaduClient_UpdateAlias(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Alias{
+			want: &model.Alias{
 				LocalPart:  "other",
 				DomainName: "example.com",
 				Address:    "other@example.com",
@@ -423,7 +476,7 @@ func TestMigaduClient_UpdateAlias(t *testing.T) {
 			localPart:    "seb",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want:         &Alias{},
+			want:         &model.Alias{},
 			wantErr:      false,
 		},
 	}
@@ -469,7 +522,7 @@ func TestMigaduClient_DeleteAlias(t *testing.T) {
 		localPart    string
 		wantedDomain string
 		statusCode   int
-		want         *Alias
+		want         *model.Alias
 		wantErr      bool
 	}{
 		{
@@ -478,7 +531,7 @@ func TestMigaduClient_DeleteAlias(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want:         &Alias{},
+			want:         &model.Alias{},
 			wantErr:      false,
 		},
 		{
@@ -487,7 +540,7 @@ func TestMigaduClient_DeleteAlias(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Alias{
+			want: &model.Alias{
 				LocalPart:  "other",
 				DomainName: "example.com",
 				Address:    "other@example.com",
@@ -507,7 +560,7 @@ func TestMigaduClient_DeleteAlias(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Alias{
+			want: &model.Alias{
 				LocalPart:  "other",
 				DomainName: "example.com",
 				Address:    "other@example.com",
@@ -533,7 +586,7 @@ func TestMigaduClient_DeleteAlias(t *testing.T) {
 			localPart:    "seb",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want:         &Alias{},
+			want:         &model.Alias{},
 			wantErr:      false,
 		},
 	}

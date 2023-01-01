@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -21,7 +22,7 @@ func TestMigaduClient_GetMailboxes(t *testing.T) {
 		domain       string
 		wantedDomain string
 		statusCode   int
-		want         *Mailboxes
+		want         *model.Mailboxes
 		wantErr      bool
 	}{
 		{
@@ -29,7 +30,7 @@ func TestMigaduClient_GetMailboxes(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want:         &Mailboxes{},
+			want:         &model.Mailboxes{},
 			wantErr:      false,
 		},
 		{
@@ -37,8 +38,8 @@ func TestMigaduClient_GetMailboxes(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Mailboxes{
-				[]Mailbox{
+			want: &model.Mailboxes{
+				[]model.Mailbox{
 					{
 						LocalPart:             "test",
 						DomainName:            "example.com",
@@ -80,8 +81,8 @@ func TestMigaduClient_GetMailboxes(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Mailboxes{
-				[]Mailbox{
+			want: &model.Mailboxes{
+				[]model.Mailbox{
 					{
 						LocalPart:             "test",
 						DomainName:            "example.com",
@@ -137,7 +138,7 @@ func TestMigaduClient_GetMailboxes(t *testing.T) {
 			domain:       "hoß.de",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want:         &Mailboxes{},
+			want:         &model.Mailboxes{},
 			wantErr:      false,
 		},
 	}
@@ -183,7 +184,7 @@ func TestMigaduClient_GetMailbox(t *testing.T) {
 		localPart    string
 		wantedDomain string
 		statusCode   int
-		want         *Mailbox
+		want         *model.Mailbox
 		wantErr      bool
 	}{
 		{
@@ -192,7 +193,7 @@ func TestMigaduClient_GetMailbox(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Mailbox{
+			want: &model.Mailbox{
 				LocalPart:             "test",
 				DomainName:            "example.com",
 				Address:               "test@example.com",
@@ -233,7 +234,7 @@ func TestMigaduClient_GetMailbox(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Mailbox{
+			want: &model.Mailbox{
 				LocalPart:  "test",
 				DomainName: "xn--ho-hia.de",
 				Address:    "test@xn--ho-hia.de",
@@ -292,7 +293,7 @@ func TestMigaduClient_CreateMailbox(t *testing.T) {
 		domain       string
 		wantedDomain string
 		statusCode   int
-		want         *Mailbox
+		want         *model.Mailbox
 		wantErr      bool
 	}{
 		{
@@ -300,7 +301,7 @@ func TestMigaduClient_CreateMailbox(t *testing.T) {
 			domain:       "example.com",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Mailbox{
+			want: &model.Mailbox{
 				LocalPart:             "test",
 				DomainName:            "example.com",
 				Address:               "test@example.com",
@@ -340,7 +341,7 @@ func TestMigaduClient_CreateMailbox(t *testing.T) {
 			domain:       "hoß.de",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Mailbox{
+			want: &model.Mailbox{
 				LocalPart:  "test",
 				DomainName: "xn--ho-hia.de",
 				Address:    "test@xn--ho-hia.de",
@@ -399,7 +400,7 @@ func TestMigaduClient_UpdateMailbox(t *testing.T) {
 		localPart    string
 		wantedDomain string
 		statusCode   int
-		want         *Mailbox
+		want         *model.Mailbox
 		wantErr      bool
 	}{
 		{
@@ -408,7 +409,7 @@ func TestMigaduClient_UpdateMailbox(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Mailbox{
+			want: &model.Mailbox{
 				LocalPart:             "test",
 				DomainName:            "example.com",
 				Address:               "test@example.com",
@@ -449,7 +450,7 @@ func TestMigaduClient_UpdateMailbox(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Mailbox{
+			want: &model.Mailbox{
 				LocalPart:  "test",
 				DomainName: "xn--ho-hia.de",
 				Address:    "test@xn--ho-hia.de",
@@ -509,7 +510,7 @@ func TestMigaduClient_DeleteMailbox(t *testing.T) {
 		localPart    string
 		wantedDomain string
 		statusCode   int
-		want         *Mailbox
+		want         *model.Mailbox
 		wantErr      bool
 	}{
 		{
@@ -518,7 +519,7 @@ func TestMigaduClient_DeleteMailbox(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "example.com",
 			statusCode:   http.StatusOK,
-			want: &Mailbox{
+			want: &model.Mailbox{
 				LocalPart:             "test",
 				DomainName:            "example.com",
 				Address:               "test@example.com",
@@ -559,7 +560,7 @@ func TestMigaduClient_DeleteMailbox(t *testing.T) {
 			localPart:    "test",
 			wantedDomain: "xn--ho-hia.de",
 			statusCode:   http.StatusOK,
-			want: &Mailbox{
+			want: &model.Mailbox{
 				LocalPart:  "test",
 				DomainName: "xn--ho-hia.de",
 				Address:    "test@xn--ho-hia.de",

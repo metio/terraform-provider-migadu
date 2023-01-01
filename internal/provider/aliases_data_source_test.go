@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/metio/terraform-provider-migadu/internal/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -21,21 +21,21 @@ func TestAliasesDataSource_Read(t *testing.T) {
 		name       string
 		domain     string
 		statusCode int
-		want       *client.Aliases
+		want       *model.Aliases
 		error      string
 	}{
 		{
 			name:       "empty",
 			domain:     "example.com",
 			statusCode: http.StatusOK,
-			want:       &client.Aliases{Aliases: []client.Alias{}},
+			want:       &model.Aliases{Aliases: []model.Alias{}},
 		},
 		{
 			name:       "single",
 			domain:     "example.com",
 			statusCode: http.StatusOK,
-			want: &client.Aliases{
-				Aliases: []client.Alias{
+			want: &model.Aliases{
+				Aliases: []model.Alias{
 					{
 						LocalPart:        "local",
 						DomainName:       "example.com",
@@ -53,8 +53,8 @@ func TestAliasesDataSource_Read(t *testing.T) {
 			name:       "multiple",
 			domain:     "example.com",
 			statusCode: http.StatusOK,
-			want: &client.Aliases{
-				Aliases: []client.Alias{
+			want: &model.Aliases{
+				Aliases: []model.Alias{
 					{
 						LocalPart:        "local",
 						DomainName:       "example.com",
@@ -84,8 +84,8 @@ func TestAliasesDataSource_Read(t *testing.T) {
 			name:       "idna",
 			domain:     "hoß.de",
 			statusCode: http.StatusOK,
-			want: &client.Aliases{
-				Aliases: []client.Alias{
+			want: &model.Aliases{
+				Aliases: []model.Alias{
 					{
 						LocalPart:  "another",
 						DomainName: "xn--ho-hia.de",
