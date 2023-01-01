@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
+	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"net/http"
 	"net/http/httptest"
 	"regexp"

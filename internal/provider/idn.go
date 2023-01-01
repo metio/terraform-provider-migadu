@@ -7,7 +7,7 @@ package provider
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/metio/terraform-provider-migadu/internal/idn"
+	"github.com/metio/terraform-provider-migadu/migadu/idn"
 )
 
 func ConvertEmailsToUnicode(emails []string, diag *diag.Diagnostics) []string {

@@ -8,8 +8,8 @@ package simulator
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/metio/terraform-provider-migadu/internal/idn"
-	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
+	"github.com/metio/terraform-provider-migadu/migadu/idn"
+	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"io"
 	"net/http"
 	"regexp"
