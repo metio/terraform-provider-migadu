@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/metio/terraform-provider-migadu/internal/client"
-	"golang.org/x/net/idna"
+	"github.com/metio/terraform-provider-migadu/internal/provider"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -141,7 +141,7 @@ func TestAliasResource(t *testing.T) {
 	}
 }
 
-func TestAliasResource_IDN_ASCII(t *testing.T) {
+func TestAliasResource_IDN_Punycode(t *testing.T) {
 	server := httptest.NewServer(aliasSimulator(t))
 	defer server.Close()
 
@@ -151,9 +151,9 @@ func TestAliasResource_IDN_ASCII(t *testing.T) {
 			{
 				Config: providerConfig(server.URL) + `
 					resource "migadu_alias" "test" {
-						domain_name  = "hoß.de"
-						local_part   = "test"
-						destinations = ["first@xn--ho-hia.de", "second@xn--ho-hia.de"]
+						domain_name           = "hoß.de"
+						local_part            = "test"
+						destinations_punycode = ["first@xn--ho-hia.de", "second@xn--ho-hia.de"]
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -161,11 +161,11 @@ func TestAliasResource_IDN_ASCII(t *testing.T) {
 					resource.TestCheckResourceAttr("migadu_alias.test", "local_part", "test"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "address", "test@xn--ho-hia.de"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", "2"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "first@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.1", "second@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_idn.#", "2"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_idn.0", "first@hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_idn.1", "second@hoß.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "first@hoß.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.1", "second@hoß.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.#", "2"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.0", "first@xn--ho-hia.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.1", "second@xn--ho-hia.de"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "id", "test@hoß.de"),
 				),
 			},
@@ -177,9 +177,9 @@ func TestAliasResource_IDN_ASCII(t *testing.T) {
 			{
 				Config: providerConfig(server.URL) + `
 					resource "migadu_alias" "test" {
-						domain_name  = "hoß.de"
-						local_part   = "test"
-						destinations = ["third@xn--ho-hia.de"]
+						domain_name           = "hoß.de"
+						local_part            = "test"
+						destinations_punycode = ["third@xn--ho-hia.de"]
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -187,9 +187,9 @@ func TestAliasResource_IDN_ASCII(t *testing.T) {
 					resource.TestCheckResourceAttr("migadu_alias.test", "local_part", "test"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "address", "test@xn--ho-hia.de"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", "1"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "third@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_idn.#", "1"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_idn.0", "third@hoß.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "third@hoß.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.#", "1"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.0", "third@xn--ho-hia.de"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "id", "test@hoß.de"),
 				),
 			},
@@ -207,9 +207,9 @@ func TestAliasResource_IDN_Unicode(t *testing.T) {
 			{
 				Config: providerConfig(server.URL) + `
 					resource "migadu_alias" "test" {
-						domain_name      = "hoß.de"
-						local_part       = "test"
-						destinations_idn = ["first@hoß.de", "second@hoß.de"]
+						domain_name  = "hoß.de"
+						local_part   = "test"
+						destinations = ["first@hoß.de", "second@hoß.de"]
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -217,11 +217,11 @@ func TestAliasResource_IDN_Unicode(t *testing.T) {
 					resource.TestCheckResourceAttr("migadu_alias.test", "local_part", "test"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "address", "test@xn--ho-hia.de"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", "2"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "first@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.1", "second@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_idn.#", "2"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_idn.0", "first@hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_idn.1", "second@hoß.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "first@hoß.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.1", "second@hoß.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.#", "2"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.0", "first@xn--ho-hia.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.1", "second@xn--ho-hia.de"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "id", "test@hoß.de"),
 				),
 			},
@@ -233,9 +233,9 @@ func TestAliasResource_IDN_Unicode(t *testing.T) {
 			{
 				Config: providerConfig(server.URL) + `
 					resource "migadu_alias" "test" {
-						domain_name      = "hoß.de"
-						local_part       = "test"
-						destinations_idn = ["third@hoß.de"]
+						domain_name  = "hoß.de"
+						local_part   = "test"
+						destinations = ["third@hoß.de"]
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -243,9 +243,9 @@ func TestAliasResource_IDN_Unicode(t *testing.T) {
 					resource.TestCheckResourceAttr("migadu_alias.test", "local_part", "test"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "address", "test@xn--ho-hia.de"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", "1"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "third@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_idn.#", "1"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_idn.0", "third@hoß.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "third@hoß.de"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.#", "1"),
+					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.0", "third@xn--ho-hia.de"),
 					resource.TestCheckResourceAttr("migadu_alias.test", "id", "test@hoß.de"),
 				),
 			},
@@ -352,18 +352,7 @@ func handleUpdateAlias(w http.ResponseWriter, r *http.Request, t *testing.T, ali
 
 	requestAlias.DomainName = domain
 	requestAlias.Address = fmt.Sprintf("%s@%s", requestAlias.LocalPart, domain)
-
-	var asciiDestinations []string
-	for _, dest := range requestAlias.Destinations {
-		parts := strings.Split(dest, "@")
-
-		ascii, err := idna.ToASCII(parts[1])
-		if err != nil {
-			t.Errorf("could not convert to punycode")
-		}
-		asciiDestinations = append(asciiDestinations, fmt.Sprintf("%s@%s", parts[0], ascii))
-	}
-	requestAlias.Destinations = asciiDestinations
+	requestAlias.Destinations = provider.ConvertEmailsToASCII(requestAlias.Destinations, nil)
 
 	missing := true
 	for index, alias := range *aliases {
@@ -406,18 +395,7 @@ func handleCreateAlias(w http.ResponseWriter, r *http.Request, t *testing.T, ali
 	}
 	alias.DomainName = domain
 	alias.Address = fmt.Sprintf("%s@%s", alias.LocalPart, domain)
-
-	var asciiDestinations []string
-	for _, dest := range alias.Destinations {
-		parts := strings.Split(dest, "@")
-
-		ascii, err := idna.ToASCII(parts[1])
-		if err != nil {
-			t.Errorf("could not convert to punycode")
-		}
-		asciiDestinations = append(asciiDestinations, fmt.Sprintf("%s@%s", parts[0], ascii))
-	}
-	alias.Destinations = asciiDestinations
+	alias.Destinations = provider.ConvertEmailsToASCII(alias.Destinations, nil)
 
 	*aliases = append(*aliases, alias)
 

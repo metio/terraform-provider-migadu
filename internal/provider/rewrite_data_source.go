@@ -28,12 +28,13 @@ type rewriteDataSource struct {
 }
 
 type rewriteDataSourceModel struct {
-	ID            types.String `tfsdk:"id"`
-	DomainName    types.String `tfsdk:"domain_name"`
-	Name          types.String `tfsdk:"name"`
-	LocalPartRule types.String `tfsdk:"local_part_rule"`
-	OrderNum      types.Int64  `tfsdk:"order_num"`
-	Destinations  types.List   `tfsdk:"destinations"`
+	ID                   types.String `tfsdk:"id"`
+	DomainName           types.String `tfsdk:"domain_name"`
+	Name                 types.String `tfsdk:"name"`
+	LocalPartRule        types.String `tfsdk:"local_part_rule"`
+	OrderNum             types.Int64  `tfsdk:"order_num"`
+	Destinations         types.List   `tfsdk:"destinations"`
+	DestinationsPunycode types.List   `tfsdk:"destinations_punycode"`
 }
 
 func (d *rewriteDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -65,6 +66,10 @@ func (d *rewriteDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Computed: true,
 			},
 			"destinations": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			"destinations_punycode": schema.ListAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
 			},
@@ -103,21 +108,24 @@ func (d *rewriteDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	//data.DomainName = types.StringValue(mailbox.DomainName)
-	//data.Name = types.StringValue(mailbox.Name)
-	data.LocalPartRule = types.StringValue(rewrite.LocalPartRule)
-	data.OrderNum = types.Int64Value(rewrite.OrderNum)
-
-	destinations, diags := types.ListValueFrom(ctx, types.StringType, rewrite.Destinations)
+	destinations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(rewrite.Destinations, &resp.Diagnostics))
 	resp.Diagnostics.Append(diags...)
-
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	destinationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(rewrite.Destinations, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	data.Destinations = destinations
-
+	data.DestinationsPunycode = destinationsPunycode
 	data.ID = types.StringValue(fmt.Sprintf("%s@%s", data.Name.ValueString(), data.DomainName.ValueString()))
+	//data.DomainName = types.StringValue(mailbox.DomainName)
+	//data.Name = types.StringValue(mailbox.Name)
+	data.LocalPartRule = types.StringValue(rewrite.LocalPartRule)
+	data.OrderNum = types.Int64Value(rewrite.OrderNum)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	if resp.Diagnostics.HasError() {

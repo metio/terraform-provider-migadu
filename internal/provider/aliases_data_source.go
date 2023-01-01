@@ -34,14 +34,15 @@ type aliasesDataSourceModel struct {
 }
 
 type aliasModel struct {
-	LocalPart        types.String `tfsdk:"local_part"`
-	DomainName       types.String `tfsdk:"domain_name"`
-	Address          types.String `tfsdk:"address"`
-	Destinations     types.List   `tfsdk:"destinations"`
-	IsInternal       types.Bool   `tfsdk:"is_internal"`
-	Expirable        types.Bool   `tfsdk:"expirable"`
-	ExpiresOn        types.String `tfsdk:"expires_on"`
-	RemoveUponExpiry types.Bool   `tfsdk:"remove_upon_expiry"`
+	LocalPart            types.String `tfsdk:"local_part"`
+	DomainName           types.String `tfsdk:"domain_name"`
+	Address              types.String `tfsdk:"address"`
+	Destinations         types.List   `tfsdk:"destinations"`
+	DestinationsPunycode types.List   `tfsdk:"destinations_punycode"`
+	IsInternal           types.Bool   `tfsdk:"is_internal"`
+	Expirable            types.Bool   `tfsdk:"expirable"`
+	ExpiresOn            types.String `tfsdk:"expires_on"`
+	RemoveUponExpiry     types.Bool   `tfsdk:"remove_upon_expiry"`
 }
 
 func (d *aliasesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -79,6 +80,10 @@ func (d *aliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 							Computed: true,
 						},
 						"destinations": schema.ListAttribute{
+							Computed:    true,
+							ElementType: types.StringType,
+						},
+						"destinations_punycode": schema.ListAttribute{
 							Computed:    true,
 							ElementType: types.StringType,
 						},
@@ -133,26 +138,30 @@ func (d *aliasesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	for _, alias := range aliases.Aliases {
-		aliasModel := aliasModel{
-			LocalPart:        types.StringValue(alias.LocalPart),
-			DomainName:       types.StringValue(alias.DomainName),
-			Address:          types.StringValue(alias.Address),
-			IsInternal:       types.BoolValue(alias.IsInternal),
-			Expirable:        types.BoolValue(alias.Expirable),
-			ExpiresOn:        types.StringValue(alias.ExpiresOn),
-			RemoveUponExpiry: types.BoolValue(alias.RemoveUponExpiry),
-		}
-
-		destinations, diags := types.ListValueFrom(ctx, types.StringType, alias.Destinations)
+		destinations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(alias.Destinations, &resp.Diagnostics))
 		resp.Diagnostics.Append(diags...)
-
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		destinationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(alias.Destinations, &resp.Diagnostics))
+		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		aliasModel.Destinations = destinations
+		model := aliasModel{
+			LocalPart:            types.StringValue(alias.LocalPart),
+			DomainName:           types.StringValue(alias.DomainName),
+			Destinations:         destinations,
+			DestinationsPunycode: destinationsPunycode,
+			Address:              types.StringValue(alias.Address),
+			IsInternal:           types.BoolValue(alias.IsInternal),
+			Expirable:            types.BoolValue(alias.Expirable),
+			ExpiresOn:            types.StringValue(alias.ExpiresOn),
+			RemoveUponExpiry:     types.BoolValue(alias.RemoveUponExpiry),
+		}
 
-		data.Aliases = append(data.Aliases, aliasModel)
+		data.Aliases = append(data.Aliases, model)
 	}
 
 	data.ID = data.DomainName

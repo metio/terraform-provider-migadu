@@ -34,11 +34,12 @@ type rewritesDataSourceModel struct {
 }
 
 type rewriteModel struct {
-	DomainName    types.String `tfsdk:"domain_name"`
-	Name          types.String `tfsdk:"name"`
-	LocalPartRule types.String `tfsdk:"local_part_rule"`
-	OrderNum      types.Int64  `tfsdk:"order_num"`
-	Destinations  types.List   `tfsdk:"destinations"`
+	DomainName           types.String `tfsdk:"domain_name"`
+	Name                 types.String `tfsdk:"name"`
+	LocalPartRule        types.String `tfsdk:"local_part_rule"`
+	OrderNum             types.Int64  `tfsdk:"order_num"`
+	Destinations         types.List   `tfsdk:"destinations"`
+	DestinationsPunycode types.List   `tfsdk:"destinations_punycode"`
 }
 
 func (d *rewritesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -82,6 +83,10 @@ func (d *rewritesDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 							Computed:    true,
 							ElementType: types.StringType,
 						},
+						"destinations_punycode": schema.ListAttribute{
+							Computed:    true,
+							ElementType: types.StringType,
+						},
 					},
 				},
 			},
@@ -121,23 +126,27 @@ func (d *rewritesDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	for _, rewrite := range rewrites.Rewrites {
-		aliasModel := rewriteModel{
-			DomainName:    types.StringValue(rewrite.DomainName),
-			Name:          types.StringValue(rewrite.Name),
-			LocalPartRule: types.StringValue(rewrite.LocalPartRule),
-			OrderNum:      types.Int64Value(rewrite.OrderNum),
-		}
-
-		destinations, diags := types.ListValueFrom(ctx, types.StringType, rewrite.Destinations)
+		destinations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(rewrite.Destinations, &resp.Diagnostics))
 		resp.Diagnostics.Append(diags...)
-
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		destinationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(rewrite.Destinations, &resp.Diagnostics))
+		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		aliasModel.Destinations = destinations
+		model := rewriteModel{
+			DomainName:           types.StringValue(rewrite.DomainName),
+			Name:                 types.StringValue(rewrite.Name),
+			LocalPartRule:        types.StringValue(rewrite.LocalPartRule),
+			OrderNum:             types.Int64Value(rewrite.OrderNum),
+			Destinations:         destinations,
+			DestinationsPunycode: destinationsPunycode,
+		}
 
-		data.Rewrites = append(data.Rewrites, aliasModel)
+		data.Rewrites = append(data.Rewrites, model)
 	}
 
 	data.ID = data.DomainName

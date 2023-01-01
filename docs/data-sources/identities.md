@@ -44,7 +44,7 @@ Read-Only:
 - `footer_plain_body` (String)
 - `local_part` (String)
 - `may_access_imap` (Boolean)
-- `may_access_managesieve` (Boolean)
+- `may_access_manage_sieve` (Boolean)
 - `may_access_pop3` (Boolean)
 - `may_receive` (Boolean)
 - `may_send` (Boolean)

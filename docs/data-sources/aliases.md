@@ -37,6 +37,7 @@ Read-Only:
 
 - `address` (String)
 - `destinations` (List of String)
+- `destinations_punycode` (List of String)
 - `domain_name` (String)
 - `expirable` (Boolean)
 - `expires_on` (String)

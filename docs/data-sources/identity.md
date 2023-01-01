@@ -37,7 +37,7 @@ data "migadu_identity" "identity" {
 - `footer_plain_body` (String)
 - `id` (String) Contains the value `local_part@domain_name/identity`.
 - `may_access_imap` (Boolean)
-- `may_access_managesieve` (Boolean)
+- `may_access_manage_sieve` (Boolean)
 - `may_access_pop3` (Boolean)
 - `may_receive` (Boolean)
 - `may_send` (Boolean)

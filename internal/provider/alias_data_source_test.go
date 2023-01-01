@@ -154,6 +154,7 @@ func TestAliasDataSource_Read(t *testing.T) {
 								resource.TestCheckResourceAttr("data.migadu_alias.test", "local_part", tt.localPart),
 								resource.TestCheckResourceAttr("data.migadu_alias.test", "address", tt.want.Address),
 								resource.TestCheckResourceAttr("data.migadu_alias.test", "destinations.#", fmt.Sprintf("%v", len(tt.want.Destinations))),
+								resource.TestCheckResourceAttr("data.migadu_alias.test", "destinations_punycode.#", fmt.Sprintf("%v", len(tt.want.Destinations))),
 								resource.TestCheckResourceAttr("data.migadu_alias.test", "id", fmt.Sprintf("%s@%s", tt.localPart, tt.domain)),
 							),
 						},

@@ -30,6 +30,7 @@ data "migadu_rewrite" "rewrite" {
 ### Read-Only
 
 - `destinations` (List of String)
+- `destinations_punycode` (List of String)
 - `id` (String) Contains the value 'name@domain_name'.
 - `local_part_rule` (String)
 - `order_num` (Number)

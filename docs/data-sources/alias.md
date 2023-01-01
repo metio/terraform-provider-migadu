@@ -31,6 +31,7 @@ data "migadu_alias" "alias" {
 
 - `address` (String)
 - `destinations` (List of String)
+- `destinations_punycode` (List of String)
 - `expirable` (Boolean)
 - `expires_on` (String)
 - `id` (String) Contains the full email address `local_part@domain_name`.

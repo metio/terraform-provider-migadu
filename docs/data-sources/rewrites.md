@@ -36,6 +36,7 @@ data "migadu_rewrites" "rewrites" {
 Read-Only:
 
 - `destinations` (List of String)
+- `destinations_punycode` (List of String)
 - `domain_name` (String)
 - `local_part_rule` (String)
 - `name` (String)

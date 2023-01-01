@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -20,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/metio/terraform-provider-migadu/internal/client"
-	"golang.org/x/net/idna"
 	"strings"
 )
 
@@ -39,16 +37,16 @@ type aliasResource struct {
 }
 
 type aliasResourceModel struct {
-	ID               types.String `tfsdk:"id"`
-	LocalPart        types.String `tfsdk:"local_part"`
-	DomainName       types.String `tfsdk:"domain_name"`
-	Address          types.String `tfsdk:"address"`
-	Destinations     types.List   `tfsdk:"destinations"`
-	DestinationsIDN  types.List   `tfsdk:"destinations_idn"`
-	IsInternal       types.Bool   `tfsdk:"is_internal"`
-	Expirable        types.Bool   `tfsdk:"expirable"`
-	ExpiresOn        types.String `tfsdk:"expires_on"`
-	RemoveUponExpiry types.Bool   `tfsdk:"remove_upon_expiry"`
+	ID                   types.String `tfsdk:"id"`
+	LocalPart            types.String `tfsdk:"local_part"`
+	DomainName           types.String `tfsdk:"domain_name"`
+	Address              types.String `tfsdk:"address"`
+	Destinations         types.List   `tfsdk:"destinations"`
+	DestinationsPunycode types.List   `tfsdk:"destinations_punycode"`
+	IsInternal           types.Bool   `tfsdk:"is_internal"`
+	Expirable            types.Bool   `tfsdk:"expirable"`
+	ExpiresOn            types.String `tfsdk:"expires_on"`
+	RemoveUponExpiry     types.Bool   `tfsdk:"remove_upon_expiry"`
 }
 
 func (r *aliasResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -105,18 +103,18 @@ func (r *aliasResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:            true,
 				ElementType:         types.StringType,
 				Validators: []validator.List{
-					listvalidator.ConflictsWith(path.MatchRoot("destinations_idn")),
+					listvalidator.ExactlyOneOf(path.MatchRoot("destinations_punycode")),
 					listvalidator.SizeAtLeast(1),
 				},
 			},
-			"destinations_idn": schema.ListAttribute{
-				Description:         "List of email addresses that act as destinations of the alias. Use this attribute instead of 'destinations' in case you are dealing with international domain names (IDN).",
-				MarkdownDescription: "List of email addresses that act as destinations of the alias. Use this attribute instead of `destinations` in case you are dealing with international domain names (IDN).",
+			"destinations_punycode": schema.ListAttribute{
+				Description:         "List of email addresses that act as destinations of the alias. Use this attribute instead of 'destinations' in case you want/must use the punycode representation of your domain.",
+				MarkdownDescription: "List of email addresses that act as destinations of the alias. Use this attribute instead of `destinations` in case you want/must use the punycode representation of your domain.",
 				Optional:            true,
 				Computed:            true,
 				ElementType:         types.StringType,
 				Validators: []validator.List{
-					listvalidator.ConflictsWith(path.MatchRoot("destinations")),
+					listvalidator.ExactlyOneOf(path.MatchRoot("destinations")),
 					listvalidator.SizeAtLeast(1),
 				},
 			},
@@ -174,8 +172,8 @@ func (r *aliasResource) Create(ctx context.Context, req resource.CreateRequest, 
 			return
 		}
 	}
-	if !plan.DestinationsIDN.IsUnknown() {
-		resp.Diagnostics.Append(plan.DestinationsIDN.ElementsAs(ctx, &destinations, false)...)
+	if !plan.DestinationsPunycode.IsUnknown() {
+		resp.Diagnostics.Append(plan.DestinationsPunycode.ElementsAs(ctx, &destinations, false)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -183,7 +181,7 @@ func (r *aliasResource) Create(ctx context.Context, req resource.CreateRequest, 
 
 	alias := &client.Alias{
 		LocalPart:        plan.LocalPart.ValueString(),
-		Destinations:     destinations,
+		Destinations:     ConvertEmailsToASCII(destinations, &resp.Diagnostics),
 		IsInternal:       plan.IsInternal.ValueBool(),
 		Expirable:        plan.Expirable.ValueBool(),
 		ExpiresOn:        plan.ExpiresOn.ValueString(),
@@ -199,20 +197,20 @@ func (r *aliasResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	receivedDestinations, diags := types.ListValueFrom(ctx, types.StringType, createdAlias.Destinations)
+	receivedDestinations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(createdAlias.Destinations, &resp.Diagnostics))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	receivedDestinationsIDN, diags := types.ListValueFrom(ctx, types.StringType, convertToUnicode(createdAlias.Destinations, &resp.Diagnostics))
+	receivedDestinationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, createdAlias.Destinations)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	plan.Destinations = receivedDestinations
-	plan.DestinationsIDN = receivedDestinationsIDN
-	plan.ID = types.StringValue(fmt.Sprintf("%s@%s", plan.LocalPart.ValueString(), plan.DomainName.ValueString()))
+	plan.DestinationsPunycode = receivedDestinationsPunycode
+	plan.ID = types.StringValue(createAliasID(plan.LocalPart, plan.DomainName))
 	plan.Address = types.StringValue(createdAlias.Address)
 	plan.IsInternal = types.BoolValue(createdAlias.IsInternal)
 	plan.Expirable = types.BoolValue(createdAlias.Expirable)
@@ -238,25 +236,25 @@ func (r *aliasResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading alias",
-			fmt.Sprintf("Could not read alias %s@%s: %v", state.LocalPart.ValueString(), state.DomainName.ValueString(), err),
+			fmt.Sprintf("Could not read alias %s: %v", createAliasID(state.LocalPart, state.DomainName), err),
 		)
 		return
 	}
 
-	destinations, diags := types.ListValueFrom(ctx, types.StringType, alias.Destinations)
+	receivedDestinations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(alias.Destinations, &resp.Diagnostics))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	destinationsIDN, diags := types.ListValueFrom(ctx, types.StringType, convertToUnicode(alias.Destinations, &resp.Diagnostics))
+	receivedDestinationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, alias.Destinations)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	state.Destinations = destinations
-	state.DestinationsIDN = destinationsIDN
-	state.ID = types.StringValue(fmt.Sprintf("%s@%s", state.LocalPart.ValueString(), state.DomainName.ValueString()))
+	state.Destinations = receivedDestinations
+	state.DestinationsPunycode = receivedDestinationsPunycode
+	state.ID = types.StringValue(createAliasID(state.LocalPart, state.DomainName))
 	state.Address = types.StringValue(alias.Address)
 	state.IsInternal = types.BoolValue(alias.IsInternal)
 	state.Expirable = types.BoolValue(alias.Expirable)
@@ -268,21 +266,6 @@ func (r *aliasResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	if resp.Diagnostics.HasError() {
 		return
 	}
-}
-
-func convertToUnicode(destinations []string, diag *diag.Diagnostics) []string {
-	var asciiDestinations []string
-	for _, dest := range destinations {
-		parts := strings.Split(dest, "@")
-
-		ascii, punyErr := idna.ToUnicode(parts[1])
-		if punyErr == nil {
-			asciiDestinations = append(asciiDestinations, fmt.Sprintf("%s@%s", parts[0], ascii))
-		} else {
-			diag.AddError("Could not convert to unicode", dest)
-		}
-	}
-	return asciiDestinations
 }
 
 func (r *aliasResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -300,8 +283,8 @@ func (r *aliasResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 	}
-	if !plan.DestinationsIDN.IsUnknown() {
-		resp.Diagnostics.Append(plan.DestinationsIDN.ElementsAs(ctx, &destinations, false)...)
+	if !plan.DestinationsPunycode.IsUnknown() {
+		resp.Diagnostics.Append(plan.DestinationsPunycode.ElementsAs(ctx, &destinations, false)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -309,7 +292,7 @@ func (r *aliasResource) Update(ctx context.Context, req resource.UpdateRequest, 
 
 	alias := &client.Alias{
 		LocalPart:        plan.LocalPart.ValueString(),
-		Destinations:     destinations,
+		Destinations:     ConvertEmailsToASCII(destinations, &resp.Diagnostics),
 		IsInternal:       plan.IsInternal.ValueBool(),
 		Expirable:        plan.Expirable.ValueBool(),
 		ExpiresOn:        plan.ExpiresOn.ValueString(),
@@ -320,25 +303,25 @@ func (r *aliasResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating alias",
-			"Could not update alias "+plan.ID.ValueString()+": "+err.Error(),
+			fmt.Sprintf("Could not update alias %s: %v", createAliasID(plan.LocalPart, plan.DomainName), err),
 		)
 		return
 	}
 
-	receivedDestinations, diags := types.ListValueFrom(ctx, types.StringType, updatedAlias.Destinations)
+	receivedDestinations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(updatedAlias.Destinations, &resp.Diagnostics))
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	receivedDestinationsIDN, diags := types.ListValueFrom(ctx, types.StringType, convertToUnicode(updatedAlias.Destinations, &resp.Diagnostics))
+	receivedDestinationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, updatedAlias.Destinations)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	plan.Destinations = receivedDestinations
-	plan.DestinationsIDN = receivedDestinationsIDN
-	plan.ID = types.StringValue(fmt.Sprintf("%s@%s", plan.LocalPart.ValueString(), plan.DomainName.ValueString()))
+	plan.DestinationsPunycode = receivedDestinationsPunycode
+	plan.ID = types.StringValue(createAliasID(plan.LocalPart, plan.DomainName))
 	plan.Address = types.StringValue(updatedAlias.Address)
 	plan.IsInternal = types.BoolValue(updatedAlias.IsInternal)
 	plan.Expirable = types.BoolValue(updatedAlias.Expirable)
@@ -364,7 +347,7 @@ func (r *aliasResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting alias",
-			"Could not delete alias "+state.ID.ValueString()+": "+err.Error(),
+			fmt.Sprintf("Could not delete alias %s: %v", createAliasID(state.LocalPart, state.DomainName), err),
 		)
 		return
 	}
@@ -393,4 +376,8 @@ func (r *aliasResource) ImportState(ctx context.Context, req resource.ImportStat
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("local_part"), localPart)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_name"), domainName)...)
+}
+
+func createAliasID(localPart, domainName types.String) string {
+	return fmt.Sprintf("%s@%s", localPart.ValueString(), domainName.ValueString())
 }

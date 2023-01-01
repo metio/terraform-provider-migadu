@@ -47,7 +47,7 @@ resource "migadu_alias" "idn" {
 ### Optional
 
 - `destinations` (List of String) List of email addresses that act as destinations of the alias.
-- `destinations_idn` (List of String) List of email addresses that act as destinations of the alias. Use this attribute instead of `destinations` in case you are dealing with international domain names (IDN).
+- `destinations_punycode` (List of String) List of email addresses that act as destinations of the alias. Use this attribute instead of `destinations` in case you want/must use the punycode representation of your domain.
 - `expirable` (Boolean)
 - `expires_on` (String)
 - `is_internal` (Boolean) Internal aliases can only receive emails from Migadu email servers.

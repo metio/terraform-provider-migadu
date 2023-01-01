@@ -28,36 +28,41 @@ type mailboxDataSource struct {
 }
 
 type mailboxDataSourceModel struct {
-	ID                    types.String  `tfsdk:"id"`
-	LocalPart             types.String  `tfsdk:"local_part"`
-	DomainName            types.String  `tfsdk:"domain_name"`
-	Address               types.String  `tfsdk:"address"`
-	Name                  types.String  `tfsdk:"name"`
-	IsInternal            types.Bool    `tfsdk:"is_internal"`
-	MaySend               types.Bool    `tfsdk:"may_send"`
-	MayReceive            types.Bool    `tfsdk:"may_receive"`
-	MayAccessImap         types.Bool    `tfsdk:"may_access_imap"`
-	MayAccessPop3         types.Bool    `tfsdk:"may_access_pop3"`
-	MayAccessManageSieve  types.Bool    `tfsdk:"may_access_managesieve"`
-	PasswordRecoveryEmail types.String  `tfsdk:"password_recovery_email"`
-	SpamAction            types.String  `tfsdk:"spam_action"`
-	SpamAggressiveness    types.String  `tfsdk:"spam_aggressiveness"`
-	Expirable             types.Bool    `tfsdk:"expirable"`
-	ExpiresOn             types.String  `tfsdk:"expires_on"`
-	RemoveUponExpiry      types.Bool    `tfsdk:"remove_upon_expiry"`
-	SenderDenyList        types.List    `tfsdk:"sender_denylist"`
-	SenderAllowList       types.List    `tfsdk:"sender_allowlist"`
-	RecipientDenyList     types.List    `tfsdk:"recipient_denylist"`
-	AutoRespondActive     types.Bool    `tfsdk:"autorespond_active"`
-	AutoRespondSubject    types.String  `tfsdk:"autorespond_subject"`
-	AutoRespondBody       types.String  `tfsdk:"autorespond_body"`
-	AutoRespondExpiresOn  types.String  `tfsdk:"autorespond_expires_on"`
-	FooterActive          types.Bool    `tfsdk:"footer_active"`
-	FooterPlainBody       types.String  `tfsdk:"footer_plain_body"`
-	FooterHtmlBody        types.String  `tfsdk:"footer_html_body"`
-	StorageUsage          types.Float64 `tfsdk:"storage_usage"`
-	Delegations           types.List    `tfsdk:"delegations"`
-	Identities            types.List    `tfsdk:"identities"`
+	ID                        types.String  `tfsdk:"id"`
+	LocalPart                 types.String  `tfsdk:"local_part"`
+	DomainName                types.String  `tfsdk:"domain_name"`
+	Address                   types.String  `tfsdk:"address"`
+	Name                      types.String  `tfsdk:"name"`
+	IsInternal                types.Bool    `tfsdk:"is_internal"`
+	MaySend                   types.Bool    `tfsdk:"may_send"`
+	MayReceive                types.Bool    `tfsdk:"may_receive"`
+	MayAccessImap             types.Bool    `tfsdk:"may_access_imap"`
+	MayAccessPop3             types.Bool    `tfsdk:"may_access_pop3"`
+	MayAccessManageSieve      types.Bool    `tfsdk:"may_access_manage_sieve"`
+	PasswordRecoveryEmail     types.String  `tfsdk:"password_recovery_email"`
+	SpamAction                types.String  `tfsdk:"spam_action"`
+	SpamAggressiveness        types.String  `tfsdk:"spam_aggressiveness"`
+	Expirable                 types.Bool    `tfsdk:"expirable"`
+	ExpiresOn                 types.String  `tfsdk:"expires_on"`
+	RemoveUponExpiry          types.Bool    `tfsdk:"remove_upon_expiry"`
+	SenderDenyList            types.List    `tfsdk:"sender_denylist"`
+	SenderDenyListPunycode    types.List    `tfsdk:"sender_denylist_punycode"`
+	SenderAllowList           types.List    `tfsdk:"sender_allowlist"`
+	SenderAllowListPunycode   types.List    `tfsdk:"sender_allowlist_punycode"`
+	RecipientDenyList         types.List    `tfsdk:"recipient_denylist"`
+	RecipientDenyListPunycode types.List    `tfsdk:"recipient_denylist_punycode"`
+	AutoRespondActive         types.Bool    `tfsdk:"auto_respond_active"`
+	AutoRespondSubject        types.String  `tfsdk:"auto_respond_subject"`
+	AutoRespondBody           types.String  `tfsdk:"auto_respond_body"`
+	AutoRespondExpiresOn      types.String  `tfsdk:"auto_respond_expires_on"`
+	FooterActive              types.Bool    `tfsdk:"footer_active"`
+	FooterPlainBody           types.String  `tfsdk:"footer_plain_body"`
+	FooterHtmlBody            types.String  `tfsdk:"footer_html_body"`
+	StorageUsage              types.Float64 `tfsdk:"storage_usage"`
+	Delegations               types.List    `tfsdk:"delegations"`
+	DelegationsPunycode       types.List    `tfsdk:"delegations_punycode"`
+	Identities                types.List    `tfsdk:"identities"`
+	IdentitiesPunycode        types.List    `tfsdk:"identities_punycode"`
 }
 
 func (d *mailboxDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -105,7 +110,7 @@ func (d *mailboxDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 			"may_access_pop3": schema.BoolAttribute{
 				Computed: true,
 			},
-			"may_access_managesieve": schema.BoolAttribute{
+			"may_access_manage_sieve": schema.BoolAttribute{
 				Computed: true,
 			},
 			"password_recovery_email": schema.StringAttribute{
@@ -130,7 +135,15 @@ func (d *mailboxDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Computed:    true,
 				ElementType: types.StringType,
 			},
+			"sender_denylist_punycode": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+			},
 			"sender_allowlist": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			"sender_allowlist_punycode": schema.ListAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
 			},
@@ -138,16 +151,20 @@ func (d *mailboxDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Computed:    true,
 				ElementType: types.StringType,
 			},
-			"autorespond_active": schema.BoolAttribute{
+			"recipient_denylist_punycode": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			"auto_respond_active": schema.BoolAttribute{
 				Computed: true,
 			},
-			"autorespond_subject": schema.StringAttribute{
+			"auto_respond_subject": schema.StringAttribute{
 				Computed: true,
 			},
-			"autorespond_body": schema.StringAttribute{
+			"auto_respond_body": schema.StringAttribute{
 				Computed: true,
 			},
-			"autorespond_expires_on": schema.StringAttribute{
+			"auto_respond_expires_on": schema.StringAttribute{
 				Computed: true,
 			},
 			"footer_active": schema.BoolAttribute{
@@ -166,7 +183,15 @@ func (d *mailboxDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Computed:    true,
 				ElementType: types.StringType,
 			},
+			"delegations_punycode": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+			},
 			"identities": schema.ListAttribute{
+				Computed:    true,
+				ElementType: types.StringType,
+			},
+			"identities_punycode": schema.ListAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
 			},
@@ -205,6 +230,31 @@ func (d *mailboxDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
+	senderDenyList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.SenderDenyList, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	senderDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.SenderDenyList, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	senderAllowList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.SenderAllowList, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	senderAllowListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.SenderAllowList, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	recipientDenyList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.RecipientDenyList, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	recipientDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.RecipientDenyList, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	delegations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.Delegations, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	delegationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.Delegations, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	identities, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.Identities, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	identitiesPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.Identities, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	data.ID = types.StringValue(fmt.Sprintf("%s@%s", data.LocalPart.ValueString(), data.DomainName.ValueString()))
 	//data.LocalPart = types.StringValue(mailbox.LocalPart)
 	//data.DomainName = types.StringValue(mailbox.DomainName)
 	data.Address = types.StringValue(mailbox.Address)
@@ -229,29 +279,16 @@ func (d *mailboxDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	data.FooterPlainBody = types.StringValue(mailbox.FooterPlainBody)
 	data.FooterHtmlBody = types.StringValue(mailbox.FooterHtmlBody)
 	data.StorageUsage = types.Float64Value(mailbox.StorageUsage)
-
-	senderDenyList, diags := types.ListValueFrom(ctx, types.StringType, mailbox.SenderDenyList)
-	resp.Diagnostics.Append(diags...)
-	senderAllowList, diags := types.ListValueFrom(ctx, types.StringType, mailbox.SenderAllowList)
-	resp.Diagnostics.Append(diags...)
-	recipientDenyList, diags := types.ListValueFrom(ctx, types.StringType, mailbox.RecipientDenyList)
-	resp.Diagnostics.Append(diags...)
-	delegations, diags := types.ListValueFrom(ctx, types.StringType, mailbox.Delegations)
-	resp.Diagnostics.Append(diags...)
-	identities, diags := types.ListValueFrom(ctx, types.StringType, mailbox.Identities)
-	resp.Diagnostics.Append(diags...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	data.SenderDenyList = senderDenyList
+	data.SenderDenyListPunycode = senderDenyListPunycode
 	data.SenderAllowList = senderAllowList
+	data.SenderAllowListPunycode = senderAllowListPunycode
 	data.RecipientDenyList = recipientDenyList
+	data.RecipientDenyListPunycode = recipientDenyListPunycode
 	data.Delegations = delegations
+	data.DelegationsPunycode = delegationsPunycode
 	data.Identities = identities
-
-	data.ID = types.StringValue(fmt.Sprintf("%s@%s", data.LocalPart.ValueString(), data.DomainName.ValueString()))
+	data.IdentitiesPunycode = identitiesPunycode
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 	if resp.Diagnostics.HasError() {

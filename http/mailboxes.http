@@ -17,7 +17,8 @@ Content-Type: application/json
 {
   "name": "Some Name",
   "local_part": "test",
-  "password": "Sup3r_s3cr3T"
+  "password": "Sup3r_s3cr3T",
+  "recipient_denylist": ["abuse@{{DOMAIN}}"]
 }
 
 ###

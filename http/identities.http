@@ -10,7 +10,7 @@ Content-Type: application/json
 
 {
   "name": "Test Name",
-  "local_part": "test",
+  "local_part": "other",
   "password": "Sup3r_s3cr3T"
 }
 

@@ -226,5 +226,8 @@ func (p *MigaduProvider) DataSources(_ context.Context) []func() datasource.Data
 func (p *MigaduProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewAliasResource,
+		NewIdentityResource,
+		NewMailboxResource,
+		NewRewriteResource,
 	}
 }

@@ -43,7 +43,7 @@ type identityModel struct {
 	MayReceive           types.Bool   `tfsdk:"may_receive"`
 	MayAccessImap        types.Bool   `tfsdk:"may_access_imap"`
 	MayAccessPop3        types.Bool   `tfsdk:"may_access_pop3"`
-	MayAccessManageSieve types.Bool   `tfsdk:"may_access_managesieve"`
+	MayAccessManageSieve types.Bool   `tfsdk:"may_access_manage_sieve"`
 	FooterActive         types.Bool   `tfsdk:"footer_active"`
 	FooterPlainBody      types.String `tfsdk:"footer_plain_body"`
 	FooterHtmlBody       types.String `tfsdk:"footer_html_body"`
@@ -103,7 +103,7 @@ func (d *identitiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 						"may_access_pop3": schema.BoolAttribute{
 							Computed: true,
 						},
-						"may_access_managesieve": schema.BoolAttribute{
+						"may_access_manage_sieve": schema.BoolAttribute{
 							Computed: true,
 						},
 						"footer_active": schema.BoolAttribute{
