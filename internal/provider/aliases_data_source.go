@@ -15,25 +15,25 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &AliasesDataSource{}
-	_ datasource.DataSourceWithConfigure = &AliasesDataSource{}
+	_ datasource.DataSource              = &aliasesDataSource{}
+	_ datasource.DataSourceWithConfigure = &aliasesDataSource{}
 )
 
 func NewAliasesDataSource() datasource.DataSource {
-	return &AliasesDataSource{}
+	return &aliasesDataSource{}
 }
 
-type AliasesDataSource struct {
+type aliasesDataSource struct {
 	migaduClient *client.MigaduClient
 }
 
-type AliasesDataSourceModel struct {
+type aliasesDataSourceModel struct {
 	ID         types.String `tfsdk:"id"`
 	DomainName types.String `tfsdk:"domain_name"`
-	Aliases    []AliasModel `tfsdk:"address_aliases"`
+	Aliases    []aliasModel `tfsdk:"address_aliases"`
 }
 
-type AliasModel struct {
+type aliasModel struct {
 	LocalPart        types.String `tfsdk:"local_part"`
 	DomainName       types.String `tfsdk:"domain_name"`
 	Address          types.String `tfsdk:"address"`
@@ -44,11 +44,11 @@ type AliasModel struct {
 	RemoveUponExpiry types.Bool   `tfsdk:"remove_upon_expiry"`
 }
 
-func (d *AliasesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *aliasesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_aliases"
 }
 
-func (d *AliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *aliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Gets all aliases of a domain.",
 		MarkdownDescription: "Gets all aliases of a domain.",
@@ -101,7 +101,7 @@ func (d *AliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	}
 }
 
-func (d *AliasesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *aliasesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -119,8 +119,8 @@ func (d *AliasesDataSource) Configure(_ context.Context, req datasource.Configur
 	d.migaduClient = migaduClient
 }
 
-func (d *AliasesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AliasesDataSourceModel
+func (d *aliasesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data aliasesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -133,7 +133,7 @@ func (d *AliasesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	for _, alias := range aliases.Aliases {
-		aliasModel := AliasModel{
+		aliasModel := aliasModel{
 			LocalPart:        types.StringValue(alias.LocalPart),
 			DomainName:       types.StringValue(alias.DomainName),
 			Address:          types.StringValue(alias.Address),

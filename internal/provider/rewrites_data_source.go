@@ -15,25 +15,25 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &RewritesDataSource{}
-	_ datasource.DataSourceWithConfigure = &RewritesDataSource{}
+	_ datasource.DataSource              = &rewritesDataSource{}
+	_ datasource.DataSourceWithConfigure = &rewritesDataSource{}
 )
 
 func NewRewritesDataSource() datasource.DataSource {
-	return &RewritesDataSource{}
+	return &rewritesDataSource{}
 }
 
-type RewritesDataSource struct {
+type rewritesDataSource struct {
 	migaduClient *client.MigaduClient
 }
 
-type RewritesDataSourceModel struct {
+type rewritesDataSourceModel struct {
 	ID         types.String   `tfsdk:"id"`
 	DomainName types.String   `tfsdk:"domain_name"`
-	Rewrites   []RewriteModel `tfsdk:"rewrites"`
+	Rewrites   []rewriteModel `tfsdk:"rewrites"`
 }
 
-type RewriteModel struct {
+type rewriteModel struct {
 	DomainName    types.String `tfsdk:"domain_name"`
 	Name          types.String `tfsdk:"name"`
 	LocalPartRule types.String `tfsdk:"local_part_rule"`
@@ -41,11 +41,11 @@ type RewriteModel struct {
 	Destinations  types.List   `tfsdk:"destinations"`
 }
 
-func (d *RewritesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *rewritesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_rewrites"
 }
 
-func (d *RewritesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *rewritesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Gets all rewrites of a domain.",
 		MarkdownDescription: "Gets all rewrites of a domain.",
@@ -89,7 +89,7 @@ func (d *RewritesDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 	}
 }
 
-func (d *RewritesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *rewritesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -107,8 +107,8 @@ func (d *RewritesDataSource) Configure(_ context.Context, req datasource.Configu
 	d.migaduClient = migaduClient
 }
 
-func (d *RewritesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RewritesDataSourceModel
+func (d *rewritesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data rewritesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -121,7 +121,7 @@ func (d *RewritesDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	for _, rewrite := range rewrites.Rewrites {
-		aliasModel := RewriteModel{
+		aliasModel := rewriteModel{
 			DomainName:    types.StringValue(rewrite.DomainName),
 			Name:          types.StringValue(rewrite.Name),
 			LocalPartRule: types.StringValue(rewrite.LocalPartRule),

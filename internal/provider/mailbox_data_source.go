@@ -15,19 +15,19 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &MailboxDataSource{}
-	_ datasource.DataSourceWithConfigure = &MailboxDataSource{}
+	_ datasource.DataSource              = &mailboxDataSource{}
+	_ datasource.DataSourceWithConfigure = &mailboxDataSource{}
 )
 
 func NewMailboxDataSource() datasource.DataSource {
-	return &MailboxDataSource{}
+	return &mailboxDataSource{}
 }
 
-type MailboxDataSource struct {
+type mailboxDataSource struct {
 	migaduClient *client.MigaduClient
 }
 
-type MailboxDataSourceModel struct {
+type mailboxDataSourceModel struct {
 	ID                    types.String  `tfsdk:"id"`
 	LocalPart             types.String  `tfsdk:"local_part"`
 	DomainName            types.String  `tfsdk:"domain_name"`
@@ -60,11 +60,11 @@ type MailboxDataSourceModel struct {
 	Identities            types.List    `tfsdk:"identities"`
 }
 
-func (d *MailboxDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *mailboxDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_mailbox"
 }
 
-func (d *MailboxDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *mailboxDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Gets a single mailbox.",
 		MarkdownDescription: "Gets a single mailbox.",
@@ -174,7 +174,7 @@ func (d *MailboxDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	}
 }
 
-func (d *MailboxDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *mailboxDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -192,8 +192,8 @@ func (d *MailboxDataSource) Configure(_ context.Context, req datasource.Configur
 	d.migaduClient = migaduClient
 }
 
-func (d *MailboxDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data MailboxDataSourceModel
+func (d *mailboxDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data mailboxDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return

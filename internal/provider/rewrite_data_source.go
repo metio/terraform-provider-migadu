@@ -15,19 +15,19 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &RewriteDataSource{}
-	_ datasource.DataSourceWithConfigure = &RewriteDataSource{}
+	_ datasource.DataSource              = &rewriteDataSource{}
+	_ datasource.DataSourceWithConfigure = &rewriteDataSource{}
 )
 
 func NewRewriteDataSource() datasource.DataSource {
-	return &RewriteDataSource{}
+	return &rewriteDataSource{}
 }
 
-type RewriteDataSource struct {
+type rewriteDataSource struct {
 	migaduClient *client.MigaduClient
 }
 
-type RewriteDataSourceModel struct {
+type rewriteDataSourceModel struct {
 	ID            types.String `tfsdk:"id"`
 	DomainName    types.String `tfsdk:"domain_name"`
 	Name          types.String `tfsdk:"name"`
@@ -36,11 +36,11 @@ type RewriteDataSourceModel struct {
 	Destinations  types.List   `tfsdk:"destinations"`
 }
 
-func (d *RewriteDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *rewriteDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_rewrite"
 }
 
-func (d *RewriteDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *rewriteDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Gets all rewrites of a domain.",
 		MarkdownDescription: "Gets all rewrites of a domain.",
@@ -72,7 +72,7 @@ func (d *RewriteDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	}
 }
 
-func (d *RewriteDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *rewriteDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -90,8 +90,8 @@ func (d *RewriteDataSource) Configure(_ context.Context, req datasource.Configur
 	d.migaduClient = migaduClient
 }
 
-func (d *RewriteDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RewriteDataSourceModel
+func (d *rewriteDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data rewriteDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return

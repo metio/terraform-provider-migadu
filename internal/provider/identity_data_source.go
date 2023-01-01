@@ -15,19 +15,19 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &IdentityDataSource{}
-	_ datasource.DataSourceWithConfigure = &IdentityDataSource{}
+	_ datasource.DataSource              = &identityDataSource{}
+	_ datasource.DataSourceWithConfigure = &identityDataSource{}
 )
 
 func NewIdentityDataSource() datasource.DataSource {
-	return &IdentityDataSource{}
+	return &identityDataSource{}
 }
 
-type IdentityDataSource struct {
+type identityDataSource struct {
 	migaduClient *client.MigaduClient
 }
 
-type IdentityDataSourceModel struct {
+type identityDataSourceModel struct {
 	ID                   types.String `tfsdk:"id"`
 	LocalPart            types.String `tfsdk:"local_part"`
 	DomainName           types.String `tfsdk:"domain_name"`
@@ -44,11 +44,11 @@ type IdentityDataSourceModel struct {
 	FooterHtmlBody       types.String `tfsdk:"footer_html_body"`
 }
 
-func (d *IdentityDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *identityDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_identity"
 }
 
-func (d *IdentityDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *identityDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Gets a single identity.",
 		MarkdownDescription: "Gets a single identity.",
@@ -107,7 +107,7 @@ func (d *IdentityDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 	}
 }
 
-func (d *IdentityDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *identityDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -125,8 +125,8 @@ func (d *IdentityDataSource) Configure(_ context.Context, req datasource.Configu
 	d.migaduClient = migaduClient
 }
 
-func (d *IdentityDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data IdentityDataSourceModel
+func (d *identityDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data identityDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return

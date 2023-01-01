@@ -15,26 +15,26 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &IdentitiesDataSource{}
-	_ datasource.DataSourceWithConfigure = &IdentitiesDataSource{}
+	_ datasource.DataSource              = &identitiesDataSource{}
+	_ datasource.DataSourceWithConfigure = &identitiesDataSource{}
 )
 
 func NewIdentitiesDataSource() datasource.DataSource {
-	return &IdentitiesDataSource{}
+	return &identitiesDataSource{}
 }
 
-type IdentitiesDataSource struct {
+type identitiesDataSource struct {
 	migaduClient *client.MigaduClient
 }
 
-type IdentitiesDataSourceModel struct {
+type identitiesDataSourceModel struct {
 	ID         types.String    `tfsdk:"id"`
 	DomainName types.String    `tfsdk:"domain_name"`
 	LocalPart  types.String    `tfsdk:"local_part"`
-	Identities []IdentityModel `tfsdk:"identities"`
+	Identities []identityModel `tfsdk:"identities"`
 }
 
-type IdentityModel struct {
+type identityModel struct {
 	LocalPart            types.String `tfsdk:"local_part"`
 	DomainName           types.String `tfsdk:"domain_name"`
 	Address              types.String `tfsdk:"address"`
@@ -49,11 +49,11 @@ type IdentityModel struct {
 	FooterHtmlBody       types.String `tfsdk:"footer_html_body"`
 }
 
-func (d *IdentitiesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *identitiesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_identities"
 }
 
-func (d *IdentitiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *identitiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Gets all identities of a domain.",
 		MarkdownDescription: "Gets all identities of a domain.",
@@ -122,7 +122,7 @@ func (d *IdentitiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 	}
 }
 
-func (d *IdentitiesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *identitiesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -140,8 +140,8 @@ func (d *IdentitiesDataSource) Configure(_ context.Context, req datasource.Confi
 	d.migaduClient = migaduClient
 }
 
-func (d *IdentitiesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data IdentitiesDataSourceModel
+func (d *identitiesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var data identitiesDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -154,7 +154,7 @@ func (d *IdentitiesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	for _, identity := range identities.Identities {
-		identityModel := IdentityModel{
+		identityModel := identityModel{
 			LocalPart:            types.StringValue(identity.LocalPart),
 			DomainName:           types.StringValue(identity.DomainName),
 			Address:              types.StringValue(identity.Address),

@@ -27,7 +27,7 @@ type aliasDataSource struct {
 	migaduClient *client.MigaduClient
 }
 
-type AliasDataSourceModel struct {
+type aliasDataSourceModel struct {
 	ID               types.String `tfsdk:"id"`
 	LocalPart        types.String `tfsdk:"local_part"`
 	DomainName       types.String `tfsdk:"domain_name"`
@@ -105,7 +105,7 @@ func (d *aliasDataSource) Configure(_ context.Context, req datasource.ConfigureR
 }
 
 func (d *aliasDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data AliasDataSourceModel
+	var data aliasDataSourceModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
