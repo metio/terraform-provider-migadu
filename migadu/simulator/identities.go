@@ -6,7 +6,7 @@
 package simulator
 
 import (
-	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
+	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"net/http"
 	"regexp"
 	"testing"
