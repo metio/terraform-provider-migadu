@@ -19,7 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/metio/terraform-provider-migadu/internal/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"strings"
 )
 
@@ -168,11 +169,11 @@ func (r *rewriteResource) Create(ctx context.Context, req resource.CreateRequest
 		}
 	}
 
-	rewrite := &client.Rewrite{
+	rewrite := &model.Rewrite{
 		Name:          plan.Name.ValueString(),
 		LocalPartRule: plan.LocalPartRule.ValueString(),
 		OrderNum:      plan.OrderNum.ValueInt64(),
-		Destinations:  ConvertEmailsToASCII(destinations, &resp.Diagnostics),
+		Destinations:  destinations,
 	}
 
 	createdRewrite, err := r.migaduClient.CreateRewrite(ctx, plan.DomainName.ValueString(), rewrite)
@@ -273,7 +274,7 @@ func (r *rewriteResource) Update(ctx context.Context, req resource.UpdateRequest
 		}
 	}
 
-	rewrite := &client.Rewrite{
+	rewrite := &model.Rewrite{
 		Name:          plan.Name.ValueString(),
 		LocalPartRule: plan.LocalPartRule.ValueString(),
 		OrderNum:      plan.OrderNum.ValueInt64(),

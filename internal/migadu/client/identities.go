@@ -10,32 +10,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"golang.org/x/net/idna"
 	"net/http"
 )
 
-type Identities struct {
-	Identities []Identity `json:"identities"`
-}
-
-type Identity struct {
-	LocalPart            string `json:"local_part"`
-	DomainName           string `json:"domain_name"`
-	Address              string `json:"address"`
-	Name                 string `json:"name"`
-	MaySend              bool   `json:"may_send"`
-	MayReceive           bool   `json:"may_receive"`
-	MayAccessImap        bool   `json:"may_access_imap"`
-	MayAccessPop3        bool   `json:"may_access_pop3"`
-	MayAccessManageSieve bool   `json:"may_access_managesieve"`
-	Password             string `json:"password"`
-	FooterActive         bool   `json:"footer_active"`
-	FooterPlainBody      string `json:"footer_plain_body"`
-	FooterHtmlBody       string `json:"footer_html_body"`
-}
-
 // GetIdentities - Returns identities for a single mailbox
-func (c *MigaduClient) GetIdentities(ctx context.Context, domain string, localPart string) (*Identities, error) {
+func (c *MigaduClient) GetIdentities(ctx context.Context, domain string, localPart string) (*model.Identities, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("GetIdentities: %w", err)
@@ -53,7 +34,7 @@ func (c *MigaduClient) GetIdentities(ctx context.Context, domain string, localPa
 		return nil, fmt.Errorf("GetIdentities: %w", err)
 	}
 
-	response := Identities{}
+	response := model.Identities{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("GetIdentities: %w", err)
@@ -63,7 +44,7 @@ func (c *MigaduClient) GetIdentities(ctx context.Context, domain string, localPa
 }
 
 // GetIdentity - Returns a specific identity
-func (c *MigaduClient) GetIdentity(ctx context.Context, domain string, localPart string, id string) (*Identity, error) {
+func (c *MigaduClient) GetIdentity(ctx context.Context, domain string, localPart string, id string) (*model.Identity, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("GetIdentity: %w", err)
@@ -81,7 +62,7 @@ func (c *MigaduClient) GetIdentity(ctx context.Context, domain string, localPart
 		return nil, fmt.Errorf("GetIdentity: %w", err)
 	}
 
-	response := Identity{}
+	response := model.Identity{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("GetIdentity: %w", err)
@@ -91,7 +72,7 @@ func (c *MigaduClient) GetIdentity(ctx context.Context, domain string, localPart
 }
 
 // CreateIdentity - Creates a new identity
-func (c *MigaduClient) CreateIdentity(ctx context.Context, domain string, localPart string, identity *Identity) (*Identity, error) {
+func (c *MigaduClient) CreateIdentity(ctx context.Context, domain string, localPart string, identity *model.Identity) (*model.Identity, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("CreateIdentity: %w", err)
@@ -114,7 +95,7 @@ func (c *MigaduClient) CreateIdentity(ctx context.Context, domain string, localP
 		return nil, fmt.Errorf("CreateIdentity: %w", err)
 	}
 
-	response := Identity{}
+	response := model.Identity{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("CreateIdentity: %w", err)
@@ -124,7 +105,7 @@ func (c *MigaduClient) CreateIdentity(ctx context.Context, domain string, localP
 }
 
 // UpdateIdentity - Updates an existing identity
-func (c *MigaduClient) UpdateIdentity(ctx context.Context, domain string, localPart string, id string, identity *Identity) (*Identity, error) {
+func (c *MigaduClient) UpdateIdentity(ctx context.Context, domain string, localPart string, id string, identity *model.Identity) (*model.Identity, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateIdentity: %w", err)
@@ -147,7 +128,7 @@ func (c *MigaduClient) UpdateIdentity(ctx context.Context, domain string, localP
 		return nil, fmt.Errorf("UpdateIdentity: %w", err)
 	}
 
-	response := Identity{}
+	response := model.Identity{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("UpdateIdentity: %w", err)
@@ -157,7 +138,7 @@ func (c *MigaduClient) UpdateIdentity(ctx context.Context, domain string, localP
 }
 
 // DeleteIdentity - Deletes an existing identity
-func (c *MigaduClient) DeleteIdentity(ctx context.Context, domain string, localPart string, id string) (*Identity, error) {
+func (c *MigaduClient) DeleteIdentity(ctx context.Context, domain string, localPart string, id string) (*model.Identity, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteIdentity: %w", err)
@@ -175,7 +156,7 @@ func (c *MigaduClient) DeleteIdentity(ctx context.Context, domain string, localP
 		return nil, fmt.Errorf("DeleteIdentity: %w", err)
 	}
 
-	response := Identity{}
+	response := model.Identity{}
 	err = json.Unmarshal(responseBody, &response)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteIdentity: %w", err)

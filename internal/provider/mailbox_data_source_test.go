@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/metio/terraform-provider-migadu/internal/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -22,7 +22,7 @@ func TestMailboxDataSource_Read(t *testing.T) {
 		domain     string
 		localPart  string
 		statusCode int
-		want       *client.Mailbox
+		want       *model.Mailbox
 		error      string
 	}{
 		{
@@ -30,14 +30,14 @@ func TestMailboxDataSource_Read(t *testing.T) {
 			domain:     "example.com",
 			localPart:  "test",
 			statusCode: http.StatusOK,
-			want:       &client.Mailbox{},
+			want:       &model.Mailbox{},
 		},
 		{
 			name:       "single",
 			domain:     "example.com",
 			localPart:  "test",
 			statusCode: http.StatusOK,
-			want: &client.Mailbox{
+			want: &model.Mailbox{
 				LocalPart:             "test",
 				DomainName:            "example.com",
 				Address:               "test@example.com",
@@ -76,7 +76,7 @@ func TestMailboxDataSource_Read(t *testing.T) {
 			domain:     "hoß.de",
 			localPart:  "test",
 			statusCode: http.StatusOK,
-			want: &client.Mailbox{
+			want: &model.Mailbox{
 				LocalPart:  "test",
 				DomainName: "xn--ho-hia.de",
 				Address:    "test@xn--ho-hia.de",

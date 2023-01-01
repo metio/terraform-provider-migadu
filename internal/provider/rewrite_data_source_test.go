@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/metio/terraform-provider-migadu/internal/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -22,7 +22,7 @@ func TestRewriteDataSource_Read(t *testing.T) {
 		domain     string
 		slug       string
 		statusCode int
-		want       *client.Rewrite
+		want       *model.Rewrite
 		error      string
 	}{
 		{
@@ -30,14 +30,14 @@ func TestRewriteDataSource_Read(t *testing.T) {
 			domain:     "example.com",
 			slug:       "test",
 			statusCode: http.StatusOK,
-			want:       &client.Rewrite{},
+			want:       &model.Rewrite{},
 		},
 		{
 			name:       "single",
 			domain:     "example.com",
 			slug:       "test",
 			statusCode: http.StatusOK,
-			want: &client.Rewrite{
+			want: &model.Rewrite{
 				DomainName:    "example.com",
 				Name:          "test",
 				LocalPartRule: "prefix-*",
@@ -52,7 +52,7 @@ func TestRewriteDataSource_Read(t *testing.T) {
 			domain:     "hoß.de",
 			slug:       "test",
 			statusCode: http.StatusOK,
-			want: &client.Rewrite{
+			want: &model.Rewrite{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "test",
 				LocalPartRule: "prefix-*",

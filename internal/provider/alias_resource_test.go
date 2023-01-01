@@ -6,13 +6,10 @@
 package provider_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/metio/terraform-provider-migadu/internal/client"
-	"github.com/metio/terraform-provider-migadu/internal/provider"
-	"io"
-	"net/http"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/simulator"
 	"net/http/httptest"
 	"regexp"
 	"strings"
@@ -25,7 +22,7 @@ func TestAliasResource(t *testing.T) {
 		domain       string
 		localPart    string
 		destinations []string
-		want         *client.Alias
+		want         *model.Alias
 		error        string
 	}{
 		{
@@ -35,7 +32,7 @@ func TestAliasResource(t *testing.T) {
 			destinations: []string{
 				"other@example.com",
 			},
-			want:  &client.Alias{},
+			want:  &model.Alias{},
 			error: "Attribute domain_name string length must be at least 1",
 		},
 		{
@@ -45,7 +42,7 @@ func TestAliasResource(t *testing.T) {
 			destinations: []string{
 				"other@example.com",
 			},
-			want:  &client.Alias{},
+			want:  &model.Alias{},
 			error: "Attribute local_part string length must be at least 1",
 		},
 		{
@@ -53,7 +50,7 @@ func TestAliasResource(t *testing.T) {
 			domain:       "example.com",
 			localPart:    "test",
 			destinations: []string{},
-			want:         &client.Alias{},
+			want:         &model.Alias{},
 			error:        "Attribute destinations list must contain at least 1 elements",
 		},
 		{
@@ -63,7 +60,7 @@ func TestAliasResource(t *testing.T) {
 			destinations: []string{
 				"other@example.com",
 			},
-			want: &client.Alias{
+			want: &model.Alias{
 				Address: "test@example.com",
 				Destinations: []string{
 					"other@example.com",
@@ -82,7 +79,7 @@ func TestAliasResource(t *testing.T) {
 				"other@example.com",
 				"some@example.com",
 			},
-			want: &client.Alias{
+			want: &model.Alias{
 				Address: "test@example.com",
 				Destinations: []string{
 					"other@example.com",
@@ -93,7 +90,7 @@ func TestAliasResource(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(aliasSimulator(t))
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{}))
 			defer server.Close()
 
 			config := providerConfig(server.URL) + fmt.Sprintf(`
@@ -142,7 +139,7 @@ func TestAliasResource(t *testing.T) {
 }
 
 func TestAliasResource_IDN_Punycode(t *testing.T) {
-	server := httptest.NewServer(aliasSimulator(t))
+	server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{}))
 	defer server.Close()
 
 	resource.UnitTest(t, resource.TestCase{
@@ -198,7 +195,7 @@ func TestAliasResource_IDN_Punycode(t *testing.T) {
 }
 
 func TestAliasResource_IDN_Unicode(t *testing.T) {
-	server := httptest.NewServer(aliasSimulator(t))
+	server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{}))
 	defer server.Close()
 
 	resource.UnitTest(t, resource.TestCase{
@@ -251,161 +248,4 @@ func TestAliasResource_IDN_Unicode(t *testing.T) {
 			},
 		},
 	})
-}
-
-func aliasSimulator(t *testing.T) http.HandlerFunc {
-	var aliases []client.Alias
-	urlPattern := regexp.MustCompile("/domains/(.*)/aliases/?(.*)?")
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		matches := urlPattern.FindStringSubmatch(r.URL.Path)
-		if matches == nil {
-			t.Errorf("Expected to request to match %s, got: %s", urlPattern, r.URL.Path)
-		}
-		domain := matches[1]
-		localPart := matches[2]
-
-		if r.Method == http.MethodPost {
-			handleCreateAlias(w, r, t, &aliases, domain)
-		}
-		if r.Method == http.MethodPut {
-			handleUpdateAlias(w, r, t, &aliases, domain, localPart)
-		}
-		if r.Method == http.MethodDelete {
-			handleDeleteAlias(w, r, t, &aliases, domain, localPart)
-		}
-		if r.Method == http.MethodGet {
-			handleGetAlias(w, r, t, &aliases, domain, localPart)
-		}
-	}
-}
-
-func handleGetAlias(w http.ResponseWriter, r *http.Request, t *testing.T, aliases *[]client.Alias, domain string, localPart string) {
-	if r.URL.Path != fmt.Sprintf("/domains/%s/aliases/%s", domain, localPart) {
-		t.Errorf("Expected to request '/domains/%s/aliases/%s', got: %s", domain, localPart, r.URL.Path)
-	}
-
-	missing := true
-	for _, alias := range *aliases {
-		if alias.DomainName == domain && alias.LocalPart == localPart {
-			missing = false
-			w.WriteHeader(http.StatusOK)
-			bytes, err := json.Marshal(alias)
-			if err != nil {
-				t.Errorf("Could not marshall alias")
-			}
-			_, err = w.Write(bytes)
-			if err != nil {
-				t.Errorf("Could not write data")
-			}
-		}
-	}
-	if missing {
-		w.WriteHeader(http.StatusNotFound)
-	}
-}
-
-func handleDeleteAlias(w http.ResponseWriter, r *http.Request, t *testing.T, aliases *[]client.Alias, domain string, localPart string) {
-	if r.URL.Path != fmt.Sprintf("/domains/%s/aliases/%s", domain, localPart) {
-		t.Errorf("Expected to request '/domains/%s/aliases/%s', got: %s", domain, localPart, r.URL.Path)
-	}
-
-	missing := true
-	for index, alias := range *aliases {
-		if alias.DomainName == domain && alias.LocalPart == localPart {
-			missing = false
-			w.WriteHeader(http.StatusOK)
-			c := *aliases
-			c[index] = c[len(c)-1]
-			*aliases = c[:len(c)-1]
-
-			bytes, err := json.Marshal(alias)
-			if err != nil {
-				t.Errorf("Could not marshall alias")
-			}
-			_, err = w.Write(bytes)
-			if err != nil {
-				t.Errorf("Could not write data")
-			}
-		}
-	}
-	if missing {
-		w.WriteHeader(http.StatusNotFound)
-	}
-}
-
-func handleUpdateAlias(w http.ResponseWriter, r *http.Request, t *testing.T, aliases *[]client.Alias, domain string, localPart string) {
-	if r.URL.Path != fmt.Sprintf("/domains/%s/aliases/%s", domain, localPart) {
-		t.Errorf("Expected to request '/domains/%s/aliases/%s', got: %s", domain, localPart, r.URL.Path)
-	}
-
-	requestBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		t.Errorf("Could not read body")
-	}
-
-	requestAlias := client.Alias{}
-	err = json.Unmarshal(requestBody, &requestAlias)
-	if err != nil {
-		t.Errorf("Could not unmarshall alias")
-	}
-
-	requestAlias.DomainName = domain
-	requestAlias.Address = fmt.Sprintf("%s@%s", requestAlias.LocalPart, domain)
-	requestAlias.Destinations = provider.ConvertEmailsToASCII(requestAlias.Destinations, nil)
-
-	missing := true
-	for index, alias := range *aliases {
-		if alias.DomainName == domain && alias.LocalPart == localPart {
-			missing = false
-			w.WriteHeader(http.StatusOK)
-			c := *aliases
-			c[index] = requestAlias
-			*aliases = c
-
-			bytes, err := json.Marshal(requestAlias)
-			if err != nil {
-				t.Errorf("Could not marshall alias")
-			}
-			_, err = w.Write(bytes)
-			if err != nil {
-				t.Errorf("Could not write data")
-			}
-		}
-	}
-	if missing {
-		w.WriteHeader(http.StatusNotFound)
-	}
-}
-
-func handleCreateAlias(w http.ResponseWriter, r *http.Request, t *testing.T, aliases *[]client.Alias, domain string) {
-	if r.URL.Path != fmt.Sprintf("/domains/%s/aliases", domain) {
-		t.Errorf("Expected to request '/domains/%s/aliases', got: %s", domain, r.URL.Path)
-	}
-
-	requestBody, err := io.ReadAll(r.Body)
-	if err != nil {
-		t.Errorf("Could not read body")
-	}
-
-	alias := client.Alias{}
-	err = json.Unmarshal(requestBody, &alias)
-	if err != nil {
-		t.Errorf("Could not unmarshall alias")
-	}
-	alias.DomainName = domain
-	alias.Address = fmt.Sprintf("%s@%s", alias.LocalPart, domain)
-	alias.Destinations = provider.ConvertEmailsToASCII(alias.Destinations, nil)
-
-	*aliases = append(*aliases, alias)
-
-	responseBody, err := json.Marshal(alias)
-	if err != nil {
-		t.Errorf("Could not marshall alias")
-	}
-
-	_, err = w.Write(responseBody)
-	if err != nil {
-		t.Errorf("Could not write data")
-	}
 }

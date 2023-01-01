@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/metio/terraform-provider-migadu/internal/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -21,23 +21,23 @@ func TestRewritesDataSource_Read(t *testing.T) {
 		name       string
 		domain     string
 		statusCode int
-		want       *client.Rewrites
+		want       *model.Rewrites
 		error      string
 	}{
 		{
 			name:       "empty",
 			domain:     "example.com",
 			statusCode: http.StatusOK,
-			want: &client.Rewrites{
-				Rewrites: []client.Rewrite{},
+			want: &model.Rewrites{
+				Rewrites: []model.Rewrite{},
 			},
 		},
 		{
 			name:       "single",
 			domain:     "example.com",
 			statusCode: http.StatusOK,
-			want: &client.Rewrites{
-				Rewrites: []client.Rewrite{
+			want: &model.Rewrites{
+				Rewrites: []model.Rewrite{
 					{
 						DomainName:    "example.com",
 						Name:          "Some Rule",
@@ -54,8 +54,8 @@ func TestRewritesDataSource_Read(t *testing.T) {
 			name:       "multiple",
 			domain:     "example.com",
 			statusCode: http.StatusOK,
-			want: &client.Rewrites{
-				Rewrites: []client.Rewrite{
+			want: &model.Rewrites{
+				Rewrites: []model.Rewrite{
 					{
 						DomainName:    "example.com",
 						Name:          "Some Rule",
@@ -83,8 +83,8 @@ func TestRewritesDataSource_Read(t *testing.T) {
 			name:       "idna",
 			domain:     "hoß.de",
 			statusCode: http.StatusOK,
-			want: &client.Rewrites{
-				Rewrites: []client.Rewrite{
+			want: &model.Rewrites{
+				Rewrites: []model.Rewrite{
 					{
 						DomainName:    "xn--ho-hia.de",
 						Name:          "Some Rule",

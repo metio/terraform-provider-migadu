@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/metio/terraform-provider-migadu/internal/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -23,7 +23,7 @@ func TestIdentityDataSource_Read(t *testing.T) {
 		localPart  string
 		identity   string
 		statusCode int
-		want       *client.Identity
+		want       *model.Identity
 		error      string
 	}{
 		{
@@ -32,7 +32,7 @@ func TestIdentityDataSource_Read(t *testing.T) {
 			localPart:  "test",
 			identity:   "someone",
 			statusCode: http.StatusOK,
-			want:       &client.Identity{},
+			want:       &model.Identity{},
 		},
 		{
 			name:       "single",
@@ -40,7 +40,7 @@ func TestIdentityDataSource_Read(t *testing.T) {
 			localPart:  "test",
 			identity:   "someone",
 			statusCode: http.StatusOK,
-			want: &client.Identity{
+			want: &model.Identity{
 				LocalPart:            "test",
 				DomainName:           "example.com",
 				Address:              "test@example.com",
@@ -62,7 +62,7 @@ func TestIdentityDataSource_Read(t *testing.T) {
 			localPart:  "test",
 			identity:   "someone",
 			statusCode: http.StatusOK,
-			want: &client.Identity{
+			want: &model.Identity{
 				LocalPart:  "test",
 				DomainName: "xn--ho-hia.de",
 				Address:    "test@xn--ho-hia.de",

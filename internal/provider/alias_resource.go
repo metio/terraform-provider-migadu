@@ -18,7 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/metio/terraform-provider-migadu/internal/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"strings"
 )
 
@@ -179,9 +180,9 @@ func (r *aliasResource) Create(ctx context.Context, req resource.CreateRequest, 
 		}
 	}
 
-	alias := &client.Alias{
+	alias := &model.Alias{
 		LocalPart:        plan.LocalPart.ValueString(),
-		Destinations:     ConvertEmailsToASCII(destinations, &resp.Diagnostics),
+		Destinations:     destinations,
 		IsInternal:       plan.IsInternal.ValueBool(),
 		Expirable:        plan.Expirable.ValueBool(),
 		ExpiresOn:        plan.ExpiresOn.ValueString(),
@@ -290,9 +291,9 @@ func (r *aliasResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		}
 	}
 
-	alias := &client.Alias{
+	alias := &model.Alias{
 		LocalPart:        plan.LocalPart.ValueString(),
-		Destinations:     ConvertEmailsToASCII(destinations, &resp.Diagnostics),
+		Destinations:     destinations,
 		IsInternal:       plan.IsInternal.ValueBool(),
 		Expirable:        plan.Expirable.ValueBool(),
 		ExpiresOn:        plan.ExpiresOn.ValueString(),

@@ -9,7 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/metio/terraform-provider-migadu/internal/client"
+	"github.com/metio/terraform-provider-migadu/internal/migadu/model"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -21,23 +21,23 @@ func TestMailboxesDataSource_Read(t *testing.T) {
 		name       string
 		domain     string
 		statusCode int
-		want       *client.Mailboxes
+		want       *model.Mailboxes
 		error      string
 	}{
 		{
 			name:       "empty",
 			domain:     "example.com",
 			statusCode: http.StatusOK,
-			want: &client.Mailboxes{
-				Mailboxes: []client.Mailbox{},
+			want: &model.Mailboxes{
+				Mailboxes: []model.Mailbox{},
 			},
 		},
 		{
 			name:       "single",
 			domain:     "example.com",
 			statusCode: http.StatusOK,
-			want: &client.Mailboxes{
-				Mailboxes: []client.Mailbox{
+			want: &model.Mailboxes{
+				Mailboxes: []model.Mailbox{
 					{
 						LocalPart:             "test",
 						DomainName:            "example.com",
@@ -78,8 +78,8 @@ func TestMailboxesDataSource_Read(t *testing.T) {
 			name:       "multiple",
 			domain:     "example.com",
 			statusCode: http.StatusOK,
-			want: &client.Mailboxes{
-				Mailboxes: []client.Mailbox{
+			want: &model.Mailboxes{
+				Mailboxes: []model.Mailbox{
 					{
 						LocalPart:  "test",
 						DomainName: "example.com",
@@ -99,8 +99,8 @@ func TestMailboxesDataSource_Read(t *testing.T) {
 			name:       "idna",
 			domain:     "hoß.de",
 			statusCode: http.StatusOK,
-			want: &client.Mailboxes{
-				Mailboxes: []client.Mailbox{
+			want: &model.Mailboxes{
+				Mailboxes: []model.Mailbox{
 					{
 						LocalPart:  "test",
 						DomainName: "xn--ho-hia.de",
