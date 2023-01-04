@@ -9,7 +9,7 @@ resource "migadu_rewrite" "example" {
   ]
 }
 
-# international domain names
+# international domain names are supported
 resource "migadu_rewrite" "idn" {
   domain_name     = "bücher.example"
   name            = "security-mails"

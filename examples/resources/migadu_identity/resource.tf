@@ -4,7 +4,7 @@ resource "migadu_identity" "example" {
   identity    = "some-identity"
 }
 
-# international domain names
+# international domain names are supported
 resource "migadu_identity" "idn" {
   domain_name = "bücher.example"
   local_part  = "some-mailbox"

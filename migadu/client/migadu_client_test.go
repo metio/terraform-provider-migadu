@@ -3,14 +3,17 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-package client
+package client_test
 
-import "time"
+import (
+	"github.com/metio/terraform-provider-migadu/migadu/client"
+	"time"
+)
 
-func newTestClient(endpoint string) *MigaduClient {
+func newTestClient(endpoint string) *client.MigaduClient {
 	username := "username"
 	token := "token"
-	c, err := New(&endpoint, &username, &token, 10*time.Second)
+	c, err := client.New(&endpoint, &username, &token, 10*time.Second)
 	if err != nil {
 		panic(err)
 	}

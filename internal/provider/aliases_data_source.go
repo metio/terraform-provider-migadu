@@ -8,8 +8,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 )
@@ -30,7 +32,7 @@ type aliasesDataSource struct {
 type aliasesDataSourceModel struct {
 	ID         types.String `tfsdk:"id"`
 	DomainName types.String `tfsdk:"domain_name"`
-	Aliases    []aliasModel `tfsdk:"address_aliases"`
+	Aliases    []aliasModel `tfsdk:"aliases"`
 }
 
 type aliasModel struct {
@@ -58,46 +60,67 @@ func (d *aliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Description:         "The domain to fetch aliases of.",
 				MarkdownDescription: "The domain to fetch aliases of.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"id": schema.StringAttribute{
 				Description:         "Same value as the 'domain_name' attribute.",
 				MarkdownDescription: "Same value as the `domain_name` attribute.",
 				Computed:            true,
 			},
-			"address_aliases": schema.ListNestedAttribute{
+			"aliases": schema.ListNestedAttribute{
 				Description:         "The configured aliases for the given 'domain_name'.",
 				MarkdownDescription: "The configured aliases for the given `domain_name`.",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"local_part": schema.StringAttribute{
-							Computed: true,
-						},
 						"domain_name": schema.StringAttribute{
-							Computed: true,
+							Description:         "The domain of an alias.",
+							MarkdownDescription: "The domain of an alias.",
+							Computed:            true,
+						},
+						"local_part": schema.StringAttribute{
+							Description:         "The local part of an alias.",
+							MarkdownDescription: "The local part of an alias.",
+							Computed:            true,
 						},
 						"address": schema.StringAttribute{
-							Computed: true,
+							Description:         "The full email address of an alias.",
+							MarkdownDescription: "The full email address of an alias.",
+							Computed:            true,
 						},
 						"destinations": schema.ListAttribute{
-							Computed:    true,
-							ElementType: types.StringType,
+							Description:         "The destinations of an alias in unicode.",
+							MarkdownDescription: "The destinations of an alias in unicode.",
+							Computed:            true,
+							ElementType:         types.StringType,
 						},
 						"destinations_punycode": schema.ListAttribute{
-							Computed:    true,
-							ElementType: types.StringType,
+							Description:         "The destinations of an alias in punycode.",
+							MarkdownDescription: "The destinations of an alias in punycode.",
+							Computed:            true,
+							ElementType:         types.StringType,
 						},
 						"is_internal": schema.BoolAttribute{
-							Computed: true,
+							Description:         "Whether this alias is internal and can only receive emails from Migadu servers.",
+							MarkdownDescription: "Whether this alias is internal and can only receive emails from Migadu servers.",
+							Computed:            true,
 						},
 						"expirable": schema.BoolAttribute{
-							Computed: true,
+							Description:         "Whether this alias expires some time in the future.",
+							MarkdownDescription: "Whether this alias expires some time in the future.",
+							Computed:            true,
 						},
 						"expires_on": schema.StringAttribute{
-							Computed: true,
+							Description:         "The expiration date of this alias.",
+							MarkdownDescription: "The expiration date of this alias.",
+							Computed:            true,
 						},
 						"remove_upon_expiry": schema.BoolAttribute{
-							Computed: true,
+							Description:         "Whether this alias is removed once it is expired.",
+							MarkdownDescription: "Whether this alias is removed once it is expired.",
+							Computed:            true,
 						},
 					},
 				},

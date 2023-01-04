@@ -8,8 +8,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 )
@@ -48,13 +50,16 @@ func (d *rewritesDataSource) Metadata(_ context.Context, req datasource.Metadata
 
 func (d *rewritesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Gets all rewrites of a domain.",
-		MarkdownDescription: "Gets all rewrites of a domain.",
+		Description:         "Gets all rewrite rules of a domain.",
+		MarkdownDescription: "Gets all rewrite rules of a domain.",
 		Attributes: map[string]schema.Attribute{
 			"domain_name": schema.StringAttribute{
-				Description:         "The domain to fetch rewrites of.",
-				MarkdownDescription: "The domain to fetch rewrites of.",
+				Description:         "The domain to fetch rewrite rules of.",
+				MarkdownDescription: "The domain to fetch rewrite rules of.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"id": schema.StringAttribute{
 				Description:         "Same value as the 'domain_name' attribute.",
@@ -62,30 +67,42 @@ func (d *rewritesDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 				Computed:            true,
 			},
 			"rewrites": schema.ListNestedAttribute{
-				Description:         "The configured rewrites for the given 'domain_name'.",
-				MarkdownDescription: "The configured rewrites for the given `domain_name`.",
+				Description:         "The configured rewrite rules for the given 'domain_name'.",
+				MarkdownDescription: "The configured rewrite rules for the given `domain_name`.",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"domain_name": schema.StringAttribute{
-							Computed: true,
+							Description:         "The domain of the rewrite rule.",
+							MarkdownDescription: "The domain of the rewrite rule.",
+							Computed:            true,
 						},
 						"name": schema.StringAttribute{
-							Computed: true,
+							Description:         "The name (slug) of the rewrite rule.",
+							MarkdownDescription: "The name (slug) of the rewrite rule.",
+							Computed:            true,
 						},
 						"local_part_rule": schema.StringAttribute{
-							Computed: true,
+							Description:         "The local part expression of the rewrite rule",
+							MarkdownDescription: "The local part expression of the rewrite rule",
+							Computed:            true,
 						},
 						"order_num": schema.Int64Attribute{
-							Computed: true,
+							Description:         "The order number of the rewrite rule.",
+							MarkdownDescription: "The order number of the rewrite rule.",
+							Computed:            true,
 						},
 						"destinations": schema.ListAttribute{
-							Computed:    true,
-							ElementType: types.StringType,
+							Description:         "The destinations of the rewrite rule in unicode.",
+							MarkdownDescription: "The destinations of the rewrite rule in unicode.",
+							Computed:            true,
+							ElementType:         types.StringType,
 						},
 						"destinations_punycode": schema.ListAttribute{
-							Computed:    true,
-							ElementType: types.StringType,
+							Description:         "The destinations of the rewrite rule in punycode.",
+							MarkdownDescription: "The destinations of the rewrite rule in punycode.",
+							Computed:            true,
+							ElementType:         types.StringType,
 						},
 					},
 				},

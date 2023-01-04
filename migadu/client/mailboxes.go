@@ -81,21 +81,23 @@ func (c *MigaduClient) CreateMailbox(ctx context.Context, domain string, mailbox
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes", c.Endpoint, ascii)
 
-	senderDenyListASCII, err := idn.ConvertEmailsToASCII(mailbox.SenderDenyList)
-	if err != nil {
-		return nil, err
+	if mailbox != nil {
+		senderDenyListASCII, err := idn.ConvertEmailsToASCII(mailbox.SenderDenyList)
+		if err != nil {
+			return nil, err
+		}
+		mailbox.SenderDenyList = senderDenyListASCII
+		senderAllowListASCII, err := idn.ConvertEmailsToASCII(mailbox.SenderAllowList)
+		if err != nil {
+			return nil, err
+		}
+		mailbox.SenderAllowList = senderAllowListASCII
+		recipientDenyListASCII, err := idn.ConvertEmailsToASCII(mailbox.RecipientDenyList)
+		if err != nil {
+			return nil, err
+		}
+		mailbox.RecipientDenyList = recipientDenyListASCII
 	}
-	mailbox.SenderDenyList = senderDenyListASCII
-	senderAllowListASCII, err := idn.ConvertEmailsToASCII(mailbox.SenderAllowList)
-	if err != nil {
-		return nil, err
-	}
-	mailbox.SenderAllowList = senderAllowListASCII
-	recipientDenyListASCII, err := idn.ConvertEmailsToASCII(mailbox.RecipientDenyList)
-	if err != nil {
-		return nil, err
-	}
-	mailbox.RecipientDenyList = recipientDenyListASCII
 
 	requestBody, err := json.Marshal(mailbox)
 	if err != nil {
@@ -129,6 +131,24 @@ func (c *MigaduClient) UpdateMailbox(ctx context.Context, domain string, localPa
 	}
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s", c.Endpoint, ascii, localPart)
+
+	if mailbox != nil {
+		senderDenyListASCII, err := idn.ConvertEmailsToASCII(mailbox.SenderDenyList)
+		if err != nil {
+			return nil, err
+		}
+		mailbox.SenderDenyList = senderDenyListASCII
+		senderAllowListASCII, err := idn.ConvertEmailsToASCII(mailbox.SenderAllowList)
+		if err != nil {
+			return nil, err
+		}
+		mailbox.SenderAllowList = senderAllowListASCII
+		recipientDenyListASCII, err := idn.ConvertEmailsToASCII(mailbox.RecipientDenyList)
+		if err != nil {
+			return nil, err
+		}
+		mailbox.RecipientDenyList = recipientDenyListASCII
+	}
 
 	requestBody, err := json.Marshal(mailbox)
 	if err != nil {

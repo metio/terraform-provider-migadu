@@ -8,13 +8,12 @@ resource "migadu_alias" "example" {
   ]
 }
 
-# international domain names
+# international domain names are supported
 resource "migadu_alias" "idn" {
   domain_name = "bücher.example"
   local_part  = "some-name"
 
-  # notice that we are using 'destinations_idn' here
-  destinations_idn = [
+  destinations = [
     "first@bücher.example",
     "second@bücher.example",
   ]

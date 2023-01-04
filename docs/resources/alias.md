@@ -23,13 +23,12 @@ resource "migadu_alias" "example" {
   ]
 }
 
-# international domain names
+# international domain names are supported
 resource "migadu_alias" "idn" {
   domain_name = "bücher.example"
   local_part  = "some-name"
 
-  # notice that we are using 'destinations_idn' here
-  destinations_idn = [
+  destinations = [
     "first@bücher.example",
     "second@bücher.example",
   ]
@@ -48,14 +47,14 @@ resource "migadu_alias" "idn" {
 
 - `destinations` (List of String) List of email addresses that act as destinations of the alias.
 - `destinations_punycode` (List of String) List of email addresses that act as destinations of the alias. Use this attribute instead of `destinations` in case you want/must use the punycode representation of your domain.
-- `expirable` (Boolean)
-- `expires_on` (String)
+- `expirable` (Boolean) Whether this alias expires at some time.
+- `expires_on` (String) The expiration date of this alias.
 - `is_internal` (Boolean) Internal aliases can only receive emails from Migadu email servers.
-- `remove_upon_expiry` (Boolean)
+- `remove_upon_expiry` (Boolean) Whether to remove this alias upon expiry.
 
 ### Read-Only
 
-- `address` (String) Contains the full email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
-- `id` (String) Contains the full email address `local_part@domain_name`.
+- `address` (String) Contains the email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
+- `id` (String) Contains the value `local_part@domain_name`.
 
 

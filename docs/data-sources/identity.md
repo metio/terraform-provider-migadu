@@ -15,8 +15,15 @@ Gets a single identity.
 ```terraform
 data "migadu_identity" "identity" {
   domain_name = "example.com"
-  local_part  = "some-name"
-  address     = "some-address"
+  local_part  = "mailbox"
+  identity    = "some-identity"
+}
+
+# international domain names are supported
+data "migadu_identity" "idn" {
+  domain_name = "bücher.example"
+  local_part  = "mailbox"
+  identity    = "some-identity"
 }
 ```
 
@@ -27,20 +34,20 @@ data "migadu_identity" "identity" {
 
 - `domain_name` (String) The domain to fetch identities of.
 - `identity` (String) The local part of the identity to fetch.
-- `local_part` (String) The local part to fetch identities of.
+- `local_part` (String) The local part of the mailbox that owns the identity.
 
 ### Read-Only
 
-- `address` (String)
-- `footer_active` (Boolean)
-- `footer_html_body` (String)
-- `footer_plain_body` (String)
+- `address` (String) The email address of the identity.
+- `footer_active` (Boolean) Whether the footer of this identity is active.
+- `footer_html_body` (String) The footer of this identity in text/html format.
+- `footer_plain_body` (String) The footer of this identity in text/plain format.
 - `id` (String) Contains the value `local_part@domain_name/identity`.
-- `may_access_imap` (Boolean)
-- `may_access_manage_sieve` (Boolean)
-- `may_access_pop3` (Boolean)
-- `may_receive` (Boolean)
-- `may_send` (Boolean)
-- `name` (String)
+- `may_access_imap` (Boolean) Whether this identity is allowed to use IMAP.
+- `may_access_manage_sieve` (Boolean) Whether this identity is allowed to manage the mail sieve.
+- `may_access_pop3` (Boolean) Whether this identity is allowed to use POP3.
+- `may_receive` (Boolean) Whether this identity is allowed to receive emails.
+- `may_send` (Boolean) Whether this identity is allowed to send emails.
+- `name` (String) The name of the identity.
 
 

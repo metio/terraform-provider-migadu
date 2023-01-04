@@ -3,18 +3,23 @@
 page_title: "migadu_rewrites Data Source - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Gets all rewrites of a domain.
+  Gets all rewrite rules of a domain.
 ---
 
 # migadu_rewrites (Data Source)
 
-Gets all rewrites of a domain.
+Gets all rewrite rules of a domain.
 
 ## Example Usage
 
 ```terraform
 data "migadu_rewrites" "rewrites" {
   domain_name = "example.com"
+}
+
+# international domain names are supported
+data "migadu_rewrites" "idn" {
+  domain_name = "bücher.example"
 }
 ```
 
@@ -23,23 +28,23 @@ data "migadu_rewrites" "rewrites" {
 
 ### Required
 
-- `domain_name` (String) The domain to fetch rewrites of.
+- `domain_name` (String) The domain to fetch rewrite rules of.
 
 ### Read-Only
 
 - `id` (String) Same value as the `domain_name` attribute.
-- `rewrites` (Attributes List) The configured rewrites for the given `domain_name`. (see [below for nested schema](#nestedatt--rewrites))
+- `rewrites` (Attributes List) The configured rewrite rules for the given `domain_name`. (see [below for nested schema](#nestedatt--rewrites))
 
 <a id="nestedatt--rewrites"></a>
 ### Nested Schema for `rewrites`
 
 Read-Only:
 
-- `destinations` (List of String)
-- `destinations_punycode` (List of String)
-- `domain_name` (String)
-- `local_part_rule` (String)
-- `name` (String)
-- `order_num` (Number)
+- `destinations` (List of String) The destinations of the rewrite rule in unicode.
+- `destinations_punycode` (List of String) The destinations of the rewrite rule in punycode.
+- `domain_name` (String) The domain of the rewrite rule.
+- `local_part_rule` (String) The local part expression of the rewrite rule
+- `name` (String) The name (slug) of the rewrite rule.
+- `order_num` (Number) The order number of the rewrite rule.
 
 
