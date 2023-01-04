@@ -8,8 +8,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 )
@@ -62,15 +64,21 @@ func (d *identitiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				Description:         "The domain to fetch identities of.",
 				MarkdownDescription: "The domain to fetch identities of.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"local_part": schema.StringAttribute{
 				Description:         "The local part to fetch identities of.",
 				MarkdownDescription: "The local part to fetch identities of.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"id": schema.StringAttribute{
-				Description:         "Contains the full email address 'local_part@domain_name'.",
-				MarkdownDescription: "Contains the full email address `local_part@domain_name`.",
+				Description:         "Contains the value 'local_part@domain_name'.",
+				MarkdownDescription: "Contains the value `local_part@domain_name`.",
 				Computed:            true,
 			},
 			"identities": schema.ListNestedAttribute{
@@ -79,41 +87,65 @@ func (d *identitiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"local_part": schema.StringAttribute{
-							Computed: true,
-						},
 						"domain_name": schema.StringAttribute{
-							Computed: true,
+							Description:         "The domain of the identity.",
+							MarkdownDescription: "The domain of the identity.",
+							Computed:            true,
+						},
+						"local_part": schema.StringAttribute{
+							Description:         "The local part of the identity.",
+							MarkdownDescription: "The local part of the identity.",
+							Computed:            true,
 						},
 						"address": schema.StringAttribute{
-							Computed: true,
+							Description:         "The email address of the identity.",
+							MarkdownDescription: "The email address of the identity.",
+							Computed:            true,
 						},
 						"name": schema.StringAttribute{
-							Computed: true,
+							Description:         "The name of the identity.",
+							MarkdownDescription: "The name of the identity.",
+							Computed:            true,
 						},
 						"may_send": schema.BoolAttribute{
-							Computed: true,
+							Description:         "Whether this identity is allowed to send emails.",
+							MarkdownDescription: "Whether this identity is allowed to send emails.",
+							Computed:            true,
 						},
 						"may_receive": schema.BoolAttribute{
-							Computed: true,
+							Description:         "Whether this identity is allowed to receive emails.",
+							MarkdownDescription: "Whether this identity is allowed to receive emails.",
+							Computed:            true,
 						},
 						"may_access_imap": schema.BoolAttribute{
-							Computed: true,
+							Description:         "Whether this identity is allowed to use IMAP.",
+							MarkdownDescription: "Whether this identity is allowed to use IMAP.",
+							Computed:            true,
 						},
 						"may_access_pop3": schema.BoolAttribute{
-							Computed: true,
+							Description:         "Whether this identity is allowed to use POP3.",
+							MarkdownDescription: "Whether this identity is allowed to use POP3.",
+							Computed:            true,
 						},
 						"may_access_manage_sieve": schema.BoolAttribute{
-							Computed: true,
+							Description:         "Whether this identity is allowed to manage the mail sieve.",
+							MarkdownDescription: "Whether this identity is allowed to manage the mail sieve.",
+							Computed:            true,
 						},
 						"footer_active": schema.BoolAttribute{
-							Computed: true,
+							Description:         "Whether the footer of this identity is active.",
+							MarkdownDescription: "Whether the footer of this identity is active.",
+							Computed:            true,
 						},
 						"footer_plain_body": schema.StringAttribute{
-							Computed: true,
+							Description:         "The footer of this identity in text/plain format.",
+							MarkdownDescription: "The footer of this identity in text/plain format.",
+							Computed:            true,
 						},
 						"footer_html_body": schema.StringAttribute{
-							Computed: true,
+							Description:         "The footer of this identity in text/html format.",
+							MarkdownDescription: "The footer of this identity in text/html format.",
+							Computed:            true,
 						},
 					},
 				},

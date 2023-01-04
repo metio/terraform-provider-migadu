@@ -1,15 +1,16 @@
+//go:build simulator
+
 /*
  * SPDX-FileCopyrightText: The terraform-provider-migadu Authors
  * SPDX-License-Identifier: 0BSD
  */
 
-package client
+package client_test
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
+	"github.com/metio/terraform-provider-migadu/migadu/simulator"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -18,28 +19,34 @@ import (
 
 func TestMigaduClient_GetRewrites(t *testing.T) {
 	tests := []struct {
-		name         string
-		domain       string
-		wantedDomain string
-		statusCode   int
-		want         *model.Rewrites
-		wantErr      bool
+		name       string
+		domain     string
+		statusCode int
+		state      []model.Rewrite
+		want       *model.Rewrites
+		wantErr    bool
 	}{
 		{
-			name:         "empty",
-			domain:       "example.com",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusOK,
-			want:         &model.Rewrites{},
-			wantErr:      false,
+			name:   "empty",
+			domain: "example.com",
+			want:   &model.Rewrites{},
 		},
 		{
-			name:         "single",
-			domain:       "example.com",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusOK,
+			name:   "single",
+			domain: "example.com",
+			state: []model.Rewrite{
+				{
+					DomainName:    "example.com",
+					Name:          "test",
+					LocalPartRule: "rule-*",
+					OrderNum:      1,
+					Destinations: []string{
+						"another@example.com",
+					},
+				},
+			},
 			want: &model.Rewrites{
-				[]model.Rewrite{
+				Rewrites: []model.Rewrite{
 					{
 						DomainName:    "example.com",
 						Name:          "test",
@@ -51,15 +58,32 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 					},
 				},
 			},
-			wantErr: false,
 		},
 		{
-			name:         "multiple",
-			domain:       "example.com",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusOK,
+			name:   "multiple",
+			domain: "example.com",
+			state: []model.Rewrite{
+				{
+					DomainName:    "example.com",
+					Name:          "test",
+					LocalPartRule: "rule-*",
+					OrderNum:      1,
+					Destinations: []string{
+						"another@example.com",
+					},
+				},
+				{
+					DomainName:    "different.com",
+					Name:          "test",
+					LocalPartRule: "rule-*",
+					OrderNum:      1,
+					Destinations: []string{
+						"another@different.com",
+					},
+				},
+			},
 			want: &model.Rewrites{
-				[]model.Rewrite{
+				Rewrites: []model.Rewrite{
 					{
 						DomainName:    "example.com",
 						Name:          "test",
@@ -69,56 +93,53 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 							"another@example.com",
 						},
 					},
+				},
+			},
+		},
+		{
+			name:   "idna",
+			domain: "hoß.de",
+			state: []model.Rewrite{
+				{
+					DomainName:    "xn--ho-hia.de",
+					Name:          "test",
+					LocalPartRule: "rule-*",
+					OrderNum:      1,
+					Destinations: []string{
+						"another@xn--ho-hia.de",
+					},
+				},
+			},
+			want: &model.Rewrites{
+				Rewrites: []model.Rewrite{
 					{
-						DomainName:    "example.com",
-						Name:          "another",
-						LocalPartRule: "rule*",
-						OrderNum:      3,
+						DomainName:    "xn--ho-hia.de",
+						Name:          "test",
+						LocalPartRule: "rule-*",
+						OrderNum:      1,
 						Destinations: []string{
-							"some@example.com",
-							"other@example.com",
+							"another@xn--ho-hia.de",
 						},
 					},
 				},
 			},
-			wantErr: false,
 		},
 		{
-			name:         "error-404",
-			domain:       "example.com",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusNotFound,
-			want:         nil,
-			wantErr:      true,
+			name:       "error-404",
+			domain:     "example.com",
+			statusCode: http.StatusNotFound,
+			wantErr:    true,
 		},
 		{
-			name:         "idna",
-			domain:       "hoß.de",
-			wantedDomain: "xn--ho-hia.de",
-			statusCode:   http.StatusOK,
-			want:         &model.Rewrites{},
-			wantErr:      false,
+			name:       "error-500",
+			domain:     "example.com",
+			statusCode: http.StatusInternalServerError,
+			wantErr:    true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != http.MethodGet {
-					t.Errorf("Expected GET request, got: %s", r.Method)
-				}
-				if r.URL.Path != fmt.Sprintf("/domains/%s/rewrites", tt.wantedDomain) {
-					t.Errorf("Expected to request '/domains/%s/rewrites', got: %s", tt.wantedDomain, r.URL.Path)
-				}
-				w.WriteHeader(tt.statusCode)
-				bytes, err := json.Marshal(tt.want)
-				if err != nil {
-					t.Errorf("Could not serialize data")
-				}
-				_, err = w.Write(bytes)
-				if err != nil {
-					t.Errorf("Could not write data")
-				}
-			}))
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Rewrites: tt.state, StatusCode: tt.statusCode}))
 			defer server.Close()
 
 			c := newTestClient(server.URL)
@@ -137,77 +158,116 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 
 func TestMigaduClient_GetRewrite(t *testing.T) {
 	tests := []struct {
-		name         string
-		domain       string
-		slug         string
-		wantedDomain string
-		statusCode   int
-		want         *model.Rewrite
-		wantErr      bool
+		name       string
+		domain     string
+		slug       string
+		statusCode int
+		state      []model.Rewrite
+		want       *model.Rewrite
+		wantErr    bool
 	}{
 		{
-			name:         "single",
-			domain:       "example.com",
-			slug:         "slug",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusOK,
+			name:   "single",
+			domain: "example.com",
+			slug:   "slug",
+			state: []model.Rewrite{
+				{
+					DomainName:    "example.com",
+					Name:          "slug",
+					LocalPartRule: "rule-*",
+					OrderNum:      1,
+					Destinations: []string{
+						"another@example.com",
+					},
+				},
+			},
 			want: &model.Rewrite{
 				DomainName:    "example.com",
-				Name:          "sec",
-				LocalPartRule: "sec-*",
-				OrderNum:      0,
+				Name:          "slug",
+				LocalPartRule: "rule-*",
+				OrderNum:      1,
 				Destinations: []string{
-					"securitu@example.com",
+					"another@example.com",
 				},
 			},
-			wantErr: false,
 		},
 		{
-			name:         "idna",
-			domain:       "hoß.de",
-			slug:         "slug",
-			wantedDomain: "xn--ho-hia.de",
-			statusCode:   http.StatusOK,
+			name:   "multiple",
+			domain: "example.com",
+			slug:   "slug",
+			state: []model.Rewrite{
+				{
+					DomainName:    "example.com",
+					Name:          "slug",
+					LocalPartRule: "rule-*",
+					OrderNum:      1,
+					Destinations: []string{
+						"another@example.com",
+					},
+				},
+				{
+					DomainName:    "different.com",
+					Name:          "slug",
+					LocalPartRule: "rule-*",
+					OrderNum:      1,
+					Destinations: []string{
+						"another@different.com",
+					},
+				},
+			},
+			want: &model.Rewrite{
+				DomainName:    "example.com",
+				Name:          "slug",
+				LocalPartRule: "rule-*",
+				OrderNum:      1,
+				Destinations: []string{
+					"another@example.com",
+				},
+			},
+		},
+		{
+			name:   "idna",
+			domain: "hoß.de",
+			slug:   "slug",
+			state: []model.Rewrite{
+				{
+					DomainName:    "xn--ho-hia.de",
+					Name:          "slug",
+					LocalPartRule: "rule-*",
+					OrderNum:      1,
+					Destinations: []string{
+						"another@xn--ho-hia.de",
+					},
+				},
+			},
 			want: &model.Rewrite{
 				DomainName:    "xn--ho-hia.de",
-				Name:          "sec",
-				LocalPartRule: "sec-*",
-				OrderNum:      0,
+				Name:          "slug",
+				LocalPartRule: "rule-*",
+				OrderNum:      1,
 				Destinations: []string{
-					"securitu@xn--ho-hia.de",
+					"another@xn--ho-hia.de",
 				},
 			},
-			wantErr: false,
 		},
 		{
-			name:         "error-404",
-			domain:       "example.com",
-			slug:         "slug",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusNotFound,
-			want:         nil,
-			wantErr:      true,
+			name:    "error-404",
+			domain:  "example.com",
+			slug:    "slug",
+			state:   []model.Rewrite{},
+			wantErr: true,
+		},
+		{
+			name:       "error-500",
+			domain:     "example.com",
+			slug:       "slug",
+			statusCode: http.StatusInternalServerError,
+			wantErr:    true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != http.MethodGet {
-					t.Errorf("Expected GET request, got: %s", r.Method)
-				}
-				if r.URL.Path != fmt.Sprintf("/domains/%s/rewrites/%s", tt.wantedDomain, tt.slug) {
-					t.Errorf("Expected to request '/domains/%s/rewrites/%s', got: %s", tt.wantedDomain, tt.slug, r.URL.Path)
-				}
-				w.WriteHeader(tt.statusCode)
-				bytes, err := json.Marshal(tt.want)
-				if err != nil {
-					t.Errorf("Could not serialize data")
-				}
-				_, err = w.Write(bytes)
-				if err != nil {
-					t.Errorf("Could not write data")
-				}
-			}))
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Rewrites: tt.state, StatusCode: tt.statusCode}))
 			defer server.Close()
 
 			c := newTestClient(server.URL)
@@ -226,78 +286,117 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 
 func TestMigaduClient_CreateRewrite(t *testing.T) {
 	tests := []struct {
-		name         string
-		domain       string
-		wantedDomain string
-		statusCode   int
-		want         *model.Rewrite
-		wantErr      bool
+		name       string
+		domain     string
+		statusCode int
+		state      []model.Rewrite
+		send       *model.Rewrite
+		want       *model.Rewrite
+		wantErr    bool
 	}{
 		{
-			name:         "single",
-			domain:       "example.com",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusOK,
+			name:   "single",
+			domain: "example.com",
+			state: []model.Rewrite{
+				{
+					DomainName:    "different.com",
+					Name:          "sec",
+					LocalPartRule: "sec-*",
+					OrderNum:      0,
+					Destinations: []string{
+						"security@different.com",
+					},
+				},
+			},
+			send: &model.Rewrite{
+				Name:          "sec",
+				LocalPartRule: "sec-*",
+				OrderNum:      0,
+				Destinations: []string{
+					"security@example.com",
+				},
+			},
 			want: &model.Rewrite{
 				DomainName:    "example.com",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
 				Destinations: []string{
-					"securitu@example.com",
+					"security@example.com",
 				},
 			},
-			wantErr: false,
 		},
 		{
-			name:         "idna",
-			domain:       "hoß.de",
-			wantedDomain: "xn--ho-hia.de",
-			statusCode:   http.StatusOK,
+			name:   "idna",
+			domain: "hoß.de",
+			state: []model.Rewrite{
+				{
+					DomainName:    "example.com",
+					Name:          "sec",
+					LocalPartRule: "sec-*",
+					OrderNum:      0,
+					Destinations: []string{
+						"security@example.com",
+					},
+				},
+			},
+			send: &model.Rewrite{
+				Name:          "slug",
+				LocalPartRule: "rule-*",
+				OrderNum:      1,
+				Destinations: []string{
+					"another@xn--ho-hia.de",
+				},
+			},
 			want: &model.Rewrite{
 				DomainName:    "xn--ho-hia.de",
+				Name:          "slug",
+				LocalPartRule: "rule-*",
+				OrderNum:      1,
+				Destinations: []string{
+					"another@xn--ho-hia.de",
+				},
+			},
+		},
+		{
+			name:   "error-404",
+			domain: "example.com",
+			state: []model.Rewrite{
+				{
+					DomainName:    "example.com",
+					Name:          "sec",
+					LocalPartRule: "sec-*",
+					OrderNum:      0,
+					Destinations: []string{
+						"security@example.com",
+					},
+				},
+			},
+			send: &model.Rewrite{
 				Name:          "sec",
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
 				Destinations: []string{
-					"securitu@xn--ho-hia.de",
+					"security@example.com",
 				},
 			},
-			wantErr: false,
+			wantErr: true,
 		},
 		{
-			name:         "error-404",
-			domain:       "example.com",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusNotFound,
-			want:         nil,
-			wantErr:      true,
+			name:       "error-500",
+			domain:     "example.com",
+			statusCode: http.StatusInternalServerError,
+			wantErr:    true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != http.MethodPost {
-					t.Errorf("Expected POST request, got: %s", r.Method)
-				}
-				if r.URL.Path != fmt.Sprintf("/domains/%s/rewrites", tt.wantedDomain) {
-					t.Errorf("Expected to request '/domains/%s/rewrites', got: %s", tt.wantedDomain, r.URL.Path)
-				}
-				w.WriteHeader(tt.statusCode)
-				bytes, err := json.Marshal(tt.want)
-				if err != nil {
-					t.Errorf("Could not serialize data")
-				}
-				_, err = w.Write(bytes)
-				if err != nil {
-					t.Errorf("Could not write data")
-				}
-			}))
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Rewrites: tt.state, StatusCode: tt.statusCode}))
 			defer server.Close()
 
 			c := newTestClient(server.URL)
 
-			got, err := c.CreateRewrite(context.Background(), tt.domain, tt.want)
+			got, err := c.CreateRewrite(context.Background(), tt.domain, tt.send)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateRewrite() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -311,82 +410,119 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 
 func TestMigaduClient_UpdateRewrite(t *testing.T) {
 	tests := []struct {
-		name         string
-		domain       string
-		slug         string
-		wantedDomain string
-		statusCode   int
-		want         *model.Rewrite
-		wantErr      bool
+		name       string
+		domain     string
+		slug       string
+		statusCode int
+		state      []model.Rewrite
+		send       *model.Rewrite
+		want       *model.Rewrite
+		wantErr    bool
 	}{
 		{
-			name:         "single",
-			domain:       "example.com",
-			slug:         "slug",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusOK,
-			want: &model.Rewrite{
-				DomainName:    "example.com",
-				Name:          "sec",
+			name:   "single",
+			domain: "example.com",
+			slug:   "slug",
+			state: []model.Rewrite{
+				{
+					DomainName:    "example.com",
+					Name:          "slug",
+					LocalPartRule: "sec-*",
+					OrderNum:      0,
+					Destinations: []string{
+						"security@example.com",
+					},
+				},
+			},
+			send: &model.Rewrite{
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
 				Destinations: []string{
-					"securitu@example.com",
+					"another@example.com",
 				},
 			},
-			wantErr: false,
+			want: &model.Rewrite{
+				DomainName:    "example.com",
+				Name:          "slug",
+				LocalPartRule: "sec-*",
+				OrderNum:      0,
+				Destinations: []string{
+					"another@example.com",
+				},
+			},
 		},
 		{
-			name:         "idna",
-			domain:       "hoß.de",
-			slug:         "slug",
-			wantedDomain: "xn--ho-hia.de",
-			statusCode:   http.StatusOK,
+			name:   "idna",
+			domain: "hoß.de",
+			slug:   "sec",
+			state: []model.Rewrite{
+				{
+					DomainName:    "xn--ho-hia.de",
+					Name:          "sec",
+					LocalPartRule: "sec-*",
+					OrderNum:      0,
+					Destinations: []string{
+						"security@xn--ho-hia.de",
+					},
+				},
+			},
+			send: &model.Rewrite{
+				LocalPartRule: "sec-*",
+				OrderNum:      0,
+				Destinations: []string{
+					"another@xn--ho-hia.de",
+				},
+			},
 			want: &model.Rewrite{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
 				Destinations: []string{
-					"securitu@xn--ho-hia.de",
+					"another@xn--ho-hia.de",
 				},
 			},
-			wantErr: false,
 		},
 		{
-			name:         "error-404",
-			domain:       "example.com",
-			slug:         "slug",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusNotFound,
-			want:         nil,
-			wantErr:      true,
+			name:   "error-404",
+			domain: "example.com",
+			slug:   "slug",
+			state: []model.Rewrite{
+				{
+					DomainName:    "different.com",
+					Name:          "slug",
+					LocalPartRule: "sec-*",
+					OrderNum:      0,
+					Destinations: []string{
+						"security@different.com",
+					},
+				},
+			},
+			send: &model.Rewrite{
+				LocalPartRule: "sec-*",
+				OrderNum:      0,
+				Destinations: []string{
+					"security@example.com",
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:       "error-500",
+			domain:     "example.com",
+			slug:       "slug",
+			statusCode: http.StatusInternalServerError,
+			wantErr:    true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != http.MethodPut {
-					t.Errorf("Expected PUT request, got: %s", r.Method)
-				}
-				if r.URL.Path != fmt.Sprintf("/domains/%s/rewrites/%s", tt.wantedDomain, tt.slug) {
-					t.Errorf("Expected to request '/domains/%s/rewrites/%s', got: %s", tt.wantedDomain, tt.slug, r.URL.Path)
-				}
-				w.WriteHeader(tt.statusCode)
-				bytes, err := json.Marshal(tt.want)
-				if err != nil {
-					t.Errorf("Could not serialize data")
-				}
-				_, err = w.Write(bytes)
-				if err != nil {
-					t.Errorf("Could not write data")
-				}
-			}))
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Rewrites: tt.state, StatusCode: tt.statusCode}))
 			defer server.Close()
 
 			c := newTestClient(server.URL)
 
-			got, err := c.UpdateRewrite(context.Background(), tt.domain, tt.slug, tt.want)
+			got, err := c.UpdateRewrite(context.Background(), tt.domain, tt.slug, tt.send)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UpdateRewrite() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -400,77 +536,116 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 
 func TestMigaduClient_DeleteRewrite(t *testing.T) {
 	tests := []struct {
-		name         string
-		domain       string
-		slug         string
-		wantedDomain string
-		statusCode   int
-		want         *model.Rewrite
-		wantErr      bool
+		name       string
+		domain     string
+		slug       string
+		statusCode int
+		state      []model.Rewrite
+		want       *model.Rewrite
+		wantErr    bool
 	}{
 		{
-			name:         "single",
-			domain:       "example.com",
-			slug:         "slug",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusOK,
+			name:   "single",
+			domain: "example.com",
+			slug:   "slug",
+			state: []model.Rewrite{
+				{
+					DomainName:    "example.com",
+					Name:          "slug",
+					LocalPartRule: "sec-*",
+					OrderNum:      0,
+					Destinations: []string{
+						"security@example.com",
+					},
+				},
+			},
 			want: &model.Rewrite{
 				DomainName:    "example.com",
-				Name:          "sec",
+				Name:          "slug",
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
 				Destinations: []string{
-					"securitu@example.com",
+					"security@example.com",
 				},
 			},
-			wantErr: false,
 		},
 		{
-			name:         "idna",
-			domain:       "hoß.de",
-			slug:         "slug",
-			wantedDomain: "xn--ho-hia.de",
-			statusCode:   http.StatusOK,
+			name:   "multiple",
+			domain: "example.com",
+			slug:   "slug",
+			state: []model.Rewrite{
+				{
+					DomainName:    "example.com",
+					Name:          "slug",
+					LocalPartRule: "sec-*",
+					OrderNum:      0,
+					Destinations: []string{
+						"security@example.com",
+					},
+				},
+				{
+					DomainName:    "different.com",
+					Name:          "slug",
+					LocalPartRule: "sec-*",
+					OrderNum:      0,
+					Destinations: []string{
+						"security@different.com",
+					},
+				},
+			},
+			want: &model.Rewrite{
+				DomainName:    "example.com",
+				Name:          "slug",
+				LocalPartRule: "sec-*",
+				OrderNum:      0,
+				Destinations: []string{
+					"security@example.com",
+				},
+			},
+		},
+		{
+			name:   "idna",
+			domain: "hoß.de",
+			slug:   "slug",
+			state: []model.Rewrite{
+				{
+					DomainName:    "xn--ho-hia.de",
+					Name:          "slug",
+					LocalPartRule: "sec-*",
+					OrderNum:      0,
+					Destinations: []string{
+						"security@xn--ho-hia.de",
+					},
+				},
+			},
 			want: &model.Rewrite{
 				DomainName:    "xn--ho-hia.de",
-				Name:          "sec",
+				Name:          "slug",
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
 				Destinations: []string{
-					"securitu@xn--ho-hia.de",
+					"security@xn--ho-hia.de",
 				},
 			},
-			wantErr: false,
 		},
 		{
-			name:         "error-404",
-			domain:       "example.com",
-			slug:         "slug",
-			wantedDomain: "example.com",
-			statusCode:   http.StatusNotFound,
-			want:         nil,
-			wantErr:      true,
+			name:    "error-404",
+			domain:  "example.com",
+			slug:    "slug",
+			state:   []model.Rewrite{},
+			wantErr: true,
+		},
+		{
+			name:       "error-500",
+			domain:     "example.com",
+			slug:       "slug",
+			statusCode: http.StatusInternalServerError,
+			wantErr:    true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.Method != http.MethodDelete {
-					t.Errorf("Expected DELETE request, got: %s", r.Method)
-				}
-				if r.URL.Path != fmt.Sprintf("/domains/%s/rewrites/%s", tt.wantedDomain, tt.slug) {
-					t.Errorf("Expected to request '/domains/%s/rewrites/%s', got: %s", tt.wantedDomain, tt.slug, r.URL.Path)
-				}
-				w.WriteHeader(tt.statusCode)
-				bytes, err := json.Marshal(tt.want)
-				if err != nil {
-					t.Errorf("Could not serialize data")
-				}
-				_, err = w.Write(bytes)
-				if err != nil {
-					t.Errorf("Could not write data")
-				}
-			}))
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Rewrites: tt.state, StatusCode: tt.statusCode}))
 			defer server.Close()
 
 			c := newTestClient(server.URL)

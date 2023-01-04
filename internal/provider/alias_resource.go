@@ -82,16 +82,16 @@ func (r *aliasResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				},
 			},
 			"id": schema.StringAttribute{
-				Description:         "Contains the full email address 'local_part@domain_name'.",
-				MarkdownDescription: "Contains the full email address `local_part@domain_name`.",
+				Description:         "Contains the value 'local_part@domain_name'.",
+				MarkdownDescription: "Contains the value `local_part@domain_name`.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"address": schema.StringAttribute{
-				Description:         "Contains the full email address 'local_part@domain_name' as returned by the Migadu API. This might be different from the 'id' attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
-				MarkdownDescription: "Contains the full email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
+				Description:         "Contains the email address 'local_part@domain_name' as returned by the Migadu API. This might be different from the 'id' attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
+				MarkdownDescription: "Contains the email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -126,16 +126,22 @@ func (r *aliasResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:            true,
 			},
 			"expirable": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "Whether this alias expires at some time.",
+				MarkdownDescription: "Whether this alias expires at some time.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"expires_on": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "The expiration date of this alias.",
+				MarkdownDescription: "The expiration date of this alias.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"remove_upon_expiry": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "Whether to remove this alias upon expiry.",
+				MarkdownDescription: "Whether to remove this alias upon expiry.",
+				Optional:            true,
+				Computed:            true,
 			},
 		},
 	}

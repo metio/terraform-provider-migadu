@@ -1,3 +1,5 @@
+//go:build simulator
+
 /*
  * SPDX-FileCopyrightText: The terraform-provider-migadu Authors
  * SPDX-License-Identifier: 0BSD
@@ -6,76 +8,80 @@
 package provider_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
+	"github.com/metio/terraform-provider-migadu/migadu/simulator"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
 	"testing"
 )
 
-func TestMailboxDataSource_Read(t *testing.T) {
+func TestMailboxDataSource_API_Success(t *testing.T) {
 	tests := []struct {
-		name       string
-		domain     string
-		localPart  string
-		statusCode int
-		want       *model.Mailbox
-		error      string
+		name      string
+		domain    string
+		localPart string
+		state     []model.Mailbox
+		want      *model.Mailbox
 	}{
 		{
-			name:       "empty",
-			domain:     "example.com",
-			localPart:  "test",
-			statusCode: http.StatusOK,
-			want:       &model.Mailbox{},
-		},
-		{
-			name:       "single",
-			domain:     "example.com",
-			localPart:  "test",
-			statusCode: http.StatusOK,
+			name:      "single",
+			domain:    "example.com",
+			localPart: "test",
+			state: []model.Mailbox{
+				{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Address:    "test@example.com",
+					Name:       "test",
+				},
+			},
 			want: &model.Mailbox{
-				LocalPart:             "test",
-				DomainName:            "example.com",
-				Address:               "test@example.com",
-				Name:                  "Some Name",
-				IsInternal:            false,
-				MaySend:               true,
-				MayReceive:            false,
-				MayAccessImap:         true,
-				MayAccessPop3:         false,
-				MayAccessManageSieve:  true,
-				PasswordMethod:        "",
-				Password:              "hunter2",
-				PasswordRecoveryEmail: "recovery@example.com",
-				SpamAction:            "",
-				SpamAggressiveness:    "",
-				Expirable:             true,
-				ExpiresOn:             "",
-				RemoveUponExpiry:      false,
-				SenderDenyList:        []string{},
-				SenderAllowList:       []string{},
-				RecipientDenyList:     []string{},
-				AutoRespondActive:     true,
-				AutoRespondSubject:    "kthxbye",
-				AutoRespondBody:       "",
-				AutoRespondExpiresOn:  "",
-				FooterActive:          false,
-				FooterPlainBody:       "",
-				FooterHtmlBody:        "",
-				StorageUsage:          0.5,
-				Delegations:           []string{},
-				Identities:            []string{},
+				LocalPart:  "test",
+				DomainName: "example.com",
+				Address:    "test@example.com",
+				Name:       "Some Name",
 			},
 		},
 		{
-			name:       "idna",
-			domain:     "hoß.de",
-			localPart:  "test",
-			statusCode: http.StatusOK,
+			name:      "multiple",
+			domain:    "example.com",
+			localPart: "test",
+			state: []model.Mailbox{
+				{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Address:    "test@example.com",
+					Name:       "test",
+				},
+				{
+					LocalPart:  "other",
+					DomainName: "example.com",
+					Address:    "other@example.com",
+					Name:       "other",
+				},
+			},
+			want: &model.Mailbox{
+				LocalPart:  "test",
+				DomainName: "example.com",
+				Address:    "test@example.com",
+				Name:       "Some Name",
+			},
+		},
+		{
+			name:      "idna",
+			domain:    "hoß.de",
+			localPart: "test",
+			state: []model.Mailbox{
+				{
+					LocalPart:  "test",
+					DomainName: "xn--ho-hia.de",
+					Address:    "test@xn--ho-hia.de",
+					Name:       "Some Name",
+				},
+			},
 			want: &model.Mailbox{
 				LocalPart:  "test",
 				DomainName: "xn--ho-hia.de",
@@ -83,70 +89,138 @@ func TestMailboxDataSource_Read(t *testing.T) {
 				Name:       "Some Name",
 			},
 		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Mailboxes: tt.state}))
+			defer server.Close()
+
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: providerConfig(server.URL) + fmt.Sprintf(`
+							data "migadu_mailbox" "test" {
+								domain_name = "%s"
+								local_part  = "%s"
+							}
+						`, tt.domain, tt.localPart),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr("data.migadu_mailbox.test", "domain_name", tt.domain),
+							resource.TestCheckResourceAttr("data.migadu_mailbox.test", "local_part", tt.localPart),
+							resource.TestCheckResourceAttr("data.migadu_mailbox.test", "id", fmt.Sprintf("%s@%s", tt.localPart, tt.domain)),
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestMailboxDataSource_API_Error(t *testing.T) {
+	tests := []struct {
+		name       string
+		domain     string
+		localPart  string
+		statusCode int
+		error      string
+	}{
 		{
 			name:       "error-401",
 			domain:     "example.com",
 			localPart:  "test",
 			statusCode: http.StatusUnauthorized,
-			want:       nil,
 			error:      "status: 401",
 		},
 		{
-			name:       "error-404",
+			name:      "error-404",
+			domain:    "example.com",
+			localPart: "test",
+			error:     "status: 404",
+		},
+		{
+			name:       "error-500",
 			domain:     "example.com",
 			localPart:  "test",
-			statusCode: http.StatusNotFound,
-			want:       nil,
-			error:      "status: 404",
+			statusCode: http.StatusInternalServerError,
+			error:      "status: 500",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(tt.statusCode)
-				bytes, err := json.Marshal(tt.want)
-				if err != nil {
-					t.Errorf("Could not serialize data")
-				}
-				_, err = w.Write(bytes)
-				if err != nil {
-					t.Errorf("Could not write data")
-				}
-			}))
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{StatusCode: tt.statusCode}))
 			defer server.Close()
 
-			config := providerConfig(server.URL) + fmt.Sprintf(`
-					data "migadu_mailbox" "test" {
-						domain_name = "%s"
-						local_part  = "%s"
-					}
-				`, tt.domain, tt.localPart)
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: providerConfig(server.URL) + fmt.Sprintf(`
+							data "migadu_mailbox" "test" {
+								domain_name = "%s"
+								local_part  = "%s"
+							}
+						`, tt.domain, tt.localPart),
+						ExpectError: regexp.MustCompile(tt.error),
+					},
+				},
+			})
+		})
+	}
+}
 
-			if tt.error != "" {
-				resource.UnitTest(t, resource.TestCase{
-					ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-					Steps: []resource.TestStep{
-						{
-							Config:      config,
-							ExpectError: regexp.MustCompile(tt.error),
-						},
+func TestMailboxDataSource_Configuration_Errors(t *testing.T) {
+	tests := []struct {
+		name          string
+		configuration string
+		error         string
+	}{
+		{
+			name: "empty-domain-name",
+			configuration: `
+				domain_name = ""
+				local_part  = "test"
+			`,
+			error: "Attribute domain_name string length must be at least 1",
+		},
+		{
+			name: "empty-local-part",
+			configuration: `
+				domain_name = "example.com"
+				local_part  = ""
+			`,
+			error: "Attribute local_part string length must be at least 1",
+		},
+		{
+			name: "missing-domain-name",
+			configuration: `
+				local_part  = "test"
+			`,
+			error: `The argument "domain_name" is required, but no definition was found`,
+		},
+		{
+			name: "missing-local-part",
+			configuration: `
+				domain_name = "example.com"
+			`,
+			error: `The argument "local_part" is required, but no definition was found`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: providerConfig("https://localhost:12345") + fmt.Sprintf(`
+							data "migadu_mailbox" "test" {
+								%s
+							}
+						`, tt.configuration),
+						ExpectError: regexp.MustCompile(tt.error),
 					},
-				})
-			} else {
-				resource.UnitTest(t, resource.TestCase{
-					ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-					Steps: []resource.TestStep{
-						{
-							Config: config,
-							Check: resource.ComposeAggregateTestCheckFunc(
-								resource.TestCheckResourceAttr("data.migadu_mailbox.test", "domain_name", tt.domain),
-								resource.TestCheckResourceAttr("data.migadu_mailbox.test", "local_part", tt.localPart),
-								resource.TestCheckResourceAttr("data.migadu_mailbox.test", "id", fmt.Sprintf("%s@%s", tt.localPart, tt.domain)),
-							),
-						},
-					},
-				})
-			}
+				},
+			})
 		})
 	}
 }

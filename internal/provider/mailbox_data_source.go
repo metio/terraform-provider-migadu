@@ -8,8 +8,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 )
@@ -78,122 +80,192 @@ func (d *mailboxDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Description:         "The domain name of the mailbox to fetch.",
 				MarkdownDescription: "The domain name of the mailbox to fetch.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"local_part": schema.StringAttribute{
 				Description:         "The local part of the mailbox to fetch.",
 				MarkdownDescription: "The local part of the mailbox to fetch.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"id": schema.StringAttribute{
-				Description:         "Contains the full email address 'local_part@domain_name'.",
-				MarkdownDescription: "Contains the full email address `local_part@domain_name`.",
+				Description:         "Contains the value 'local_part@domain_name'.",
+				MarkdownDescription: "Contains the value `local_part@domain_name`.",
 				Computed:            true,
 			},
 			"address": schema.StringAttribute{
-				Computed: true,
+				Description:         "The email address of the mailbox.",
+				MarkdownDescription: "The email address of the mailbox.",
+				Computed:            true,
 			},
 			"name": schema.StringAttribute{
-				Computed: true,
+				Description:         "The name of the mailbox.",
+				MarkdownDescription: "The name of the mailbox.",
+				Computed:            true,
 			},
 			"is_internal": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.",
+				MarkdownDescription: "Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.",
+				Computed:            true,
 			},
 			"may_send": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether this mailbox is allowed to send emails.",
+				MarkdownDescription: "Whether this mailbox is allowed to send emails.",
+				Computed:            true,
 			},
 			"may_receive": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether this mailbox is allowed to receive emails.",
+				MarkdownDescription: "Whether this mailbox is allowed to receive emails.",
+				Computed:            true,
 			},
 			"may_access_imap": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether this mailbox is allowed to use IMAP.",
+				MarkdownDescription: "Whether this mailbox is allowed to use IMAP.",
+				Computed:            true,
 			},
 			"may_access_pop3": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether this mailbox is allowed to use POP3.",
+				MarkdownDescription: "Whether this mailbox is allowed to use POP3.",
+				Computed:            true,
 			},
 			"may_access_manage_sieve": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether this mailbox is allowed to manage the mail sieve.",
+				MarkdownDescription: "Whether this mailbox is allowed to manage the mail sieve.",
+				Computed:            true,
 			},
 			"password_recovery_email": schema.StringAttribute{
-				Computed: true,
+				Description:         "The recovery email address of this mailbox.",
+				MarkdownDescription: "The recovery email address of this mailbox.",
+				Computed:            true,
 			},
 			"spam_action": schema.StringAttribute{
-				Computed: true,
+				Description:         "The action to take once spam arrives in this mailbox.",
+				MarkdownDescription: "The action to take once spam arrives in this mailbox.",
+				Computed:            true,
 			},
 			"spam_aggressiveness": schema.StringAttribute{
-				Computed: true,
+				Description:         "How aggressive will spam be detected in this mailbox.",
+				MarkdownDescription: "How aggressive will spam be detected in this mailbox.",
+				Computed:            true,
 			},
 			"expirable": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether this mailbox expires in the future.",
+				MarkdownDescription: "Whether this mailbox expires in the future.",
+				Computed:            true,
 			},
 			"expires_on": schema.StringAttribute{
-				Computed: true,
+				Description:         "The expiration date of this mailbox.",
+				MarkdownDescription: "The expiration date of this mailbox.",
+				Computed:            true,
 			},
 			"remove_upon_expiry": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether this mailbox will be removed upon expiry.",
+				MarkdownDescription: "Whether this mailbox will be removed upon expiry.",
+				Computed:            true,
 			},
 			"sender_denylist": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "The email addresses of senders that will always be denied delivery in unicode.",
+				MarkdownDescription: "The email addresses of senders that will always be denied delivery in unicode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"sender_denylist_punycode": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "The email addresses of senders that will always be denied delivery in punycode.",
+				MarkdownDescription: "The email addresses of senders that will always be denied delivery in punycode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"sender_allowlist": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "The email addresses of senders that will always be allowed delivery in unicode.",
+				MarkdownDescription: "The email addresses of senders that will always be allowed delivery in unicode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"sender_allowlist_punycode": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "The email addresses of senders that will always be denied delivery in punycode.",
+				MarkdownDescription: "The email addresses of senders that will always be denied delivery in punycode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"recipient_denylist": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "The email addresses of recipients that will always be denied delivery in unicode.",
+				MarkdownDescription: "The email addresses of recipients that will always be denied delivery in unicode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"recipient_denylist_punycode": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "The email addresses of recipients that will always be denied delivery in punycode.",
+				MarkdownDescription: "The email addresses of recipients that will always be denied delivery in punycode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"auto_respond_active": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether an automatic response is active in this mailbox.",
+				MarkdownDescription: "Whether an automatic response is active in this mailbox.",
+				Computed:            true,
 			},
 			"auto_respond_subject": schema.StringAttribute{
-				Computed: true,
+				Description:         "The subject of the automatic response.",
+				MarkdownDescription: "The subject of the automatic response.",
+				Computed:            true,
 			},
 			"auto_respond_body": schema.StringAttribute{
-				Computed: true,
+				Description:         "The body of the automatic response.",
+				MarkdownDescription: "The body of the automatic response.",
+				Computed:            true,
 			},
 			"auto_respond_expires_on": schema.StringAttribute{
-				Computed: true,
+				Description:         "The expiration date of the automatic response.",
+				MarkdownDescription: "The expiration date of the automatic response.",
+				Computed:            true,
 			},
 			"footer_active": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether the footer of this mailbox is active.",
+				MarkdownDescription: "Whether the footer of this mailbox is active.",
+				Computed:            true,
 			},
 			"footer_plain_body": schema.StringAttribute{
-				Computed: true,
+				Description:         "The footer of this mailbox in text/plain format.",
+				MarkdownDescription: "The footer of this mailbox in text/plain format.",
+				Computed:            true,
 			},
 			"footer_html_body": schema.StringAttribute{
-				Computed: true,
+				Description:         "The footer of this mailbox in text/html format.",
+				MarkdownDescription: "The footer of this mailbox in text/html format.",
+				Computed:            true,
 			},
 			"storage_usage": schema.Float64Attribute{
-				Computed: true,
+				Description:         "The current storage usage of this mailbox.",
+				MarkdownDescription: "The current storage usage of this mailbox.",
+				Computed:            true,
 			},
 			"delegations": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "The delegations of this mailbox in unicode.",
+				MarkdownDescription: "The delegations of this mailbox in unicode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"delegations_punycode": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "The delegations of this mailbox in punycode.",
+				MarkdownDescription: "The delegations of this mailbox in punycode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"identities": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "The identities of this mailbox in unicode.",
+				MarkdownDescription: "The identities of this mailbox in unicode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"identities_punycode": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "The identities of this mailbox in punycode.",
+				MarkdownDescription: "The identities of this mailbox in punycode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 		},
 	}

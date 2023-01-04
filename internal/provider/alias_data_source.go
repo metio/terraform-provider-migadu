@@ -8,8 +8,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 )
@@ -53,39 +55,59 @@ func (d *aliasDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 				Description:         "The domain name of the alias to fetch.",
 				MarkdownDescription: "The domain name of the alias to fetch.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"local_part": schema.StringAttribute{
 				Description:         "The local part of the alias to fetch.",
 				MarkdownDescription: "The local part of the alias to fetch.",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"id": schema.StringAttribute{
-				Description:         "Contains the full email address 'local_part@domain_name'.",
-				MarkdownDescription: "Contains the full email address `local_part@domain_name`.",
+				Description:         "Contains the value 'local_part@domain_name'.",
+				MarkdownDescription: "Contains the value `local_part@domain_name`.",
 				Computed:            true,
 			},
 			"address": schema.StringAttribute{
-				Computed: true,
+				Description:         "Contains the full email address of the alias as returned by the Migadu API.",
+				MarkdownDescription: "Contains the full email address of the alias as returned by the Migadu API.",
+				Computed:            true,
 			},
 			"destinations": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "Destination email addresses in unicode.",
+				MarkdownDescription: "Destination email addresses in unicode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"destinations_punycode": schema.ListAttribute{
-				Computed:    true,
-				ElementType: types.StringType,
+				Description:         "Destination email addresses in punycode.",
+				MarkdownDescription: "Destination email addresses in punycode.",
+				Computed:            true,
+				ElementType:         types.StringType,
 			},
 			"is_internal": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether this alias is internal only. An internal alias can only receive emails from Migadu servers.",
+				MarkdownDescription: "Whether this alias is internal only. An internal alias can only receive emails from Migadu servers.",
+				Computed:            true,
 			},
 			"expirable": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether this alias expires at some time.",
+				MarkdownDescription: "Whether this alias expires at some time.",
+				Computed:            true,
 			},
 			"expires_on": schema.StringAttribute{
-				Computed: true,
+				Description:         "The expiration date of this alias.",
+				MarkdownDescription: "The expiration date of this alias.",
+				Computed:            true,
 			},
 			"remove_upon_expiry": schema.BoolAttribute{
-				Computed: true,
+				Description:         "Whether to remove this alias upon expiry.",
+				MarkdownDescription: "Whether to remove this alias upon expiry.",
+				Computed:            true,
 			},
 		},
 	}

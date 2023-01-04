@@ -19,7 +19,14 @@ resource "migadu_mailbox" "example" {
   password    = "Sup3r_s3cr3T"
 }
 
-# international domain names
+# send invitation to users and let them set password themselves
+resource "migadu_mailbox" "invitation" {
+  domain_name             = "example.com"
+  local_part              = "some-mailbox"
+  password_recovery_email = "old@address.example"
+}
+
+# international domain names are supported
 resource "migadu_mailbox" "idn" {
   domain_name = "bücher.example"
   local_part  = "some-mailbox"
@@ -37,38 +44,38 @@ resource "migadu_mailbox" "idn" {
 
 ### Optional
 
-- `auto_respond_active` (Boolean)
-- `auto_respond_body` (String)
-- `auto_respond_expires_on` (String)
-- `auto_respond_subject` (String)
-- `expirable` (Boolean)
-- `expires_on` (String)
-- `footer_active` (Boolean)
-- `footer_html_body` (String)
-- `footer_plain_body` (String)
-- `is_internal` (Boolean) Internal mailboxes can only receive emails from Migadu email servers.
-- `may_access_imap` (Boolean)
-- `may_access_manage_sieve` (Boolean)
-- `may_access_pop3` (Boolean)
-- `may_receive` (Boolean)
-- `may_send` (Boolean)
-- `name` (String)
-- `password` (String, Sensitive)
-- `password_method` (String)
-- `password_recovery_email` (String)
-- `recipient_denylist` (List of String)
-- `recipient_denylist_punycode` (List of String)
-- `remove_upon_expiry` (Boolean)
-- `sender_allowlist` (List of String)
-- `sender_allowlist_punycode` (List of String)
-- `sender_denylist` (List of String)
-- `sender_denylist_punycode` (List of String)
-- `spam_action` (String)
-- `spam_aggressiveness` (String)
+- `auto_respond_active` (Boolean) Whether an automatic response is active in this mailbox.
+- `auto_respond_body` (String) The body of the automatic response.
+- `auto_respond_expires_on` (String) The expiration date of the automatic response.
+- `auto_respond_subject` (String) The subject of the automatic response.
+- `expirable` (Boolean) Whether this mailbox expires in the future.
+- `expires_on` (String) The expiration date of this mailbox.
+- `footer_active` (Boolean) Whether the footer of this mailbox is active.
+- `footer_html_body` (String) The footer of this mailbox in text/html format.
+- `footer_plain_body` (String) The footer of this mailbox in text/plain format.
+- `is_internal` (Boolean) Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.
+- `may_access_imap` (Boolean) Whether this mailbox is allowed to use IMAP.
+- `may_access_manage_sieve` (Boolean) Whether this mailbox is allowed to manage the mail sieve.
+- `may_access_pop3` (Boolean) Whether this mailbox is allowed to use POP3.
+- `may_receive` (Boolean) Whether this mailbox is allowed to receive emails.
+- `may_send` (Boolean) Whether this mailbox is allowed to send emails.
+- `name` (String) The name of the mailbox.
+- `password` (String, Sensitive) The password of this mailbox.
+- `password_recovery_email` (String) The recovery email address of this mailbox. If this is set instead of `password` an invitation to that address will be send to the user and they can set their own password.
+- `recipient_denylist` (List of String) The email addresses of recipients that will always be denied delivery in unicode.
+- `recipient_denylist_punycode` (List of String) The email addresses of recipients that will always be denied delivery in punycode.
+- `remove_upon_expiry` (Boolean) Whether this mailbox will be removed upon expiry.
+- `sender_allowlist` (List of String) The email addresses of senders that will always be allowed delivery in unicode.
+- `sender_allowlist_punycode` (List of String) The email addresses of senders that will always be denied delivery in punycode.
+- `sender_denylist` (List of String) The email addresses of senders that will always be denied delivery in unicode.
+- `sender_denylist_punycode` (List of String) The email addresses of senders that will always be denied delivery in punycode.
+- `spam_action` (String) The action to take once spam arrives in this mailbox.
+- `spam_aggressiveness` (String) How aggressive will spam be detected in this mailbox.
 
 ### Read-Only
 
 - `address` (String) Contains the full email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
 - `id` (String) Contains the full email address 'local_part@domain_name'.
+- `storage_usage` (Number) The current storage usage of this mailbox.
 
 

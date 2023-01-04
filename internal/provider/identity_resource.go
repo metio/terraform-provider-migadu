@@ -113,40 +113,67 @@ func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				},
 			},
 			"name": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "The name of the identity.",
+				MarkdownDescription: "The name of the identity.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"may_send": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "Whether this identity is allowed to send emails.",
+				MarkdownDescription: "Whether this identity is allowed to send emails.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"may_receive": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "Whether this identity is allowed to receive emails.",
+				MarkdownDescription: "Whether this identity is allowed to receive emails.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"may_access_imap": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "Whether this identity is allowed to use IMAP.",
+				MarkdownDescription: "Whether this identity is allowed to use IMAP.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"may_access_pop3": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "Whether this identity is allowed to use POP3.",
+				MarkdownDescription: "Whether this identity is allowed to use POP3.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"may_access_manage_sieve": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "Whether this identity is allowed to manage the mail sieve.",
+				MarkdownDescription: "Whether this identity is allowed to manage the mail sieve.",
+				Optional:            true,
+				Computed:            true,
+			},
+			"password": schema.StringAttribute{
+				Description:         "The password of the identity.",
+				MarkdownDescription: "The password of the identity.",
+				Required:            true,
+				Sensitive:           true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"footer_active": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "Whether the footer of this identity is active.",
+				MarkdownDescription: "Whether the footer of this identity is active.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"footer_plain_body": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "The footer of this identity in text/plain format.",
+				MarkdownDescription: "The footer of this identity in text/plain format.",
+				Optional:            true,
+				Computed:            true,
 			},
 			"footer_html_body": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Description:         "The footer of this identity in text/html format.",
+				MarkdownDescription: "The footer of this identity in text/html format.",
+				Optional:            true,
+				Computed:            true,
 			},
 		},
 	}
@@ -328,7 +355,12 @@ func (r *identityResource) Delete(ctx context.Context, req resource.DeleteReques
 func (r *identityResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	idParts := strings.Split(req.ID, "@")
 
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+	localPart := idParts[0]
+	domainPart := strings.Split(idParts[1], "/")
+	domainName := domainPart[0]
+	identity := domainPart[1]
+
+	if localPart == "" || domainName == "" || identity == "" {
 		resp.Diagnostics.AddError(
 			"Error importing identity",
 			fmt.Sprintf("Expected import identifier with format: 'local_part@domain_name/identity' Got: '%q'", req.ID),
@@ -336,9 +368,6 @@ func (r *identityResource) ImportState(ctx context.Context, req resource.ImportS
 		return
 	}
 
-	localPart := idParts[0]
-	domainName := idParts[1]
-	identity := idParts[1]
 	tflog.Trace(ctx, "parsed import ID", map[string]interface{}{
 		"local_part":  localPart,
 		"domain_name": domainName,
@@ -349,6 +378,7 @@ func (r *identityResource) ImportState(ctx context.Context, req resource.ImportS
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("local_part"), localPart)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_name"), domainName)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("identity"), identity)...)
 }
 
 func createIdentityID(localPart, domainName, identity types.String) string {

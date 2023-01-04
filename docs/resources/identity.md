@@ -19,7 +19,7 @@ resource "migadu_identity" "example" {
   identity    = "some-identity"
 }
 
-# international domain names
+# international domain names are supported
 resource "migadu_identity" "idn" {
   domain_name = "bücher.example"
   local_part  = "some-mailbox"
@@ -35,18 +35,19 @@ resource "migadu_identity" "idn" {
 - `domain_name` (String) The domain name of the identity to manage.
 - `identity` (String) The local part of the identity to manage.
 - `local_part` (String) The local part of the mailbox that owns the identity.
+- `password` (String, Sensitive) The password of the identity.
 
 ### Optional
 
-- `footer_active` (Boolean)
-- `footer_html_body` (String)
-- `footer_plain_body` (String)
-- `may_access_imap` (Boolean)
-- `may_access_manage_sieve` (Boolean)
-- `may_access_pop3` (Boolean)
-- `may_receive` (Boolean)
-- `may_send` (Boolean)
-- `name` (String)
+- `footer_active` (Boolean) Whether the footer of this identity is active.
+- `footer_html_body` (String) The footer of this identity in text/html format.
+- `footer_plain_body` (String) The footer of this identity in text/plain format.
+- `may_access_imap` (Boolean) Whether this identity is allowed to use IMAP.
+- `may_access_manage_sieve` (Boolean) Whether this identity is allowed to manage the mail sieve.
+- `may_access_pop3` (Boolean) Whether this identity is allowed to use POP3.
+- `may_receive` (Boolean) Whether this identity is allowed to receive emails.
+- `may_send` (Boolean) Whether this identity is allowed to send emails.
+- `name` (String) The name of the identity.
 
 ### Read-Only
 

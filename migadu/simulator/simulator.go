@@ -18,18 +18,19 @@ type State struct {
 	Aliases    []model.Alias
 	Identities []model.Identity
 	Rewrites   []model.Rewrite
+	StatusCode int
 }
 
 func MigaduAPI(t *testing.T, state *State) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if aliasesUrlPattern.MatchString(r.URL.Path) {
-			handleAliases(t, &state.Aliases).ServeHTTP(w, r)
+			handleAliases(t, &state.Aliases, state.StatusCode).ServeHTTP(w, r)
 		} else if identitiesUrlPattern.MatchString(r.URL.Path) {
-			handleIdentities(t, &state.Identities).ServeHTTP(w, r)
+			handleIdentities(t, &state.Identities, state.StatusCode).ServeHTTP(w, r)
 		} else if rewritesPattern.MatchString(r.URL.Path) {
-			handleRewrites(t, &state.Rewrites).ServeHTTP(w, r)
+			handleRewrites(t, &state.Rewrites, state.StatusCode).ServeHTTP(w, r)
 		} else if mailboxesPattern.MatchString(r.URL.Path) {
-			handleMailboxes(t, &state.Mailboxes).ServeHTTP(w, r)
+			handleMailboxes(t, &state.Mailboxes, state.StatusCode).ServeHTTP(w, r)
 		} else {
 			t.Errorf("No Handler for URL: %s", r.URL.Path)
 		}

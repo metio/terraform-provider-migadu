@@ -20,7 +20,7 @@ import (
 
 var aliasesUrlPattern = regexp.MustCompile("/domains/(.*)/aliases/?(.*)?")
 
-func handleAliases(t *testing.T, aliases *[]model.Alias) http.HandlerFunc {
+func handleAliases(t *testing.T, aliases *[]model.Alias, forcedStatusCode int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		matches := aliasesUrlPattern.FindStringSubmatch(r.URL.Path)
 		if matches == nil {
@@ -28,6 +28,11 @@ func handleAliases(t *testing.T, aliases *[]model.Alias) http.HandlerFunc {
 		}
 		domain := matches[1]
 		localPart := matches[2]
+
+		if forcedStatusCode > 0 {
+			w.WriteHeader(forcedStatusCode)
+			return
+		}
 
 		if r.Method == http.MethodPost {
 			handleCreateAlias(w, r, t, aliases, domain)
@@ -119,6 +124,7 @@ func handleUpdateAlias(w http.ResponseWriter, r *http.Request, t *testing.T, ali
 	}
 
 	requestAlias.DomainName = domain
+	requestAlias.LocalPart = localPart
 	requestAlias.Address = fmt.Sprintf("%s@%s", requestAlias.LocalPart, domain)
 	ascii, err := idn.ConvertEmailsToASCII(requestAlias.Destinations)
 	if err != nil {
@@ -158,6 +164,7 @@ func handleCreateAlias(w http.ResponseWriter, r *http.Request, t *testing.T, ali
 	if err != nil {
 		t.Errorf("Could not unmarshall alias")
 	}
+
 	alias.DomainName = domain
 	alias.Address = fmt.Sprintf("%s@%s", alias.LocalPart, domain)
 	ascii, err := idn.ConvertEmailsToASCII(alias.Destinations)
@@ -165,6 +172,13 @@ func handleCreateAlias(w http.ResponseWriter, r *http.Request, t *testing.T, ali
 		t.Errorf("Could not convert to punycode")
 	}
 	alias.Destinations = ascii
+
+	for _, existingAlias := range *aliases {
+		if existingAlias.DomainName == alias.DomainName && existingAlias.LocalPart == alias.LocalPart {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+	}
 
 	*aliases = append(*aliases, alias)
 
