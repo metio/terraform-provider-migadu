@@ -3,12 +3,12 @@
 page_title: "migadu_rewrite Data Source - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Gets a specific rewrite rule of a domain.
+  Get information about a single rewrite rule.
 ---
 
 # migadu_rewrite (Data Source)
 
-Gets a specific rewrite rule of a domain.
+Get information about a single rewrite rule.
 
 ## Example Usage
 
@@ -30,14 +30,14 @@ data "migadu_rewrite" "idn" {
 
 ### Required
 
-- `domain_name` (String) The domain of the rewrite rule to fetch.
-- `name` (String) The name (slug) of the rewrite rule to fetch.
+- `domain_name` (String) The domain of the rewrite rule.
+- `name` (String) The name (slug) of the rewrite rule.
 
 ### Read-Only
 
 - `destinations` (List of String) The destinations of the rewrite rule in unicode.
 - `destinations_punycode` (List of String) The destinations of the rewrite rule in punycode.
-- `id` (String) Contains the value 'name@domain_name'.
+- `id` (String) Contains the value `domain_name/name`.
 - `local_part_rule` (String) The local part expression of the rewrite rule
 - `order_num` (Number) The order number of the rewrite rule.
 

@@ -130,7 +130,7 @@ func TestRewriteDataSource_API_Success(t *testing.T) {
 						Check: resource.ComposeAggregateTestCheckFunc(
 							resource.TestCheckResourceAttr("data.migadu_rewrite.test", "domain_name", tt.domain),
 							resource.TestCheckResourceAttr("data.migadu_rewrite.test", "name", tt.slug),
-							resource.TestCheckResourceAttr("data.migadu_rewrite.test", "id", fmt.Sprintf("%s@%s", tt.slug, tt.domain)),
+							resource.TestCheckResourceAttr("data.migadu_rewrite.test", "id", fmt.Sprintf("%s/%s", tt.domain, tt.slug)),
 						),
 					},
 				},

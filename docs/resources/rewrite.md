@@ -3,12 +3,12 @@
 page_title: "migadu_rewrite Resource - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Manage a single rewrite rule.
+  Provides a rewrite rule.
 ---
 
 # migadu_rewrite (Resource)
 
-Manage a single rewrite rule.
+Provides a rewrite rule.
 
 ## Example Usage
 
@@ -31,8 +31,8 @@ resource "migadu_rewrite" "idn" {
   local_part_rule = "sec-*"
 
   destinations = [
-    "first@ücher.example",
-    "second@ücher.example",
+    "first@bücher.example",
+    "second@bücher.example",
   ]
 }
 ```
@@ -42,7 +42,7 @@ resource "migadu_rewrite" "idn" {
 
 ### Required
 
-- `domain_name` (String) The domain name of the rewrite rule to manage.
+- `domain_name` (String) The domain name of the rewrite rule.
 - `local_part_rule` (String) The regular expression matching the local part of incoming emails.
 - `name` (String) The name (slug) of the rewrite rule.
 
@@ -54,6 +54,6 @@ resource "migadu_rewrite" "idn" {
 
 ### Read-Only
 
-- `id` (String) Contains the value `name`.
+- `id` (String) Contains the value `domain_name/name`.
 
 

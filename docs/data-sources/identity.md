@@ -3,12 +3,12 @@
 page_title: "migadu_identity Data Source - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Gets a single identity.
+  Get information about a single identity owned by mailbox.
 ---
 
 # migadu_identity (Data Source)
 
-Gets a single identity.
+Get information about a single identity owned by mailbox.
 
 ## Example Usage
 
@@ -32,22 +32,22 @@ data "migadu_identity" "idn" {
 
 ### Required
 
-- `domain_name` (String) The domain to fetch identities of.
-- `identity` (String) The local part of the identity to fetch.
+- `domain_name` (String) The domain name of the mailbox/identity.
+- `identity` (String) The local part of the identity.
 - `local_part` (String) The local part of the mailbox that owns the identity.
 
 ### Read-Only
 
-- `address` (String) The email address of the identity.
-- `footer_active` (Boolean) Whether the footer of this identity is active.
-- `footer_html_body` (String) The footer of this identity in text/html format.
-- `footer_plain_body` (String) The footer of this identity in text/plain format.
+- `address` (String) The email address of the identity `identity@domain_name` as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.
+- `footer_active` (Boolean) Whether the footer of the identity is active.
+- `footer_html_body` (String) The footer of the identity in `text/html` format.
+- `footer_plain_body` (String) The footer of the identity in `text/plain` format.
 - `id` (String) Contains the value `local_part@domain_name/identity`.
-- `may_access_imap` (Boolean) Whether this identity is allowed to use IMAP.
-- `may_access_manage_sieve` (Boolean) Whether this identity is allowed to manage the mail sieve.
-- `may_access_pop3` (Boolean) Whether this identity is allowed to use POP3.
-- `may_receive` (Boolean) Whether this identity is allowed to receive emails.
-- `may_send` (Boolean) Whether this identity is allowed to send emails.
+- `may_access_imap` (Boolean) Whether the identity is allowed to use IMAP.
+- `may_access_manage_sieve` (Boolean) Whether the identity is allowed to manage the mail sieve.
+- `may_access_pop3` (Boolean) Whether the identity is allowed to use POP3.
+- `may_receive` (Boolean) Whether the identity is allowed to receive emails.
+- `may_send` (Boolean) Whether the identity is allowed to send emails.
 - `name` (String) The name of the identity.
 
 

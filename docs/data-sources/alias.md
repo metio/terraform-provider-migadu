@@ -3,12 +3,12 @@
 page_title: "migadu_alias Data Source - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Gets a single alias.
+  Get information about an email alias.
 ---
 
 # migadu_alias (Data Source)
 
-Gets a single alias.
+Get information about an email alias.
 
 ## Example Usage
 
@@ -30,18 +30,18 @@ data "migadu_alias" "idn" {
 
 ### Required
 
-- `domain_name` (String) The domain name of the alias to fetch.
-- `local_part` (String) The local part of the alias to fetch.
+- `domain_name` (String) The domain name of the alias.
+- `local_part` (String) The local part of the alias.
 
 ### Read-Only
 
-- `address` (String) Contains the full email address of the alias as returned by the Migadu API.
-- `destinations` (List of String) Destination email addresses in unicode.
-- `destinations_punycode` (List of String) Destination email addresses in punycode.
-- `expirable` (Boolean) Whether this alias expires at some time.
-- `expires_on` (String) The expiration date of this alias.
+- `address` (String) The email address of the alias `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
+- `destinations` (List of String) List of email addresses that act as destinations of the alias in unicode.
+- `destinations_punycode` (List of String) List of email addresses that act as destinations of the alias in punycode.
+- `expirable` (Boolean) Whether the alias expires at some time.
+- `expires_on` (String) The expiration date of the alias.
 - `id` (String) Contains the value `local_part@domain_name`.
-- `is_internal` (Boolean) Whether this alias is internal only. An internal alias can only receive emails from Migadu servers.
-- `remove_upon_expiry` (Boolean) Whether to remove this alias upon expiry.
+- `is_internal` (Boolean) Whether the alias is internal only. An internal alias can only receive emails from Migadu servers.
+- `remove_upon_expiry` (Boolean) Whether to remove the alias upon expiry.
 
 

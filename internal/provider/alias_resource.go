@@ -56,12 +56,12 @@ func (r *aliasResource) Metadata(_ context.Context, req resource.MetadataRequest
 
 func (r *aliasResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Manage a single alias.",
-		MarkdownDescription: "Manage a single alias.",
+		Description:         "Provides an email alias.",
+		MarkdownDescription: "Provides an email alias.",
 		Attributes: map[string]schema.Attribute{
 			"domain_name": schema.StringAttribute{
-				Description:         "The domain name of the alias to manage.",
-				MarkdownDescription: "The domain name of the alias to manage.",
+				Description:         "The domain name of the alias.",
+				MarkdownDescription: "The domain name of the alias.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -71,8 +71,8 @@ func (r *aliasResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				},
 			},
 			"local_part": schema.StringAttribute{
-				Description:         "The local part of the alias to manage.",
-				MarkdownDescription: "The local part of the alias to manage.",
+				Description:         "The local part of the alias.",
+				MarkdownDescription: "The local part of the alias.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -90,16 +90,16 @@ func (r *aliasResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				},
 			},
 			"address": schema.StringAttribute{
-				Description:         "Contains the email address 'local_part@domain_name' as returned by the Migadu API. This might be different from the 'id' attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
-				MarkdownDescription: "Contains the email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
+				Description:         "The email address 'local_part@domain_name' as returned by the Migadu API. This might be different from the 'id' attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
+				MarkdownDescription: "The email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"destinations": schema.ListAttribute{
-				Description:         "List of email addresses that act as destinations of the alias.",
-				MarkdownDescription: "List of email addresses that act as destinations of the alias.",
+				Description:         "List of email addresses that act as destinations of the alias in unicode.",
+				MarkdownDescription: "List of email addresses that act as destinations of the alias in unicode.",
 				Optional:            true,
 				Computed:            true,
 				ElementType:         types.StringType,
@@ -109,8 +109,8 @@ func (r *aliasResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				},
 			},
 			"destinations_punycode": schema.ListAttribute{
-				Description:         "List of email addresses that act as destinations of the alias. Use this attribute instead of 'destinations' in case you want/must use the punycode representation of your domain.",
-				MarkdownDescription: "List of email addresses that act as destinations of the alias. Use this attribute instead of `destinations` in case you want/must use the punycode representation of your domain.",
+				Description:         "List of email addresses that act as destinations of the alias in punycode. Use this attribute instead of 'destinations' in case you want/must use the punycode representation of your domain.",
+				MarkdownDescription: "List of email addresses that act as destinations of the alias in punycode. Use this attribute instead of `destinations` in case you want/must use the punycode representation of your domain.",
 				Optional:            true,
 				Computed:            true,
 				ElementType:         types.StringType,

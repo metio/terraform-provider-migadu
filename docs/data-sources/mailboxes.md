@@ -3,12 +3,12 @@
 page_title: "migadu_mailboxes Data Source - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Gets all mailboxes of a domain.
+  Get information about all mailbox of a domain.
 ---
 
 # migadu_mailboxes (Data Source)
 
-Gets all mailboxes of a domain.
+Get information about all mailbox of a domain.
 
 ## Example Usage
 
@@ -28,7 +28,7 @@ data "migadu_mailboxes" "idn" {
 
 ### Required
 
-- `domain_name` (String) The domain to fetch mailboxes of.
+- `domain_name` (String) The domain name of the mailboxes.
 
 ### Read-Only
 
@@ -40,7 +40,7 @@ data "migadu_mailboxes" "idn" {
 
 Read-Only:
 
-- `address` (String) The email address of the mailbox.
+- `address` (String) The email address of the mailbox `local_part@domain_name` as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.
 - `auto_respond_active` (Boolean) Whether an automatic response is active in this mailbox.
 - `auto_respond_body` (String) The body of the automatic response.
 - `auto_respond_expires_on` (String) The expiration date of the automatic response.

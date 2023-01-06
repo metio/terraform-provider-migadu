@@ -79,12 +79,12 @@ func (r *mailboxResource) Metadata(_ context.Context, req resource.MetadataReque
 
 func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Manage a single mailbox.",
-		MarkdownDescription: "Manage a single mailbox.",
+		Description:         "Provides a mailbox.",
+		MarkdownDescription: "Provides a mailbox.",
 		Attributes: map[string]schema.Attribute{
 			"domain_name": schema.StringAttribute{
-				Description:         "The domain name of the mailbox to manage.",
-				MarkdownDescription: "The domain name of the mailbox to manage.",
+				Description:         "The domain name of the mailbox.",
+				MarkdownDescription: "The domain name of the mailbox.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -94,8 +94,8 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				},
 			},
 			"local_part": schema.StringAttribute{
-				Description:         "The local part of the mailbox to manage.",
-				MarkdownDescription: "The local part of the mailbox to manage.",
+				Description:         "The local part of the mailbox.",
+				MarkdownDescription: "The local part of the mailbox.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -105,16 +105,16 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				},
 			},
 			"id": schema.StringAttribute{
-				Description:         "Contains the full email address 'local_part@domain_name'.",
-				MarkdownDescription: "Contains the full email address 'local_part@domain_name'.",
+				Description:         "Contains the value 'local_part@domain_name'.",
+				MarkdownDescription: "Contains the value `local_part@domain_name`.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"address": schema.StringAttribute{
-				Description:         "Contains the full email address 'local_part@domain_name' as returned by the Migadu API. This might be different from the 'id' attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
-				MarkdownDescription: "Contains the full email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
+				Description:         "The email address of the mailbox 'local_part@domain_name' as returned by the Migadu API. This might be different from the 'id' attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
+				MarkdownDescription: "The email address of the mailbox `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

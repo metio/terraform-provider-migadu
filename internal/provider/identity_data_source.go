@@ -52,12 +52,12 @@ func (d *identityDataSource) Metadata(_ context.Context, req datasource.Metadata
 
 func (d *identityDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Gets a single identity.",
-		MarkdownDescription: "Gets a single identity.",
+		Description:         "Get information about a single identity owned by mailbox.",
+		MarkdownDescription: "Get information about a single identity owned by mailbox.",
 		Attributes: map[string]schema.Attribute{
 			"domain_name": schema.StringAttribute{
-				Description:         "The domain to fetch identities of.",
-				MarkdownDescription: "The domain to fetch identities of.",
+				Description:         "The domain name of the mailbox/identity.",
+				MarkdownDescription: "The domain name of the mailbox/identity.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -72,8 +72,8 @@ func (d *identityDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 				},
 			},
 			"identity": schema.StringAttribute{
-				Description:         "The local part of the identity to fetch.",
-				MarkdownDescription: "The local part of the identity to fetch.",
+				Description:         "The local part of the identity.",
+				MarkdownDescription: "The local part of the identity.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -85,8 +85,8 @@ func (d *identityDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 				Computed:            true,
 			},
 			"address": schema.StringAttribute{
-				Description:         "The email address of the identity.",
-				MarkdownDescription: "The email address of the identity.",
+				Description:         "The email address of the identity 'identity@domain_name' as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
+				MarkdownDescription: "The email address of the identity `identity@domain_name` as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
 				Computed:            true,
 			},
 			"name": schema.StringAttribute{
@@ -95,43 +95,43 @@ func (d *identityDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 				Computed:            true,
 			},
 			"may_send": schema.BoolAttribute{
-				Description:         "Whether this identity is allowed to send emails.",
-				MarkdownDescription: "Whether this identity is allowed to send emails.",
+				Description:         "Whether the identity is allowed to send emails.",
+				MarkdownDescription: "Whether the identity is allowed to send emails.",
 				Computed:            true,
 			},
 			"may_receive": schema.BoolAttribute{
-				Description:         "Whether this identity is allowed to receive emails.",
-				MarkdownDescription: "Whether this identity is allowed to receive emails.",
+				Description:         "Whether the identity is allowed to receive emails.",
+				MarkdownDescription: "Whether the identity is allowed to receive emails.",
 				Computed:            true,
 			},
 			"may_access_imap": schema.BoolAttribute{
-				Description:         "Whether this identity is allowed to use IMAP.",
-				MarkdownDescription: "Whether this identity is allowed to use IMAP.",
+				Description:         "Whether the identity is allowed to use IMAP.",
+				MarkdownDescription: "Whether the identity is allowed to use IMAP.",
 				Computed:            true,
 			},
 			"may_access_pop3": schema.BoolAttribute{
-				Description:         "Whether this identity is allowed to use POP3.",
-				MarkdownDescription: "Whether this identity is allowed to use POP3.",
+				Description:         "Whether the identity is allowed to use POP3.",
+				MarkdownDescription: "Whether the identity is allowed to use POP3.",
 				Computed:            true,
 			},
 			"may_access_manage_sieve": schema.BoolAttribute{
-				Description:         "Whether this identity is allowed to manage the mail sieve.",
-				MarkdownDescription: "Whether this identity is allowed to manage the mail sieve.",
+				Description:         "Whether the identity is allowed to manage the mail sieve.",
+				MarkdownDescription: "Whether the identity is allowed to manage the mail sieve.",
 				Computed:            true,
 			},
 			"footer_active": schema.BoolAttribute{
-				Description:         "Whether the footer of this identity is active.",
-				MarkdownDescription: "Whether the footer of this identity is active.",
+				Description:         "Whether the footer of the identity is active.",
+				MarkdownDescription: "Whether the footer of the identity is active.",
 				Computed:            true,
 			},
 			"footer_plain_body": schema.StringAttribute{
-				Description:         "The footer of this identity in text/plain format.",
-				MarkdownDescription: "The footer of this identity in text/plain format.",
+				Description:         "The footer of the identity in 'text/plain' format.",
+				MarkdownDescription: "The footer of the identity in `text/plain` format.",
 				Computed:            true,
 			},
 			"footer_html_body": schema.StringAttribute{
-				Description:         "The footer of this identity in text/html format.",
-				MarkdownDescription: "The footer of this identity in text/html format.",
+				Description:         "The footer of the identity in 'text/html' format.",
+				MarkdownDescription: "The footer of the identity in `text/html` format.",
 				Computed:            true,
 			},
 		},

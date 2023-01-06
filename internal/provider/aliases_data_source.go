@@ -53,12 +53,12 @@ func (d *aliasesDataSource) Metadata(_ context.Context, req datasource.MetadataR
 
 func (d *aliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Gets all aliases of a domain.",
-		MarkdownDescription: "Gets all aliases of a domain.",
+		Description:         "Get information about all email aliases of a domain.",
+		MarkdownDescription: "Get information about all email aliases of a domain.",
 		Attributes: map[string]schema.Attribute{
 			"domain_name": schema.StringAttribute{
-				Description:         "The domain to fetch aliases of.",
-				MarkdownDescription: "The domain to fetch aliases of.",
+				Description:         "The domain name of all aliases.",
+				MarkdownDescription: "The domain name of all aliases.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -76,50 +76,50 @@ func (d *aliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"domain_name": schema.StringAttribute{
-							Description:         "The domain of an alias.",
-							MarkdownDescription: "The domain of an alias.",
+							Description:         "The domain name of the alias.",
+							MarkdownDescription: "The domain name of the alias.",
 							Computed:            true,
 						},
 						"local_part": schema.StringAttribute{
-							Description:         "The local part of an alias.",
-							MarkdownDescription: "The local part of an alias.",
+							Description:         "The local part of the alias.",
+							MarkdownDescription: "The local part of the alias.",
 							Computed:            true,
 						},
 						"address": schema.StringAttribute{
-							Description:         "The full email address of an alias.",
-							MarkdownDescription: "The full email address of an alias.",
+							Description:         "The email address 'local_part@domain_name' as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
+							MarkdownDescription: "The email address `local_part@domain_name` as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
 							Computed:            true,
 						},
 						"destinations": schema.ListAttribute{
-							Description:         "The destinations of an alias in unicode.",
-							MarkdownDescription: "The destinations of an alias in unicode.",
+							Description:         "List of email addresses that act as destinations of the alias in unicode.",
+							MarkdownDescription: "List of email addresses that act as destinations of the alias in unicode.",
 							Computed:            true,
 							ElementType:         types.StringType,
 						},
 						"destinations_punycode": schema.ListAttribute{
-							Description:         "The destinations of an alias in punycode.",
-							MarkdownDescription: "The destinations of an alias in punycode.",
+							Description:         "List of email addresses that act as destinations of the alias in punycode.",
+							MarkdownDescription: "List of email addresses that act as destinations of the alias in punycode.",
 							Computed:            true,
 							ElementType:         types.StringType,
 						},
 						"is_internal": schema.BoolAttribute{
-							Description:         "Whether this alias is internal and can only receive emails from Migadu servers.",
-							MarkdownDescription: "Whether this alias is internal and can only receive emails from Migadu servers.",
+							Description:         "Whether the alias is internal and can only receive emails from Migadu servers.",
+							MarkdownDescription: "Whether the alias is internal and can only receive emails from Migadu servers.",
 							Computed:            true,
 						},
 						"expirable": schema.BoolAttribute{
-							Description:         "Whether this alias expires some time in the future.",
-							MarkdownDescription: "Whether this alias expires some time in the future.",
+							Description:         "Whether the alias expires some time in the future.",
+							MarkdownDescription: "Whether the alias expires some time in the future.",
 							Computed:            true,
 						},
 						"expires_on": schema.StringAttribute{
-							Description:         "The expiration date of this alias.",
-							MarkdownDescription: "The expiration date of this alias.",
+							Description:         "The expiration date of the alias.",
+							MarkdownDescription: "The expiration date of the alias.",
 							Computed:            true,
 						},
 						"remove_upon_expiry": schema.BoolAttribute{
-							Description:         "Whether this alias is removed once it is expired.",
-							MarkdownDescription: "Whether this alias is removed once it is expired.",
+							Description:         "Whether the alias is removed once it is expired.",
+							MarkdownDescription: "Whether the alias is removed once it is expired.",
 							Computed:            true,
 						},
 					},

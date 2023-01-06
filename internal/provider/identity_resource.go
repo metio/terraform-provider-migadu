@@ -60,12 +60,12 @@ func (r *identityResource) Metadata(_ context.Context, req resource.MetadataRequ
 
 func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Manage a single identity.",
-		MarkdownDescription: "Manage a single identity.",
+		Description:         "Provides an identity to an existing mailbox.",
+		MarkdownDescription: "Provides an identity to an existing mailbox.",
 		Attributes: map[string]schema.Attribute{
 			"domain_name": schema.StringAttribute{
-				Description:         "The domain name of the identity to manage.",
-				MarkdownDescription: "The domain name of the identity to manage.",
+				Description:         "The domain name of the mailbox/identity.",
+				MarkdownDescription: "The domain name of the mailbox/identity.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -86,8 +86,8 @@ func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				},
 			},
 			"identity": schema.StringAttribute{
-				Description:         "The local part of the identity to manage.",
-				MarkdownDescription: "The local part of the identity to manage.",
+				Description:         "The local part of the identity.",
+				MarkdownDescription: "The local part of the identity.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -119,32 +119,32 @@ func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Computed:            true,
 			},
 			"may_send": schema.BoolAttribute{
-				Description:         "Whether this identity is allowed to send emails.",
-				MarkdownDescription: "Whether this identity is allowed to send emails.",
+				Description:         "Whether the identity is allowed to send emails.",
+				MarkdownDescription: "Whether the identity is allowed to send emails.",
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_receive": schema.BoolAttribute{
-				Description:         "Whether this identity is allowed to receive emails.",
-				MarkdownDescription: "Whether this identity is allowed to receive emails.",
+				Description:         "Whether the identity is allowed to receive emails.",
+				MarkdownDescription: "Whether the identity is allowed to receive emails.",
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_access_imap": schema.BoolAttribute{
-				Description:         "Whether this identity is allowed to use IMAP.",
-				MarkdownDescription: "Whether this identity is allowed to use IMAP.",
+				Description:         "Whether the identity is allowed to use IMAP.",
+				MarkdownDescription: "Whether the identity is allowed to use IMAP.",
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_access_pop3": schema.BoolAttribute{
-				Description:         "Whether this identity is allowed to use POP3.",
-				MarkdownDescription: "Whether this identity is allowed to use POP3.",
+				Description:         "Whether the identity is allowed to use POP3.",
+				MarkdownDescription: "Whether the identity is allowed to use POP3.",
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_access_manage_sieve": schema.BoolAttribute{
-				Description:         "Whether this identity is allowed to manage the mail sieve.",
-				MarkdownDescription: "Whether this identity is allowed to manage the mail sieve.",
+				Description:         "Whether the identity is allowed to manage the mail sieve.",
+				MarkdownDescription: "Whether the identity is allowed to manage the mail sieve.",
 				Optional:            true,
 				Computed:            true,
 			},
@@ -158,20 +158,20 @@ func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				},
 			},
 			"footer_active": schema.BoolAttribute{
-				Description:         "Whether the footer of this identity is active.",
-				MarkdownDescription: "Whether the footer of this identity is active.",
+				Description:         "Whether the footer of the identity is active.",
+				MarkdownDescription: "Whether the footer of the identity is active.",
 				Optional:            true,
 				Computed:            true,
 			},
 			"footer_plain_body": schema.StringAttribute{
-				Description:         "The footer of this identity in text/plain format.",
-				MarkdownDescription: "The footer of this identity in text/plain format.",
+				Description:         "The footer of the identity in 'text/plain' format.",
+				MarkdownDescription: "The footer of the identity in `text/plain` format.",
 				Optional:            true,
 				Computed:            true,
 			},
 			"footer_html_body": schema.StringAttribute{
-				Description:         "The footer of this identity in text/html format.",
-				MarkdownDescription: "The footer of this identity in text/html format.",
+				Description:         "The footer of the identity in 'text/html' format.",
+				MarkdownDescription: "The footer of the identity in `text/html` format.",
 				Optional:            true,
 				Computed:            true,
 			},
