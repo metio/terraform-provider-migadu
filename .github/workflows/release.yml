@@ -64,7 +64,7 @@ jobs:
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: ${{ github.event.repository.name }} version ${{ steps.release.outputs.version }} published
-          body: See ${{ steps.create_release.outputs.url }} for details.
+          body: See https://github.com/metio/terraform-provider-migadu/releases/tag/${{ steps.release.outputs.version }} for details.
           to: ${{ secrets.MAIL_RECIPIENT }}
           from: ${{ secrets.MAIL_SENDER }}
       - id: matrix
@@ -74,5 +74,5 @@ jobs:
         with:
           room_id: ${{ secrets.MATRIX_ROOM_ID }}
           access_token: ${{ secrets.MATRIX_ACCESS_TOKEN }}
-          message: ${{ github.event.repository.name }} version [${{ steps.release.outputs.version }}](${{ steps.create_release.outputs.url }}) published
+          message: ${{ github.event.repository.name }} version [${{ steps.release.outputs.version }}](https://github.com/metio/terraform-provider-migadu/releases/tag/${{ steps.release.outputs.version }}) published
           server: ${{ secrets.MATRIX_SERVER }}
