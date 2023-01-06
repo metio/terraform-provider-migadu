@@ -50,8 +50,8 @@ func (d *rewritesDataSource) Metadata(_ context.Context, req datasource.Metadata
 
 func (d *rewritesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Gets all rewrite rules of a domain.",
-		MarkdownDescription: "Gets all rewrite rules of a domain.",
+		Description:         "Get information about a all rewrite rules of a domain.",
+		MarkdownDescription: "Get information about a all rewrite rules of a domain.",
 		Attributes: map[string]schema.Attribute{
 			"domain_name": schema.StringAttribute{
 				Description:         "The domain to fetch rewrite rules of.",

@@ -3,12 +3,12 @@
 page_title: "migadu_mailbox Data Source - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Gets a single mailbox.
+  Get information about a mailbox.
 ---
 
 # migadu_mailbox (Data Source)
 
-Gets a single mailbox.
+Get information about a mailbox.
 
 ## Example Usage
 
@@ -30,43 +30,43 @@ data "migadu_mailbox" "idn" {
 
 ### Required
 
-- `domain_name` (String) The domain name of the mailbox to fetch.
-- `local_part` (String) The local part of the mailbox to fetch.
+- `domain_name` (String) The domain name of the mailbox.
+- `local_part` (String) The local part of the mailbox.
 
 ### Read-Only
 
-- `address` (String) The email address of the mailbox.
-- `auto_respond_active` (Boolean) Whether an automatic response is active in this mailbox.
+- `address` (String) The email address of the mailbox `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
+- `auto_respond_active` (Boolean) Whether an automatic response is active in the mailbox.
 - `auto_respond_body` (String) The body of the automatic response.
 - `auto_respond_expires_on` (String) The expiration date of the automatic response.
 - `auto_respond_subject` (String) The subject of the automatic response.
-- `delegations` (List of String) The delegations of this mailbox in unicode.
-- `delegations_punycode` (List of String) The delegations of this mailbox in punycode.
-- `expirable` (Boolean) Whether this mailbox expires in the future.
-- `expires_on` (String) The expiration date of this mailbox.
-- `footer_active` (Boolean) Whether the footer of this mailbox is active.
-- `footer_html_body` (String) The footer of this mailbox in text/html format.
-- `footer_plain_body` (String) The footer of this mailbox in text/plain format.
+- `delegations` (List of String) The delegations of the mailbox in unicode.
+- `delegations_punycode` (List of String) The delegations of the mailbox in punycode.
+- `expirable` (Boolean) Whether the mailbox expires in the future.
+- `expires_on` (String) The expiration date of the mailbox.
+- `footer_active` (Boolean) Whether the footer of the mailbox is active.
+- `footer_html_body` (String) The footer of the mailbox in `text/html` format.
+- `footer_plain_body` (String) The footer of the mailbox in `text/plain` format.
 - `id` (String) Contains the value `local_part@domain_name`.
-- `identities` (List of String) The identities of this mailbox in unicode.
-- `identities_punycode` (List of String) The identities of this mailbox in punycode.
-- `is_internal` (Boolean) Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.
-- `may_access_imap` (Boolean) Whether this mailbox is allowed to use IMAP.
-- `may_access_manage_sieve` (Boolean) Whether this mailbox is allowed to manage the mail sieve.
-- `may_access_pop3` (Boolean) Whether this mailbox is allowed to use POP3.
-- `may_receive` (Boolean) Whether this mailbox is allowed to receive emails.
-- `may_send` (Boolean) Whether this mailbox is allowed to send emails.
+- `identities` (List of String) The identities of the mailbox in unicode.
+- `identities_punycode` (List of String) The identities of the mailbox in punycode.
+- `is_internal` (Boolean) Whether the mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.
+- `may_access_imap` (Boolean) Whether the mailbox is allowed to use IMAP.
+- `may_access_manage_sieve` (Boolean) Whether the mailbox is allowed to manage the mail sieve.
+- `may_access_pop3` (Boolean) Whether the mailbox is allowed to use POP3.
+- `may_receive` (Boolean) Whether the mailbox is allowed to receive emails.
+- `may_send` (Boolean) Whether the mailbox is allowed to send emails.
 - `name` (String) The name of the mailbox.
-- `password_recovery_email` (String) The recovery email address of this mailbox.
+- `password_recovery_email` (String) The recovery email address of the mailbox.
 - `recipient_denylist` (List of String) The email addresses of recipients that will always be denied delivery in unicode.
 - `recipient_denylist_punycode` (List of String) The email addresses of recipients that will always be denied delivery in punycode.
-- `remove_upon_expiry` (Boolean) Whether this mailbox will be removed upon expiry.
+- `remove_upon_expiry` (Boolean) Whether the mailbox will be removed upon expiry.
 - `sender_allowlist` (List of String) The email addresses of senders that will always be allowed delivery in unicode.
 - `sender_allowlist_punycode` (List of String) The email addresses of senders that will always be denied delivery in punycode.
 - `sender_denylist` (List of String) The email addresses of senders that will always be denied delivery in unicode.
 - `sender_denylist_punycode` (List of String) The email addresses of senders that will always be denied delivery in punycode.
-- `spam_action` (String) The action to take once spam arrives in this mailbox.
-- `spam_aggressiveness` (String) How aggressive will spam be detected in this mailbox.
-- `storage_usage` (Number) The current storage usage of this mailbox.
+- `spam_action` (String) The action to take once spam arrives in the mailbox.
+- `spam_aggressiveness` (String) How aggressive will spam be detected in the mailbox.
+- `storage_usage` (Number) The current storage usage of the mailbox.
 
 

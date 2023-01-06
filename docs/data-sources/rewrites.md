@@ -3,12 +3,12 @@
 page_title: "migadu_rewrites Data Source - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Gets all rewrite rules of a domain.
+  Get information about a all rewrite rules of a domain.
 ---
 
 # migadu_rewrites (Data Source)
 
-Gets all rewrite rules of a domain.
+Get information about a all rewrite rules of a domain.
 
 ## Example Usage
 

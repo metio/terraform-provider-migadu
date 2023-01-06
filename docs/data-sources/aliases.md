@@ -3,12 +3,12 @@
 page_title: "migadu_aliases Data Source - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Gets all aliases of a domain.
+  Get information about all email aliases of a domain.
 ---
 
 # migadu_aliases (Data Source)
 
-Gets all aliases of a domain.
+Get information about all email aliases of a domain.
 
 ## Example Usage
 
@@ -28,7 +28,7 @@ data "migadu_aliases" "idn" {
 
 ### Required
 
-- `domain_name` (String) The domain to fetch aliases of.
+- `domain_name` (String) The domain name of all aliases.
 
 ### Read-Only
 
@@ -40,14 +40,14 @@ data "migadu_aliases" "idn" {
 
 Read-Only:
 
-- `address` (String) The full email address of an alias.
-- `destinations` (List of String) The destinations of an alias in unicode.
-- `destinations_punycode` (List of String) The destinations of an alias in punycode.
-- `domain_name` (String) The domain of an alias.
-- `expirable` (Boolean) Whether this alias expires some time in the future.
-- `expires_on` (String) The expiration date of this alias.
-- `is_internal` (Boolean) Whether this alias is internal and can only receive emails from Migadu servers.
-- `local_part` (String) The local part of an alias.
-- `remove_upon_expiry` (Boolean) Whether this alias is removed once it is expired.
+- `address` (String) The email address `local_part@domain_name` as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.
+- `destinations` (List of String) List of email addresses that act as destinations of the alias in unicode.
+- `destinations_punycode` (List of String) List of email addresses that act as destinations of the alias in punycode.
+- `domain_name` (String) The domain name of the alias.
+- `expirable` (Boolean) Whether the alias expires some time in the future.
+- `expires_on` (String) The expiration date of the alias.
+- `is_internal` (Boolean) Whether the alias is internal and can only receive emails from Migadu servers.
+- `local_part` (String) The local part of the alias.
+- `remove_upon_expiry` (Boolean) Whether the alias is removed once it is expired.
 
 

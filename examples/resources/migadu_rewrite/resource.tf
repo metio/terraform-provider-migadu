@@ -16,7 +16,7 @@ resource "migadu_rewrite" "idn" {
   local_part_rule = "sec-*"
 
   destinations = [
-    "first@ücher.example",
-    "second@ücher.example",
+    "first@bücher.example",
+    "second@bücher.example",
   ]
 }

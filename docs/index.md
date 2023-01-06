@@ -32,6 +32,6 @@ provider "migadu" {
 ### Optional
 
 - `endpoint` (String) The API endpoint to use. Can be specified with the `MIGADU_ENDPOINT` environment variable. Defaults to `https://api.migadu.com/v1/`. Take a look at https://www.migadu.com/api/#api-requests for more information.
-- `timeout` (Number) The timeout to apply for HTTP requests in seconds. Can be specified with the 'MIGADU_TIMEOUT' environment variable. Defaults to 10.
+- `timeout` (Number) The timeout to apply for HTTP requests in seconds. Can be specified with the `MIGADU_TIMEOUT` environment variable. Defaults to 10.
 - `token` (String, Sensitive) The API key to use. Can be specified with the `MIGADU_TOKEN` environment variable Take a look at https://www.migadu.com/api/#api-keys for more information.
 - `username` (String, Sensitive) The username to use. Can be specified with the `MIGADU_USERNAME` environment variable Take a look at https://www.migadu.com/api/#api-requests for more information.

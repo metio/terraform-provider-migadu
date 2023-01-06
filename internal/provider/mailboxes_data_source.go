@@ -78,12 +78,12 @@ func (d *mailboxesDataSource) Metadata(_ context.Context, req datasource.Metadat
 
 func (d *mailboxesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Gets all mailboxes of a domain.",
-		MarkdownDescription: "Gets all mailboxes of a domain.",
+		Description:         "Get information about all mailbox of a domain.",
+		MarkdownDescription: "Get information about all mailbox of a domain.",
 		Attributes: map[string]schema.Attribute{
 			"domain_name": schema.StringAttribute{
-				Description:         "The domain to fetch mailboxes of.",
-				MarkdownDescription: "The domain to fetch mailboxes of.",
+				Description:         "The domain name of the mailboxes.",
+				MarkdownDescription: "The domain name of the mailboxes.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -111,8 +111,8 @@ func (d *mailboxesDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 							Computed:            true,
 						},
 						"address": schema.StringAttribute{
-							Description:         "The email address of the mailbox.",
-							MarkdownDescription: "The email address of the mailbox.",
+							Description:         "The email address of the mailbox 'local_part@domain_name' as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
+							MarkdownDescription: "The email address of the mailbox `local_part@domain_name` as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
 							Computed:            true,
 						},
 						"name": schema.StringAttribute{

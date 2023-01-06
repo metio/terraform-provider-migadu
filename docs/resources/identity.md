@@ -3,12 +3,12 @@
 page_title: "migadu_identity Resource - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Manage a single identity.
+  Provides an identity to an existing mailbox.
 ---
 
 # migadu_identity (Resource)
 
-Manage a single identity.
+Provides an identity to an existing mailbox.
 
 ## Example Usage
 
@@ -32,21 +32,21 @@ resource "migadu_identity" "idn" {
 
 ### Required
 
-- `domain_name` (String) The domain name of the identity to manage.
-- `identity` (String) The local part of the identity to manage.
+- `domain_name` (String) The domain name of the mailbox/identity.
+- `identity` (String) The local part of the identity.
 - `local_part` (String) The local part of the mailbox that owns the identity.
 - `password` (String, Sensitive) The password of the identity.
 
 ### Optional
 
-- `footer_active` (Boolean) Whether the footer of this identity is active.
-- `footer_html_body` (String) The footer of this identity in text/html format.
-- `footer_plain_body` (String) The footer of this identity in text/plain format.
-- `may_access_imap` (Boolean) Whether this identity is allowed to use IMAP.
-- `may_access_manage_sieve` (Boolean) Whether this identity is allowed to manage the mail sieve.
-- `may_access_pop3` (Boolean) Whether this identity is allowed to use POP3.
-- `may_receive` (Boolean) Whether this identity is allowed to receive emails.
-- `may_send` (Boolean) Whether this identity is allowed to send emails.
+- `footer_active` (Boolean) Whether the footer of the identity is active.
+- `footer_html_body` (String) The footer of the identity in `text/html` format.
+- `footer_plain_body` (String) The footer of the identity in `text/plain` format.
+- `may_access_imap` (Boolean) Whether the identity is allowed to use IMAP.
+- `may_access_manage_sieve` (Boolean) Whether the identity is allowed to manage the mail sieve.
+- `may_access_pop3` (Boolean) Whether the identity is allowed to use POP3.
+- `may_receive` (Boolean) Whether the identity is allowed to receive emails.
+- `may_send` (Boolean) Whether the identity is allowed to send emails.
 - `name` (String) The name of the identity.
 
 ### Read-Only

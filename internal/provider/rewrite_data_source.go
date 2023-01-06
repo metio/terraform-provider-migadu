@@ -45,28 +45,28 @@ func (d *rewriteDataSource) Metadata(_ context.Context, req datasource.MetadataR
 
 func (d *rewriteDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Gets a specific rewrite rule of a domain.",
-		MarkdownDescription: "Gets a specific rewrite rule of a domain.",
+		Description:         "Get information about a single rewrite rule.",
+		MarkdownDescription: "Get information about a single rewrite rule.",
 		Attributes: map[string]schema.Attribute{
 			"domain_name": schema.StringAttribute{
-				Description:         "The domain of the rewrite rule to fetch.",
-				MarkdownDescription: "The domain of the rewrite rule to fetch.",
+				Description:         "The domain of the rewrite rule.",
+				MarkdownDescription: "The domain of the rewrite rule.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"name": schema.StringAttribute{
-				Description:         "The name (slug) of the rewrite rule to fetch.",
-				MarkdownDescription: "The name (slug) of the rewrite rule to fetch.",
+				Description:         "The name (slug) of the rewrite rule.",
+				MarkdownDescription: "The name (slug) of the rewrite rule.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"id": schema.StringAttribute{
-				Description:         "Contains the value 'name@domain_name'.",
-				MarkdownDescription: "Contains the value 'name@domain_name'.",
+				Description:         "Contains the value 'domain_name/name'.",
+				MarkdownDescription: "Contains the value `domain_name/name`.",
 				Computed:            true,
 			},
 			"local_part_rule": schema.StringAttribute{
@@ -139,7 +139,7 @@ func (d *rewriteDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	data.Destinations = destinations
 	data.DestinationsPunycode = destinationsPunycode
-	data.ID = types.StringValue(fmt.Sprintf("%s@%s", data.Name.ValueString(), data.DomainName.ValueString()))
+	data.ID = types.StringValue(fmt.Sprintf("%s/%s", data.DomainName.ValueString(), data.Name.ValueString()))
 	//data.DomainName = types.StringValue(mailbox.DomainName)
 	//data.Name = types.StringValue(mailbox.Name)
 	data.LocalPartRule = types.StringValue(rewrite.LocalPartRule)

@@ -3,12 +3,12 @@
 page_title: "migadu_alias Resource - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Manage a single alias.
+  Provides an email alias.
 ---
 
 # migadu_alias (Resource)
 
-Manage a single alias.
+Provides an email alias.
 
 ## Example Usage
 
@@ -40,13 +40,13 @@ resource "migadu_alias" "idn" {
 
 ### Required
 
-- `domain_name` (String) The domain name of the alias to manage.
-- `local_part` (String) The local part of the alias to manage.
+- `domain_name` (String) The domain name of the alias.
+- `local_part` (String) The local part of the alias.
 
 ### Optional
 
-- `destinations` (List of String) List of email addresses that act as destinations of the alias.
-- `destinations_punycode` (List of String) List of email addresses that act as destinations of the alias. Use this attribute instead of `destinations` in case you want/must use the punycode representation of your domain.
+- `destinations` (List of String) List of email addresses that act as destinations of the alias in unicode.
+- `destinations_punycode` (List of String) List of email addresses that act as destinations of the alias in punycode. Use this attribute instead of `destinations` in case you want/must use the punycode representation of your domain.
 - `expirable` (Boolean) Whether this alias expires at some time.
 - `expires_on` (String) The expiration date of this alias.
 - `is_internal` (Boolean) Internal aliases can only receive emails from Migadu email servers.
@@ -54,7 +54,7 @@ resource "migadu_alias" "idn" {
 
 ### Read-Only
 
-- `address` (String) Contains the email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
+- `address` (String) The email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
 - `id` (String) Contains the value `local_part@domain_name`.
 
 

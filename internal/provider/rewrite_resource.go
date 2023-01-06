@@ -54,12 +54,12 @@ func (r *rewriteResource) Metadata(_ context.Context, req resource.MetadataReque
 
 func (r *rewriteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Manage a single rewrite rule.",
-		MarkdownDescription: "Manage a single rewrite rule.",
+		Description:         "Provides a rewrite rule.",
+		MarkdownDescription: "Provides a rewrite rule.",
 		Attributes: map[string]schema.Attribute{
 			"domain_name": schema.StringAttribute{
-				Description:         "The domain name of the rewrite rule to manage.",
-				MarkdownDescription: "The domain name of the rewrite rule to manage.",
+				Description:         "The domain name of the rewrite rule.",
+				MarkdownDescription: "The domain name of the rewrite rule.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -69,8 +69,8 @@ func (r *rewriteResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				},
 			},
 			"id": schema.StringAttribute{
-				Description:         "Contains the value 'name'.",
-				MarkdownDescription: "Contains the value `name`.",
+				Description:         "Contains the value 'domain_name/name'.",
+				MarkdownDescription: "Contains the value `domain_name/name`.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

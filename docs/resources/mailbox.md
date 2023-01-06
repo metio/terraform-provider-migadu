@@ -3,12 +3,12 @@
 page_title: "migadu_mailbox Resource - terraform-provider-migadu"
 subcategory: ""
 description: |-
-  Manage a single mailbox.
+  Provides a mailbox.
 ---
 
 # migadu_mailbox (Resource)
 
-Manage a single mailbox.
+Provides a mailbox.
 
 ## Example Usage
 
@@ -39,8 +39,8 @@ resource "migadu_mailbox" "idn" {
 
 ### Required
 
-- `domain_name` (String) The domain name of the mailbox to manage.
-- `local_part` (String) The local part of the mailbox to manage.
+- `domain_name` (String) The domain name of the mailbox.
+- `local_part` (String) The local part of the mailbox.
 
 ### Optional
 
@@ -74,8 +74,8 @@ resource "migadu_mailbox" "idn" {
 
 ### Read-Only
 
-- `address` (String) Contains the full email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
-- `id` (String) Contains the full email address 'local_part@domain_name'.
+- `address` (String) The email address of the mailbox `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
+- `id` (String) Contains the value `local_part@domain_name`.
 - `storage_usage` (Number) The current storage usage of this mailbox.
 
 
