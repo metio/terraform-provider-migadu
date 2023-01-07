@@ -54,13 +54,13 @@ func (p *MigaduProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 			},
 			"token": schema.StringAttribute{
 				Description:         "The API key to use. Can be specified with the 'MIGADU_TOKEN' environment variable. Take a look at https://www.migadu.com/api/#api-keys for more information.",
-				MarkdownDescription: "The API key to use. Can be specified with the `MIGADU_TOKEN` environment variable Take a look at https://www.migadu.com/api/#api-keys for more information.",
+				MarkdownDescription: "The API key to use. Can be specified with the `MIGADU_TOKEN` environment variable. Take a look at https://www.migadu.com/api/#api-keys for more information.",
 				Optional:            true,
 				Sensitive:           true,
 			},
 			"username": schema.StringAttribute{
 				Description:         "The username to use. Can be specified with the 'MIGADU_USERNAME' environment variable. Take a look at https://www.migadu.com/api/#api-requests for more information.",
-				MarkdownDescription: "The username to use. Can be specified with the `MIGADU_USERNAME` environment variable Take a look at https://www.migadu.com/api/#api-requests for more information.",
+				MarkdownDescription: "The username to use. Can be specified with the `MIGADU_USERNAME` environment variable. Take a look at https://www.migadu.com/api/#api-requests for more information.",
 				Optional:            true,
 				Sensitive:           true,
 			},
