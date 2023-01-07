@@ -5,10 +5,12 @@
 
 package model
 
+// Rewrites is the data model that wraps multiple rewrite rules
 type Rewrites struct {
 	Rewrites []Rewrite `json:"rewrites"`
 }
 
+// Rewrite is the data model for a single rewrite rule
 type Rewrite struct {
 	DomainName    string   `json:"domain_name"`
 	Name          string   `json:"name"`

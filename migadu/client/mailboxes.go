@@ -16,7 +16,7 @@ import (
 	"net/http"
 )
 
-// GetMailboxes - Returns mailboxes for a single domain
+// GetMailboxes returns mailboxes for a single domain
 func (c *MigaduClient) GetMailboxes(ctx context.Context, domain string) (*model.Mailboxes, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -44,7 +44,7 @@ func (c *MigaduClient) GetMailboxes(ctx context.Context, domain string) (*model.
 	return &response, nil
 }
 
-// GetMailbox - Returns specific mailbox
+// GetMailbox returns specific mailbox
 func (c *MigaduClient) GetMailbox(ctx context.Context, domain string, localPart string) (*model.Mailbox, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -72,7 +72,7 @@ func (c *MigaduClient) GetMailbox(ctx context.Context, domain string, localPart 
 	return &response, nil
 }
 
-// CreateMailbox - Creates a new mailbox
+// CreateMailbox creates a new mailbox
 func (c *MigaduClient) CreateMailbox(ctx context.Context, domain string, mailbox *model.Mailbox) (*model.Mailbox, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -123,7 +123,7 @@ func (c *MigaduClient) CreateMailbox(ctx context.Context, domain string, mailbox
 	return &response, nil
 }
 
-// UpdateMailbox - Updates an existing mailbox
+// UpdateMailbox updates an existing mailbox
 func (c *MigaduClient) UpdateMailbox(ctx context.Context, domain string, localPart string, mailbox *model.Mailbox) (*model.Mailbox, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -174,7 +174,7 @@ func (c *MigaduClient) UpdateMailbox(ctx context.Context, domain string, localPa
 	return &response, nil
 }
 
-// DeleteMailbox - Deletes an existing mailbox
+// DeleteMailbox deletes an existing mailbox
 func (c *MigaduClient) DeleteMailbox(ctx context.Context, domain string, localPart string) (*model.Mailbox, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {

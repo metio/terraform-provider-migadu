@@ -5,10 +5,12 @@
 
 package model
 
+// Identities is the data model that wraps multiple identities
 type Identities struct {
 	Identities []Identity `json:"identities"`
 }
 
+// Identity is the data model for a single identity
 type Identity struct {
 	LocalPart            string `json:"local_part"`
 	DomainName           string `json:"domain_name"`

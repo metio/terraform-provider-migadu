@@ -11,10 +11,12 @@ import (
 	"strings"
 )
 
+// ConvertEmailsToUnicode converts the domain name of email addresses to their unicode representation
 func ConvertEmailsToUnicode(emails []string) ([]string, error) {
 	return convertEmailsWith(emails, idna.ToUnicode)
 }
 
+// ConvertEmailsToASCII converts the domain name of email addresses to their punycode representation
 func ConvertEmailsToASCII(emails []string) ([]string, error) {
 	return convertEmailsWith(emails, idna.ToASCII)
 }

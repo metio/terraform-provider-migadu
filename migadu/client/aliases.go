@@ -16,7 +16,7 @@ import (
 	"net/http"
 )
 
-// GetAliases - Returns aliases for a single domain
+// GetAliases returns all aliases for a single domain
 func (c *MigaduClient) GetAliases(ctx context.Context, domain string) (*model.Aliases, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -44,7 +44,7 @@ func (c *MigaduClient) GetAliases(ctx context.Context, domain string) (*model.Al
 	return &response, nil
 }
 
-// GetAlias - Returns specific alias
+// GetAlias returns specific alias
 func (c *MigaduClient) GetAlias(ctx context.Context, domain string, localPart string) (*model.Alias, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -72,7 +72,7 @@ func (c *MigaduClient) GetAlias(ctx context.Context, domain string, localPart st
 	return &response, nil
 }
 
-// CreateAlias - Creates a new alias
+// CreateAlias creates a new alias
 func (c *MigaduClient) CreateAlias(ctx context.Context, domain string, alias *model.Alias) (*model.Alias, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -111,7 +111,7 @@ func (c *MigaduClient) CreateAlias(ctx context.Context, domain string, alias *mo
 	return &response, nil
 }
 
-// UpdateAlias - Updates an existing alias
+// UpdateAlias updates an existing alias
 func (c *MigaduClient) UpdateAlias(ctx context.Context, domain string, localPart string, alias *model.Alias) (*model.Alias, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -150,7 +150,7 @@ func (c *MigaduClient) UpdateAlias(ctx context.Context, domain string, localPart
 	return &response, nil
 }
 
-// DeleteAlias - Deletes an existing alias
+// DeleteAlias deletes an existing alias
 func (c *MigaduClient) DeleteAlias(ctx context.Context, domain string, localPart string) (*model.Alias, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {

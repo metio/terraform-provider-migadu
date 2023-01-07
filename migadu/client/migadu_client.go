@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// MigaduClient holds all necessary information to interact with the Migadu API
 type MigaduClient struct {
 	HTTPClient *http.Client
 	Endpoint   string
@@ -20,6 +21,7 @@ type MigaduClient struct {
 	Token      string
 }
 
+// New creates a new MigaduClient
 func New(endpoint, username, token *string, timeout time.Duration) (*MigaduClient, error) {
 	if username == nil {
 		return nil, errors.New("no username supplied")

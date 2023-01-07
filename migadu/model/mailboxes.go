@@ -5,10 +5,12 @@
 
 package model
 
+// Mailboxes is the data model that wraps multiple mailboxes
 type Mailboxes struct {
 	Mailboxes []Mailbox `json:"mailboxes"`
 }
 
+// Mailbox is the data model for a single mailbox
 type Mailbox struct {
 	LocalPart             string   `json:"local_part"`
 	DomainName            string   `json:"domain_name"`

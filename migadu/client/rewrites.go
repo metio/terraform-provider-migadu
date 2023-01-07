@@ -22,7 +22,7 @@ type rewriteJson struct {
 	Destinations string `json:"destinations"`
 }
 
-// GetRewrites - Returns rewrite rules for a single domain
+// GetRewrites returns rewrite rules for a single domain
 func (c *MigaduClient) GetRewrites(ctx context.Context, domain string) (*model.Rewrites, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -50,7 +50,7 @@ func (c *MigaduClient) GetRewrites(ctx context.Context, domain string) (*model.R
 	return &response, nil
 }
 
-// GetRewrite - Returns a specific rewrite rule
+// GetRewrite returns a specific rewrite rule
 func (c *MigaduClient) GetRewrite(ctx context.Context, domain string, slug string) (*model.Rewrite, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -78,7 +78,7 @@ func (c *MigaduClient) GetRewrite(ctx context.Context, domain string, slug strin
 	return &response, nil
 }
 
-// CreateRewrite - Creates a new rewrite rule
+// CreateRewrite creates a new rewrite rule
 func (c *MigaduClient) CreateRewrite(ctx context.Context, domain string, rewrite *model.Rewrite) (*model.Rewrite, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -120,7 +120,7 @@ func (c *MigaduClient) CreateRewrite(ctx context.Context, domain string, rewrite
 	return &response, nil
 }
 
-// UpdateRewrite - Updates an existing rewrite rule
+// UpdateRewrite updates an existing rewrite rule
 func (c *MigaduClient) UpdateRewrite(ctx context.Context, domain string, slug string, rewrite *model.Rewrite) (*model.Rewrite, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -162,7 +162,7 @@ func (c *MigaduClient) UpdateRewrite(ctx context.Context, domain string, slug st
 	return &response, nil
 }
 
-// DeleteRewrite - Deletes an existing rewrite rule
+// DeleteRewrite deletes an existing rewrite rule
 func (c *MigaduClient) DeleteRewrite(ctx context.Context, domain string, slug string) (*model.Rewrite, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
