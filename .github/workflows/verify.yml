@@ -94,7 +94,7 @@ jobs:
           terraform_wrapper: false
       - id: tests
         name: Run Tests
-        run: go test -v -cover -parallel=4 -timeout=240s -tags testing ./internal/provider/
+        run: go test -v -cover -parallel=4 -timeout=240s -tags simulator ./internal/provider/
         env:
           TF_ACC: "1"
   terratest:
@@ -127,6 +127,9 @@ jobs:
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
+      - id: gotestsum
+        name: Setup gotestsum
+        run: go install gotest.tools/gotestsum@latest
       - id: terratest
         name: Run Terratest Tests
         run: make terratests
