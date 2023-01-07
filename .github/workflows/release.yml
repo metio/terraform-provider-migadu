@@ -4,7 +4,7 @@
 name: Automated Release
 on:
   schedule:
-    - cron: 47 2 * * FRI
+    - cron: 24 4 * * WED
   workflow_dispatch:
 jobs:
   release:
