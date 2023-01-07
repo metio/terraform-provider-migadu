@@ -19,7 +19,7 @@ jobs:
           fetch-depth: 0
       - id: commits
         name: Count Commits
-        run: echo "count=$(git rev-list --count HEAD --since='last Friday' -- internal)" >> $GITHUB_OUTPUT
+        run: echo "count=$(git rev-list --count HEAD --since='last week')" >> $GITHUB_OUTPUT
       - id: release
         name: Create Release Version
         if: steps.commits.outputs.count > 0
