@@ -5,10 +5,12 @@
 
 package model
 
+// Aliases is the data model that wraps multiple aliases
 type Aliases struct {
 	Aliases []Alias `json:"address_aliases"`
 }
 
+// Alias is the data model for a single alias
 type Alias struct {
 	LocalPart        string   `json:"local_part"`
 	DomainName       string   `json:"domain_name"`

@@ -15,7 +15,7 @@ import (
 	"net/http"
 )
 
-// GetIdentities - Returns identities for a single mailbox
+// GetIdentities returns identities for a single mailbox
 func (c *MigaduClient) GetIdentities(ctx context.Context, domain string, localPart string) (*model.Identities, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -43,7 +43,7 @@ func (c *MigaduClient) GetIdentities(ctx context.Context, domain string, localPa
 	return &response, nil
 }
 
-// GetIdentity - Returns a specific identity
+// GetIdentity returns a specific identity
 func (c *MigaduClient) GetIdentity(ctx context.Context, domain string, localPart string, id string) (*model.Identity, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -71,7 +71,7 @@ func (c *MigaduClient) GetIdentity(ctx context.Context, domain string, localPart
 	return &response, nil
 }
 
-// CreateIdentity - Creates a new identity
+// CreateIdentity creates a new identity
 func (c *MigaduClient) CreateIdentity(ctx context.Context, domain string, localPart string, identity *model.Identity) (*model.Identity, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -104,7 +104,7 @@ func (c *MigaduClient) CreateIdentity(ctx context.Context, domain string, localP
 	return &response, nil
 }
 
-// UpdateIdentity - Updates an existing identity
+// UpdateIdentity updates an existing identity
 func (c *MigaduClient) UpdateIdentity(ctx context.Context, domain string, localPart string, id string, identity *model.Identity) (*model.Identity, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {
@@ -137,7 +137,7 @@ func (c *MigaduClient) UpdateIdentity(ctx context.Context, domain string, localP
 	return &response, nil
 }
 
-// DeleteIdentity - Deletes an existing identity
+// DeleteIdentity deletes an existing identity
 func (c *MigaduClient) DeleteIdentity(ctx context.Context, domain string, localPart string, id string) (*model.Identity, error) {
 	ascii, err := idna.ToASCII(domain)
 	if err != nil {

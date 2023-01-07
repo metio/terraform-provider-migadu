@@ -13,6 +13,7 @@ import (
 	"testing"
 )
 
+// State is the optional state of the Migadu API. Use this to populate the simulator before a test.
 type State struct {
 	Mailboxes  []model.Mailbox
 	Aliases    []model.Alias
@@ -21,6 +22,7 @@ type State struct {
 	StatusCode int
 }
 
+// MigaduAPI returns a handler function that simulates the Migadu API.
 func MigaduAPI(t *testing.T, state *State) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if aliasesUrlPattern.MatchString(r.URL.Path) {
