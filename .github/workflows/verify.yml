@@ -96,8 +96,11 @@ jobs:
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
-      - id: tests
-        name: Run Tests
+      - id: client_tests
+        name: Client Tests
+        run: go test -v -cover -parallel=4 -timeout=600s -tags simulator ./migadu/
+      - id: provider_tests
+        name: Provider Tests
         run: go test -v -cover -parallel=4 -timeout=600s -tags simulator ./internal/provider/
         env:
           TF_ACC: "1"
@@ -131,9 +134,9 @@ jobs:
         with:
           terraform_version: ${{ matrix.terraform }}
           terraform_wrapper: false
-      - id: gotestsum
-        name: Setup gotestsum
-        run: go install gotest.tools/gotestsum@latest
+      - id: install
+        name: Install Provider
+        run: make install
       - id: terratest
         name: Run Terratest Tests
-        run: make terratests
+        run: go test -parallel=4 -timeout=600s -tags simulator ./terratest/tests
