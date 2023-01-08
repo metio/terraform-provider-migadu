@@ -65,8 +65,8 @@ func (p *MigaduProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 				Sensitive:           true,
 			},
 			"timeout": schema.Int64Attribute{
-				Description:         "The timeout to apply for HTTP requests in seconds. Can be specified with the 'MIGADU_TIMEOUT' environment variable. Defaults to 10.",
-				MarkdownDescription: "The timeout to apply for HTTP requests in seconds. Can be specified with the `MIGADU_TIMEOUT` environment variable. Defaults to 10.",
+				Description:         "The timeout to apply for HTTP requests in seconds. Can be specified with the 'MIGADU_TIMEOUT' environment variable. Defaults to '10'.",
+				MarkdownDescription: "The timeout to apply for HTTP requests in seconds. Can be specified with the `MIGADU_TIMEOUT` environment variable. Defaults to `10`.",
 				Optional:            true,
 			},
 		},
