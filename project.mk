@@ -36,12 +36,12 @@ out/terratests-run-sentinel: out/terratest-lock-sentinel $(shell find terratest 
 
 out/tests-sentinel: $(shell find internal -type f -name '*.go') $(shell find migadu -type f -name '*.go')
 	mkdir --parents $(@D)
-	gotestsum --format=testname -- -v -cover -timeout=120s -parallel=4 -tags=simulator ./internal/provider ./migadu/*
+	gotestsum --format=testname -- -v -cover -timeout=120s -parallel=4 -tags=simulator ./internal/provider ./migadu/...
 	touch $@
 
 out/coverage.out: $(shell find internal -type f -name '*.go') $(shell find migadu -type f -name '*.go')
 	mkdir --parents $(@D)
-	gotestsum --format=testname -- -v -cover -coverprofile=out/coverage.out -timeout=120s -parallel=4 -tags=simulator ./internal/provider ./migadu/*
+	gotestsum --format=testname -- -v -cover -coverprofile=out/coverage.out -timeout=120s -parallel=4 -tags=simulator ./internal/provider ./migadu/...
 
 out/coverage.html: out/coverage.out
 	go tool cover -html=out/coverage.out -o out/coverage.html
@@ -80,7 +80,7 @@ tests: out/tests-sentinel ## run the unit tests
 
 .PHONY: test
 test: ## run specific unit tests
-	go test -v -timeout=120s -tags simulator -run $(filter-out $@,$(MAKECMDGOALS)) ./internal/provider ./migadu/*
+	go test -v -timeout=120s -tags simulator -run $(filter-out $@,$(MAKECMDGOALS)) ./internal/provider ./migadu/...
 
 .PHONY: coverage
 coverage: out/coverage.html ## generate coverage report

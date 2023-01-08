@@ -98,7 +98,7 @@ jobs:
           terraform_wrapper: false
       - id: client_tests
         name: Client Tests
-        run: go test -v -cover -parallel=4 -timeout=600s -tags simulator ./migadu/*
+        run: go test -v -cover -parallel=4 -timeout=600s -tags simulator ./migadu/...
       - id: provider_tests
         name: Provider Tests
         run: go test -v -cover -parallel=4 -timeout=600s -tags simulator ./internal/provider/
