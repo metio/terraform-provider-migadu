@@ -78,4 +78,12 @@ resource "migadu_mailbox" "idn" {
 - `id` (String) Contains the value `local_part@domain_name`.
 - `storage_usage` (Number) The current storage usage of this mailbox.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# migadu_mailbox resources can be imported by specifying the local part
+# and the domain name of the alias to import.
+terraform import migadu_mailbox.mailbox 'local_part@domain_name'
+```
