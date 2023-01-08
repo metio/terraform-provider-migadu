@@ -57,4 +57,12 @@ resource "migadu_alias" "idn" {
 - `address` (String) The email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
 - `id` (String) Contains the value `local_part@domain_name`.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# migadu_alias resources can be imported by specifying the local part
+# and the domain name of the alias to import.
+terraform import migadu_alias.alias 'local_part@domain_name'
+```

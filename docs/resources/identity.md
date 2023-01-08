@@ -54,4 +54,12 @@ resource "migadu_identity" "idn" {
 - `address` (String) Contains the email address of the identity `identity@domain_name` as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.
 - `id` (String) Contains the value `local_part@domain_name/identity`.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+# migadu_identity resources can be imported by specifying the local part,
+# the domain name, and the identity to import.
+terraform import migadu_identity.identity 'local_part@domain_name/identity'
+```
