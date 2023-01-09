@@ -128,7 +128,7 @@ func TestIdentityDataSource(t *testing.T) {
 			defer terraform.Destroy(t, terraformOptions)
 			terraform.InitAndApplyAndIdempotent(t, terraformOptions)
 
-			assert.Equal(t, fmt.Sprintf("%s@%s", tt.localPart, tt.domain), terraform.Output(t, terraformOptions, "id"), "id")
+			assert.Equal(t, fmt.Sprintf("%s@%s/%s", tt.localPart, tt.domain, tt.identity), terraform.Output(t, terraformOptions, "id"), "id")
 			assert.Equal(t, tt.domain, terraform.Output(t, terraformOptions, "domain_name"), "domain_name")
 			assert.Equal(t, tt.localPart, terraform.Output(t, terraformOptions, "local_part"), "local_part")
 			assert.Equal(t, tt.identity, terraform.Output(t, terraformOptions, "identity"), "identity")
