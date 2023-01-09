@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: 0BSD
  */
 
-package provider_test
+package acceptance_test
 
 import (
 	"fmt"
