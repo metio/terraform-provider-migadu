@@ -26,7 +26,6 @@ func TestIdentityDataSource_API_Success(t *testing.T) {
 		identity  string
 		state     []model.Identity
 		want      *model.Identity
-		error     string
 	}{
 		{
 			name:      "single",
