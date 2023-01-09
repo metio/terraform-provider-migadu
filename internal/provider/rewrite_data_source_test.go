@@ -25,7 +25,6 @@ func TestRewriteDataSource_API_Success(t *testing.T) {
 		slug   string
 		state  []model.Rewrite
 		want   *model.Rewrite
-		error  string
 	}{
 		{
 			name:   "single",

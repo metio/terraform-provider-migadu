@@ -24,7 +24,6 @@ func TestRewritesDataSource_API_Success(t *testing.T) {
 		domain string
 		state  []model.Rewrite
 		want   *model.Rewrites
-		error  string
 	}{
 		{
 			name:   "empty",
