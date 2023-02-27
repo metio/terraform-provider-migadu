@@ -37,18 +37,17 @@ type mailboxResource struct {
 }
 
 type mailboxResourceModel struct {
-	ID                   types.String `tfsdk:"id"`
-	LocalPart            types.String `tfsdk:"local_part"`
-	DomainName           types.String `tfsdk:"domain_name"`
-	Address              types.String `tfsdk:"address"`
-	Name                 types.String `tfsdk:"name"`
-	IsInternal           types.Bool   `tfsdk:"is_internal"`
-	MaySend              types.Bool   `tfsdk:"may_send"`
-	MayReceive           types.Bool   `tfsdk:"may_receive"`
-	MayAccessImap        types.Bool   `tfsdk:"may_access_imap"`
-	MayAccessPop3        types.Bool   `tfsdk:"may_access_pop3"`
-	MayAccessManageSieve types.Bool   `tfsdk:"may_access_manage_sieve"`
-	//PasswordMethod            types.String  `tfsdk:"password_method"`
+	ID                        types.String `tfsdk:"id"`
+	LocalPart                 types.String `tfsdk:"local_part"`
+	DomainName                types.String `tfsdk:"domain_name"`
+	Address                   types.String `tfsdk:"address"`
+	Name                      types.String `tfsdk:"name"`
+	IsInternal                types.Bool   `tfsdk:"is_internal"`
+	MaySend                   types.Bool   `tfsdk:"may_send"`
+	MayReceive                types.Bool   `tfsdk:"may_receive"`
+	MayAccessImap             types.Bool   `tfsdk:"may_access_imap"`
+	MayAccessPop3             types.Bool   `tfsdk:"may_access_pop3"`
+	MayAccessManageSieve      types.Bool   `tfsdk:"may_access_manage_sieve"`
 	Password                  types.String `tfsdk:"password"`
 	PasswordRecoveryEmail     types.String `tfsdk:"password_recovery_email"`
 	SpamAction                types.String `tfsdk:"spam_action"`
@@ -160,16 +159,6 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Optional:            true,
 				Computed:            true,
 			},
-			//"password_method": schema.StringAttribute{
-			//	Optional: true,
-			//	Computed: true,
-			//	Validators: []validator.String{
-			//		stringvalidator.OneOf("password", "invitation"),
-			//	},
-			//	PlanModifiers: []planmodifier.String{
-			//		DefaultString("password"),
-			//	},
-			//},
 			"password": schema.StringAttribute{
 				Description:         "The password of this mailbox.",
 				MarkdownDescription: "The password of this mailbox.",
@@ -375,15 +364,14 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	mailbox := &model.Mailbox{
-		LocalPart:            plan.LocalPart.ValueString(),
-		Name:                 plan.Name.ValueString(),
-		IsInternal:           plan.IsInternal.ValueBool(),
-		MaySend:              plan.MaySend.ValueBool(),
-		MayReceive:           plan.MayReceive.ValueBool(),
-		MayAccessImap:        plan.MayAccessImap.ValueBool(),
-		MayAccessPop3:        plan.MayAccessPop3.ValueBool(),
-		MayAccessManageSieve: plan.MayAccessManageSieve.ValueBool(),
-		//PasswordMethod:        plan.PasswordMethod.ValueString(),
+		LocalPart:             plan.LocalPart.ValueString(),
+		Name:                  plan.Name.ValueString(),
+		IsInternal:            plan.IsInternal.ValueBool(),
+		MaySend:               plan.MaySend.ValueBool(),
+		MayReceive:            plan.MayReceive.ValueBool(),
+		MayAccessImap:         plan.MayAccessImap.ValueBool(),
+		MayAccessPop3:         plan.MayAccessPop3.ValueBool(),
+		MayAccessManageSieve:  plan.MayAccessManageSieve.ValueBool(),
 		Password:              plan.Password.ValueString(),
 		PasswordRecoveryEmail: plan.PasswordRecoveryEmail.ValueString(),
 		SpamAction:            plan.SpamAction.ValueString(),
@@ -441,8 +429,6 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 	plan.MayAccessImap = types.BoolValue(createdMailbox.MayAccessImap)
 	plan.MayAccessPop3 = types.BoolValue(createdMailbox.MayAccessPop3)
 	plan.MayAccessManageSieve = types.BoolValue(createdMailbox.MayAccessManageSieve)
-	//plan.PasswordMethod = types.StringValue(createdMailbox.PasswordMethod)
-	//plan.Password = types.StringValue(createdMailbox.Password)
 	plan.PasswordRecoveryEmail = types.StringValue(createdMailbox.PasswordRecoveryEmail)
 	plan.SpamAction = types.StringValue(createdMailbox.SpamAction)
 	plan.SpamAggressiveness = types.StringValue(createdMailbox.SpamAggressiveness)
@@ -510,8 +496,6 @@ func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, re
 	state.MayAccessImap = types.BoolValue(mailbox.MayAccessImap)
 	state.MayAccessPop3 = types.BoolValue(mailbox.MayAccessPop3)
 	state.MayAccessManageSieve = types.BoolValue(mailbox.MayAccessManageSieve)
-	//state.PasswordMethod = types.StringValue(mailbox.PasswordMethod)
-	//state.Password = types.StringValue(mailbox.Password)
 	state.PasswordRecoveryEmail = types.StringValue(mailbox.PasswordRecoveryEmail)
 	state.SpamAction = types.StringValue(mailbox.SpamAction)
 	state.SpamAggressiveness = types.StringValue(mailbox.SpamAggressiveness)
@@ -588,14 +572,13 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	mailbox := &model.Mailbox{
-		Name:                 plan.Name.ValueString(),
-		IsInternal:           plan.IsInternal.ValueBool(),
-		MaySend:              plan.MaySend.ValueBool(),
-		MayReceive:           plan.MayReceive.ValueBool(),
-		MayAccessImap:        plan.MayAccessImap.ValueBool(),
-		MayAccessPop3:        plan.MayAccessPop3.ValueBool(),
-		MayAccessManageSieve: plan.MayAccessManageSieve.ValueBool(),
-		//PasswordMethod:        plan.PasswordMethod.ValueString(),
+		Name:                  plan.Name.ValueString(),
+		IsInternal:            plan.IsInternal.ValueBool(),
+		MaySend:               plan.MaySend.ValueBool(),
+		MayReceive:            plan.MayReceive.ValueBool(),
+		MayAccessImap:         plan.MayAccessImap.ValueBool(),
+		MayAccessPop3:         plan.MayAccessPop3.ValueBool(),
+		MayAccessManageSieve:  plan.MayAccessManageSieve.ValueBool(),
 		Password:              plan.Password.ValueString(),
 		PasswordRecoveryEmail: plan.PasswordRecoveryEmail.ValueString(),
 		SpamAction:            plan.SpamAction.ValueString(),
@@ -653,8 +636,6 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 	plan.MayAccessImap = types.BoolValue(updatedMailbox.MayAccessImap)
 	plan.MayAccessPop3 = types.BoolValue(updatedMailbox.MayAccessPop3)
 	plan.MayAccessManageSieve = types.BoolValue(updatedMailbox.MayAccessManageSieve)
-	//plan.PasswordMethod = types.StringValue(updatedMailbox.PasswordMethod)
-	//plan.Password = types.StringValue(updatedMailbox.Password)
 	plan.PasswordRecoveryEmail = types.StringValue(updatedMailbox.PasswordRecoveryEmail)
 	plan.SpamAction = types.StringValue(updatedMailbox.SpamAction)
 	plan.SpamAggressiveness = types.StringValue(updatedMailbox.SpamAggressiveness)

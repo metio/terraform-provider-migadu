@@ -140,8 +140,6 @@ func (d *rewriteDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	data.Destinations = destinations
 	data.DestinationsPunycode = destinationsPunycode
 	data.ID = types.StringValue(fmt.Sprintf("%s/%s", data.DomainName.ValueString(), data.Name.ValueString()))
-	//data.DomainName = types.StringValue(mailbox.DomainName)
-	//data.Name = types.StringValue(mailbox.Name)
 	data.LocalPartRule = types.StringValue(rewrite.LocalPartRule)
 	data.OrderNum = types.Int64Value(rewrite.OrderNum)
 
