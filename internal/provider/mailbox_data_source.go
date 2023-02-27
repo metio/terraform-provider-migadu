@@ -321,8 +321,6 @@ func (d *mailboxDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	data.ID = types.StringValue(fmt.Sprintf("%s@%s", data.LocalPart.ValueString(), data.DomainName.ValueString()))
-	//data.LocalPart = types.StringValue(mailbox.LocalPart)
-	//data.DomainName = types.StringValue(mailbox.DomainName)
 	data.Address = types.StringValue(mailbox.Address)
 	data.Name = types.StringValue(mailbox.Name)
 	data.IsInternal = types.BoolValue(mailbox.IsInternal)

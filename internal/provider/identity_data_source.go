@@ -169,9 +169,6 @@ func (d *identityDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	//data.LocalPart = types.StringValue(identity.LocalPart)
-	//data.DomainName = types.StringValue(identity.DomainName)
-	//data.Identity = types.StringValue(identity.Identity)
 	data.Address = types.StringValue(identity.Address)
 	data.Name = types.StringValue(identity.Name)
 	data.MaySend = types.BoolValue(identity.MaySend)
