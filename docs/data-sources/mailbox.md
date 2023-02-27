@@ -67,6 +67,5 @@ data "migadu_mailbox" "idn" {
 - `sender_denylist_punycode` (List of String) The email addresses of senders that will always be denied delivery in punycode.
 - `spam_action` (String) The action to take once spam arrives in the mailbox.
 - `spam_aggressiveness` (String) How aggressive will spam be detected in the mailbox.
-- `storage_usage` (Number) The current storage usage of the mailbox.
 
 
