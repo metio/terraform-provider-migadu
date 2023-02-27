@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/float64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -50,27 +49,26 @@ type mailboxResourceModel struct {
 	MayAccessPop3        types.Bool   `tfsdk:"may_access_pop3"`
 	MayAccessManageSieve types.Bool   `tfsdk:"may_access_manage_sieve"`
 	//PasswordMethod            types.String  `tfsdk:"password_method"`
-	Password                  types.String  `tfsdk:"password"`
-	PasswordRecoveryEmail     types.String  `tfsdk:"password_recovery_email"`
-	SpamAction                types.String  `tfsdk:"spam_action"`
-	SpamAggressiveness        types.String  `tfsdk:"spam_aggressiveness"`
-	Expirable                 types.Bool    `tfsdk:"expirable"`
-	ExpiresOn                 types.String  `tfsdk:"expires_on"`
-	RemoveUponExpiry          types.Bool    `tfsdk:"remove_upon_expiry"`
-	SenderDenyList            types.List    `tfsdk:"sender_denylist"`
-	SenderDenyListPunycode    types.List    `tfsdk:"sender_denylist_punycode"`
-	SenderAllowList           types.List    `tfsdk:"sender_allowlist"`
-	SenderAllowListPunycode   types.List    `tfsdk:"sender_allowlist_punycode"`
-	RecipientDenyList         types.List    `tfsdk:"recipient_denylist"`
-	RecipientDenyListPunycode types.List    `tfsdk:"recipient_denylist_punycode"`
-	AutoRespondActive         types.Bool    `tfsdk:"auto_respond_active"`
-	AutoRespondSubject        types.String  `tfsdk:"auto_respond_subject"`
-	AutoRespondBody           types.String  `tfsdk:"auto_respond_body"`
-	AutoRespondExpiresOn      types.String  `tfsdk:"auto_respond_expires_on"`
-	FooterActive              types.Bool    `tfsdk:"footer_active"`
-	FooterPlainBody           types.String  `tfsdk:"footer_plain_body"`
-	FooterHtmlBody            types.String  `tfsdk:"footer_html_body"`
-	StorageUsage              types.Float64 `tfsdk:"storage_usage"`
+	Password                  types.String `tfsdk:"password"`
+	PasswordRecoveryEmail     types.String `tfsdk:"password_recovery_email"`
+	SpamAction                types.String `tfsdk:"spam_action"`
+	SpamAggressiveness        types.String `tfsdk:"spam_aggressiveness"`
+	Expirable                 types.Bool   `tfsdk:"expirable"`
+	ExpiresOn                 types.String `tfsdk:"expires_on"`
+	RemoveUponExpiry          types.Bool   `tfsdk:"remove_upon_expiry"`
+	SenderDenyList            types.List   `tfsdk:"sender_denylist"`
+	SenderDenyListPunycode    types.List   `tfsdk:"sender_denylist_punycode"`
+	SenderAllowList           types.List   `tfsdk:"sender_allowlist"`
+	SenderAllowListPunycode   types.List   `tfsdk:"sender_allowlist_punycode"`
+	RecipientDenyList         types.List   `tfsdk:"recipient_denylist"`
+	RecipientDenyListPunycode types.List   `tfsdk:"recipient_denylist_punycode"`
+	AutoRespondActive         types.Bool   `tfsdk:"auto_respond_active"`
+	AutoRespondSubject        types.String `tfsdk:"auto_respond_subject"`
+	AutoRespondBody           types.String `tfsdk:"auto_respond_body"`
+	AutoRespondExpiresOn      types.String `tfsdk:"auto_respond_expires_on"`
+	FooterActive              types.Bool   `tfsdk:"footer_active"`
+	FooterPlainBody           types.String `tfsdk:"footer_plain_body"`
+	FooterHtmlBody            types.String `tfsdk:"footer_html_body"`
 }
 
 func (r *mailboxResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -307,14 +305,6 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Optional:            true,
 				Computed:            true,
 			},
-			"storage_usage": schema.Float64Attribute{
-				Description:         "The current storage usage of this mailbox.",
-				MarkdownDescription: "The current storage usage of this mailbox.",
-				Computed:            true,
-				PlanModifiers: []planmodifier.Float64{
-					float64planmodifier.UseStateForUnknown(),
-				},
-			},
 		},
 	}
 }
@@ -472,7 +462,6 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 	plan.FooterActive = types.BoolValue(createdMailbox.FooterActive)
 	plan.FooterPlainBody = types.StringValue(createdMailbox.FooterPlainBody)
 	plan.FooterHtmlBody = types.StringValue(createdMailbox.FooterHtmlBody)
-	plan.StorageUsage = types.Float64Value(createdMailbox.StorageUsage)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)
@@ -542,7 +531,6 @@ func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, re
 	state.FooterActive = types.BoolValue(mailbox.FooterActive)
 	state.FooterPlainBody = types.StringValue(mailbox.FooterPlainBody)
 	state.FooterHtmlBody = types.StringValue(mailbox.FooterHtmlBody)
-	state.StorageUsage = types.Float64Value(mailbox.StorageUsage)
 
 	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -686,7 +674,6 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 	plan.FooterActive = types.BoolValue(updatedMailbox.FooterActive)
 	plan.FooterPlainBody = types.StringValue(updatedMailbox.FooterPlainBody)
 	plan.FooterHtmlBody = types.StringValue(updatedMailbox.FooterHtmlBody)
-	plan.StorageUsage = types.Float64Value(updatedMailbox.StorageUsage)
 
 	diags = resp.State.Set(ctx, plan)
 	resp.Diagnostics.Append(diags...)

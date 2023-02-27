@@ -76,7 +76,6 @@ resource "migadu_mailbox" "idn" {
 
 - `address` (String) The email address of the mailbox `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
 - `id` (String) Contains the value `local_part@domain_name`.
-- `storage_usage` (Number) The current storage usage of this mailbox.
 
 ## Import
 
