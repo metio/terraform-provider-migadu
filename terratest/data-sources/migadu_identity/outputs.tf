@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: The terraform-provider-git Authors
+# SPDX-FileCopyrightText: The terraform-provider-migadu Authors
 # SPDX-License-Identifier: 0BSD
 
 output "id" {
