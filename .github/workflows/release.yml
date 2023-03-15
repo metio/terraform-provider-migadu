@@ -33,7 +33,7 @@ jobs:
       - id: setup_go
         name: Set up Go
         if: steps.commits.outputs.count > 0
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
           cache: true
