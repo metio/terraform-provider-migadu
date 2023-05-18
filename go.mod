@@ -6,7 +6,7 @@ module github.com/metio/terraform-provider-migadu
 go 1.19
 
 require (
-	github.com/gruntwork-io/terratest v0.41.24
+	github.com/gruntwork-io/terratest v0.41.25
 	github.com/hashicorp/terraform-plugin-docs v0.14.1
 	github.com/hashicorp/terraform-plugin-framework v1.2.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.10.0
