@@ -25,7 +25,7 @@ func (c *MigaduClient) GetMailboxes(ctx context.Context, domain string) (*model.
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes", c.Endpoint, ascii)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("GetMailboxes: %w", err)
 	}
@@ -53,7 +53,7 @@ func (c *MigaduClient) GetMailbox(ctx context.Context, domain string, localPart 
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s", c.Endpoint, ascii, localPart)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("GetMailbox: %w", err)
 	}
@@ -183,7 +183,7 @@ func (c *MigaduClient) DeleteMailbox(ctx context.Context, domain string, localPa
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s", c.Endpoint, ascii, localPart)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteMailbox: %w", err)
 	}
