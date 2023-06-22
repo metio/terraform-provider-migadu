@@ -25,7 +25,7 @@ func (c *MigaduClient) GetAliases(ctx context.Context, domain string) (*model.Al
 
 	url := fmt.Sprintf("%s/domains/%s/aliases", c.Endpoint, ascii)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("GetAliases: %w", err)
 	}
@@ -53,7 +53,7 @@ func (c *MigaduClient) GetAlias(ctx context.Context, domain string, localPart st
 
 	url := fmt.Sprintf("%s/domains/%s/aliases/%s", c.Endpoint, ascii, localPart)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("GetAlias: %w", err)
 	}
@@ -159,7 +159,7 @@ func (c *MigaduClient) DeleteAlias(ctx context.Context, domain string, localPart
 
 	url := fmt.Sprintf("%s/domains/%s/aliases/%s", c.Endpoint, ascii, localPart)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteAlias: %w", err)
 	}

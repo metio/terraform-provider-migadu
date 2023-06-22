@@ -31,7 +31,7 @@ func (c *MigaduClient) GetRewrites(ctx context.Context, domain string) (*model.R
 
 	url := fmt.Sprintf("%s/domains/%s/rewrites", c.Endpoint, ascii)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("GetRewrites: %w", err)
 	}
@@ -59,7 +59,7 @@ func (c *MigaduClient) GetRewrite(ctx context.Context, domain string, slug strin
 
 	url := fmt.Sprintf("%s/domains/%s/rewrites/%s", c.Endpoint, ascii, slug)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("GetRewrite: %w", err)
 	}
@@ -171,7 +171,7 @@ func (c *MigaduClient) DeleteRewrite(ctx context.Context, domain string, slug st
 
 	url := fmt.Sprintf("%s/domains/%s/rewrites/%s", c.Endpoint, ascii, slug)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteRewrite: %w", err)
 	}

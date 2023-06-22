@@ -24,7 +24,7 @@ func (c *MigaduClient) GetIdentities(ctx context.Context, domain string, localPa
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities", c.Endpoint, ascii, localPart)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("GetIdentities: %w", err)
 	}
@@ -52,7 +52,7 @@ func (c *MigaduClient) GetIdentity(ctx context.Context, domain string, localPart
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities/%s", c.Endpoint, ascii, localPart, id)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("GetIdentity: %w", err)
 	}
@@ -146,7 +146,7 @@ func (c *MigaduClient) DeleteIdentity(ctx context.Context, domain string, localP
 
 	url := fmt.Sprintf("%s/domains/%s/mailboxes/%s/identities/%s", c.Endpoint, ascii, localPart, id)
 
-	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("DeleteIdentity: %w", err)
 	}
