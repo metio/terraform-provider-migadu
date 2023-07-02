@@ -40,5 +40,3 @@ data "migadu_rewrite" "idn" {
 - `id` (String) Contains the value `domain_name/name`.
 - `local_part_rule` (String) The local part expression of the rewrite rule
 - `order_num` (Number) The order number of the rewrite rule.
-
-

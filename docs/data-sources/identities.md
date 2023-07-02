@@ -55,5 +55,3 @@ Read-Only:
 - `may_receive` (Boolean) Whether the identity is allowed to receive emails.
 - `may_send` (Boolean) Whether the identity is allowed to send emails.
 - `name` (String) The name of the identity.
-
-

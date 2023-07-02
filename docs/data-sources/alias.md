@@ -43,5 +43,3 @@ data "migadu_alias" "idn" {
 - `id` (String) Contains the value `local_part@domain_name`.
 - `is_internal` (Boolean) Whether the alias is internal only. An internal alias can only receive emails from Migadu servers.
 - `remove_upon_expiry` (Boolean) Whether to remove the alias upon expiry.
-
-
