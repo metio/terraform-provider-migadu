@@ -46,5 +46,3 @@ Read-Only:
 - `local_part_rule` (String) The local part expression of the rewrite rule
 - `name` (String) The name (slug) of the rewrite rule.
 - `order_num` (Number) The order number of the rewrite rule.
-
-

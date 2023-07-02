@@ -49,5 +49,3 @@ Read-Only:
 - `is_internal` (Boolean) Whether the alias is internal and can only receive emails from Migadu servers.
 - `local_part` (String) The local part of the alias.
 - `remove_upon_expiry` (Boolean) Whether the alias is removed once it is expired.
-
-
