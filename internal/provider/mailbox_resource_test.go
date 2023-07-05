@@ -125,6 +125,7 @@ func TestMailboxResource_API_Success(t *testing.T) {
 
 func TestMailboxResource_API_Errors(t *testing.T) {
 	tests := []struct {
+		testcase   string
 		name       string
 		domain     string
 		localPart  string
@@ -134,7 +135,8 @@ func TestMailboxResource_API_Errors(t *testing.T) {
 		error      string
 	}{
 		{
-			name:      "error-400",
+			testcase:  "error-400",
+			name:      "Some Name",
 			domain:    "example.com",
 			localPart: "test",
 			password:  "secret",
@@ -148,7 +150,8 @@ func TestMailboxResource_API_Errors(t *testing.T) {
 			error: "CreateMailbox: status: 400",
 		},
 		{
-			name:       "error-500",
+			testcase:   "error-500",
+			name:       "Some Name",
 			domain:     "example.com",
 			localPart:  "test",
 			password:   "secret",
@@ -157,7 +160,7 @@ func TestMailboxResource_API_Errors(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.testcase, func(t *testing.T) {
 			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Mailboxes: tt.state, StatusCode: tt.statusCode}))
 			defer server.Close()
 
@@ -167,11 +170,12 @@ func TestMailboxResource_API_Errors(t *testing.T) {
 					{
 						Config: providerConfig(server.URL) + fmt.Sprintf(`
 							resource "migadu_mailbox" "test" {
+								name        = "%s"
 								domain_name = "%s"
 								local_part  = "%s"
 								password    = "%s"
 							}
-						`, tt.domain, tt.localPart, tt.password),
+						`, tt.name, tt.domain, tt.localPart, tt.password),
 						ExpectError: regexp.MustCompile(tt.error),
 					},
 				},
@@ -189,6 +193,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 		{
 			name: "empty-domain-name",
 			configuration: `
+				name        = "Some Name"
 				domain_name = ""
 				local_part  = "test"
 				password    = "secret"
@@ -198,6 +203,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 		{
 			name: "missing-domain-name",
 			configuration: `
+				name        = "Some Name"
 				local_part  = "test"
 				password    = "secret"
 			`,
@@ -206,6 +212,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 		{
 			name: "empty-local-part",
 			configuration: `
+				name        = "Some Name"
 				domain_name = "example.com"
 				local_part  = ""
 				password    = "secret"
@@ -215,6 +222,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 		{
 			name: "missing-local-part",
 			configuration: `
+				name        = "Some Name"
 				domain_name = "example.com"
 				password    = "secret"
 			`,
@@ -223,6 +231,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 		{
 			name: "empty-password",
 			configuration: `
+				name        = "Some Name"
 				domain_name = "example.com"
 				local_part  = "test"
 				password    = ""
@@ -232,6 +241,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 		{
 			name: "missing-password",
 			configuration: `
+				name        = "Some Name"
 				domain_name = "example.com"
 				local_part  = "test"
 			`,
@@ -240,6 +250,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 		{
 			name: "empty-password-recovery-email",
 			configuration: `
+				name                    = "Some Name"
 				domain_name             = "example.com"
 				local_part              = "test"
 				password_recovery_email = ""
@@ -249,14 +260,35 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 		{
 			name: "missing-password-recovery-email",
 			configuration: `
-				domain_name             = "example.com"
-				local_part              = "test"
+				name        = "Some Name"
+				domain_name = "example.com"
+				local_part  = "test"
 			`,
 			error: `(?s)No attribute specified when one \(and only one\) of \[password_recovery_email\](.*)is required`,
 		},
 		{
+			name: "empty-name",
+			configuration: `
+				name        = ""
+				domain_name = "example.com"
+				local_part  = "test"
+				password    = "secret"
+			`,
+			error: "Attribute name string length must be at least 1",
+		},
+		{
+			name: "missing-name",
+			configuration: `
+				domain_name = "example.com"
+				local_part  = "test"
+				password    = "secret"
+			`,
+			error: `The argument "name" is required, but no definition was found`,
+		},
+		{
 			name: "duplicate-passwords",
 			configuration: `
+				name                    = "Some Name"
 				domain_name             = "example.com"
 				local_part              = "test"
 				password                = "secret"
