@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strconv"
 	"testing"
 )
 
@@ -177,6 +178,117 @@ func TestMailboxResource_API_Errors(t *testing.T) {
 							}
 						`, tt.name, tt.domain, tt.localPart, tt.password),
 						ExpectError: regexp.MustCompile(tt.error),
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestMailboxResource_Configuration_Success(t *testing.T) {
+	tests := []struct {
+		testcase      string
+		configuration string
+		state         []model.Mailbox
+		want          *model.Mailbox
+	}{
+		//{
+		//	testcase: "invitation",
+		//	configuration: `
+		//		name                    = "Some Name"
+		//		domain_name             = "example.com"
+		//		local_part              = "test"
+		//		password_recovery_email = "someone@example.com"
+		//	`,
+		//	state: []model.Mailbox{},
+		//	want: &model.Mailbox{
+		//		Name:                  "Some Name",
+		//		DomainName:            "example.com",
+		//		LocalPart:             "test",
+		//		Address:               "test@example.com",
+		//		PasswordRecoveryEmail: "someone@example.com",
+		//	},
+		//},
+		{
+			testcase: "managed-password",
+			configuration: `
+				name        = "Some Name"
+				domain_name = "example.com"
+				local_part  = "test"
+				password    = "secret"
+			`,
+			state: []model.Mailbox{},
+			want: &model.Mailbox{
+				Name:       "Some Name",
+				DomainName: "example.com",
+				LocalPart:  "test",
+				Address:    "test@example.com",
+				Password:   "secret",
+			},
+		},
+		{
+			testcase: "delegations",
+			configuration: `
+				name        = "Some Name"
+				domain_name = "example.com"
+				local_part  = "test"
+				password    = "secret"
+				delegations = ["other@example.com"]
+			`,
+			state: []model.Mailbox{},
+			want: &model.Mailbox{
+				Name:        "Some Name",
+				DomainName:  "example.com",
+				LocalPart:   "test",
+				Address:     "test@example.com",
+				Password:    "secret",
+				Delegations: []string{"other@example.com"},
+			},
+		},
+		{
+			testcase: "identities",
+			configuration: `
+				name        = "Some Name"
+				domain_name = "example.com"
+				local_part  = "test"
+				password    = "secret"
+				identities = ["other@example.com"]
+			`,
+			state: []model.Mailbox{},
+			want: &model.Mailbox{
+				Name:       "Some Name",
+				DomainName: "example.com",
+				LocalPart:  "test",
+				Address:    "test@example.com",
+				Password:   "secret",
+				Identities: []string{"other@example.com"},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.testcase, func(t *testing.T) {
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Mailboxes: tt.state}))
+			defer server.Close()
+
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: providerConfig(server.URL) + fmt.Sprintf(`
+							resource "migadu_mailbox" "test" {
+								%s
+							}
+						`, tt.configuration),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "domain_name", tt.want.DomainName),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "name", tt.want.Name),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "local_part", tt.want.LocalPart),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "password", tt.want.Password),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "password_recovery_email", tt.want.PasswordRecoveryEmail),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "id", fmt.Sprintf("%s@%s", tt.want.LocalPart, tt.want.DomainName)),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "delegations.#", strconv.Itoa(len(tt.want.Delegations))),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "identities.#", strconv.Itoa(len(tt.want.Identities))),
+						),
 					},
 				},
 			})
