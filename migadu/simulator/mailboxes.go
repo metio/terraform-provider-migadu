@@ -122,6 +122,11 @@ func handleUpdateMailbox(w http.ResponseWriter, r *http.Request, t *testing.T, m
 		t.Errorf("Could not unmarshall mailbox")
 	}
 
+	if requestMailbox.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	requestMailbox.DomainName = domain
 	requestMailbox.LocalPart = localPart
 	requestMailbox.Address = fmt.Sprintf("%s@%s", requestMailbox.LocalPart, domain)
@@ -157,6 +162,11 @@ func handleCreateMailbox(w http.ResponseWriter, r *http.Request, t *testing.T, m
 	err = json.Unmarshal(requestBody, &mailbox)
 	if err != nil {
 		t.Errorf("Could not unmarshall mailbox")
+	}
+
+	if mailbox.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	mailbox.DomainName = domain

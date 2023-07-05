@@ -306,6 +306,25 @@ func TestMigaduClient_CreateMailbox(t *testing.T) {
 			},
 		},
 		{
+			name:   "error-missing-name",
+			domain: "example.com",
+			state:  []model.Mailbox{},
+			send: &model.Mailbox{
+				Password: "Sup3r_s3cr3T",
+			},
+			wantErr: true,
+		},
+		{
+			name:   "error-empty-name",
+			domain: "example.com",
+			state:  []model.Mailbox{},
+			send: &model.Mailbox{
+				Name:     "",
+				Password: "Sup3r_s3cr3T",
+			},
+			wantErr: true,
+		},
+		{
 			name:       "error-404",
 			domain:     "example.com",
 			statusCode: http.StatusNotFound,
@@ -419,6 +438,23 @@ func TestMigaduClient_UpdateMailbox(t *testing.T) {
 				Address:    "test@xn--ho-hia.de",
 				Name:       "Different Name",
 			},
+		},
+		{
+			name:      "error-empty-name",
+			domain:    "example.com",
+			localPart: "test",
+			state: []model.Mailbox{
+				{
+					LocalPart:  "other",
+					DomainName: "example.com",
+					Address:    "other@example.com",
+					Name:       "Some Name",
+				},
+			},
+			send: &model.Mailbox{
+				Name: "",
+			},
+			wantErr: true,
 		},
 		{
 			name:      "error-404",

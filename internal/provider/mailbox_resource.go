@@ -120,8 +120,10 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"name": schema.StringAttribute{
 				Description:         "The name of the mailbox.",
 				MarkdownDescription: "The name of the mailbox.",
-				Optional:            true,
-				Computed:            true,
+				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"is_internal": schema.BoolAttribute{
 				Description:         "Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.",

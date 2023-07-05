@@ -14,6 +14,7 @@ Provides a mailbox.
 
 ```terraform
 resource "migadu_mailbox" "example" {
+  name        = "Mailbox Name"
   domain_name = "example.com"
   local_part  = "some-mailbox"
   password    = "Sup3r_s3cr3T"
@@ -21,6 +22,7 @@ resource "migadu_mailbox" "example" {
 
 # send invitation to users and let them set password themselves
 resource "migadu_mailbox" "invitation" {
+  name                    = "Mailbox Name"
   domain_name             = "example.com"
   local_part              = "some-mailbox"
   password_recovery_email = "old@address.example"
@@ -28,6 +30,7 @@ resource "migadu_mailbox" "invitation" {
 
 # international domain names are supported
 resource "migadu_mailbox" "idn" {
+  name        = "Mäilböx Nämé"
   domain_name = "bücher.example"
   local_part  = "some-mailbox"
   password    = "Sup3r_s3cr3T"
@@ -41,6 +44,7 @@ resource "migadu_mailbox" "idn" {
 
 - `domain_name` (String) The domain name of the mailbox.
 - `local_part` (String) The local part of the mailbox.
+- `name` (String) The name of the mailbox.
 
 ### Optional
 
@@ -59,7 +63,6 @@ resource "migadu_mailbox" "idn" {
 - `may_access_pop3` (Boolean) Whether this mailbox is allowed to use POP3.
 - `may_receive` (Boolean) Whether this mailbox is allowed to receive emails.
 - `may_send` (Boolean) Whether this mailbox is allowed to send emails.
-- `name` (String) The name of the mailbox.
 - `password` (String, Sensitive) The password of this mailbox.
 - `password_recovery_email` (String) The recovery email address of this mailbox. If this is set instead of `password` an invitation to that address will be send to the user and they can set their own password.
 - `recipient_denylist` (List of String) The email addresses of recipients that will always be denied delivery in unicode.
