@@ -52,11 +52,15 @@ resource "migadu_mailbox" "idn" {
 - `auto_respond_body` (String) The body of the automatic response.
 - `auto_respond_expires_on` (String) The expiration date of the automatic response.
 - `auto_respond_subject` (String) The subject of the automatic response.
+- `delegations` (List of String) The delegations of the mailbox in unicode.
+- `delegations_punycode` (List of String) The delegations of the mailbox in punycode.
 - `expirable` (Boolean) Whether this mailbox expires in the future.
 - `expires_on` (String) The expiration date of this mailbox.
 - `footer_active` (Boolean) Whether the footer of this mailbox is active.
 - `footer_html_body` (String) The footer of this mailbox in text/html format.
 - `footer_plain_body` (String) The footer of this mailbox in text/plain format.
+- `identities` (List of String) The identities of the mailbox in unicode.
+- `identities_punycode` (List of String) The identities of the mailbox in punycode.
 - `is_internal` (Boolean) Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.
 - `may_access_imap` (Boolean) Whether this mailbox is allowed to use IMAP.
 - `may_access_manage_sieve` (Boolean) Whether this mailbox is allowed to manage the mail sieve.

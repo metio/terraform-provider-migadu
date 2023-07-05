@@ -29,6 +29,14 @@ output "delegations_punycode" {
   value = data.migadu_mailbox.mailbox.delegations_punycode
 }
 
+output "identities" {
+  value = data.migadu_mailbox.mailbox.identities
+}
+
+output "identities_punycode" {
+  value = data.migadu_mailbox.mailbox.identities_punycode
+}
+
 output "auto_respond_active" {
   value = data.migadu_mailbox.mailbox.auto_respond_active
 }

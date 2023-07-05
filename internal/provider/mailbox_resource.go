@@ -61,6 +61,10 @@ type mailboxResourceModel struct {
 	SenderAllowListPunycode   types.List   `tfsdk:"sender_allowlist_punycode"`
 	RecipientDenyList         types.List   `tfsdk:"recipient_denylist"`
 	RecipientDenyListPunycode types.List   `tfsdk:"recipient_denylist_punycode"`
+	Delegations               types.List   `tfsdk:"delegations"`
+	DelegationsPunycode       types.List   `tfsdk:"delegations_punycode"`
+	Identities                types.List   `tfsdk:"identities"`
+	IdentitiesPunycode        types.List   `tfsdk:"identities_punycode"`
 	AutoRespondActive         types.Bool   `tfsdk:"auto_respond_active"`
 	AutoRespondSubject        types.String `tfsdk:"auto_respond_subject"`
 	AutoRespondBody           types.String `tfsdk:"auto_respond_body"`
@@ -254,6 +258,34 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Computed:            true,
 				ElementType:         types.StringType,
 			},
+			"delegations": schema.ListAttribute{
+				Description:         "The delegations of the mailbox in unicode.",
+				MarkdownDescription: "The delegations of the mailbox in unicode.",
+				Optional:            true,
+				Computed:            true,
+				ElementType:         types.StringType,
+			},
+			"delegations_punycode": schema.ListAttribute{
+				Description:         "The delegations of the mailbox in punycode.",
+				MarkdownDescription: "The delegations of the mailbox in punycode.",
+				Optional:            true,
+				Computed:            true,
+				ElementType:         types.StringType,
+			},
+			"identities": schema.ListAttribute{
+				Description:         "The identities of the mailbox in unicode.",
+				MarkdownDescription: "The identities of the mailbox in unicode.",
+				Optional:            true,
+				Computed:            true,
+				ElementType:         types.StringType,
+			},
+			"identities_punycode": schema.ListAttribute{
+				Description:         "The identities of the mailbox in punycode.",
+				MarkdownDescription: "The identities of the mailbox in punycode.",
+				Optional:            true,
+				Computed:            true,
+				ElementType:         types.StringType,
+			},
 			"auto_respond_active": schema.BoolAttribute{
 				Description:         "Whether an automatic response is active in this mailbox.",
 				MarkdownDescription: "Whether an automatic response is active in this mailbox.",
@@ -364,6 +396,32 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 			return
 		}
 	}
+	var wantedDelegations []string
+	if !plan.Delegations.IsUnknown() {
+		resp.Diagnostics.Append(plan.Delegations.ElementsAs(ctx, &wantedDelegations, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	if !plan.DelegationsPunycode.IsUnknown() {
+		resp.Diagnostics.Append(plan.DelegationsPunycode.ElementsAs(ctx, &wantedDelegations, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	var wantedIdentities []string
+	if !plan.Identities.IsUnknown() {
+		resp.Diagnostics.Append(plan.Identities.ElementsAs(ctx, &wantedIdentities, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	if !plan.IdentitiesPunycode.IsUnknown() {
+		resp.Diagnostics.Append(plan.IdentitiesPunycode.ElementsAs(ctx, &wantedIdentities, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
 
 	mailbox := &model.Mailbox{
 		LocalPart:             plan.LocalPart.ValueString(),
@@ -384,6 +442,8 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 		SenderDenyList:        wantedSenderDenyList,
 		SenderAllowList:       wantedSenderAllowList,
 		RecipientDenyList:     wantedRecipientDenyList,
+		Delegations:           wantedDelegations,
+		Identities:            wantedIdentities,
 		AutoRespondActive:     plan.AutoRespondActive.ValueBool(),
 		AutoRespondSubject:    plan.AutoRespondSubject.ValueString(),
 		AutoRespondBody:       plan.AutoRespondBody.ValueString(),
@@ -420,6 +480,14 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 	resp.Diagnostics.Append(diags...)
 	recipientDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(createdMailbox.RecipientDenyList, &resp.Diagnostics))
 	resp.Diagnostics.Append(diags...)
+	delegations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(createdMailbox.Delegations, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	delegationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(createdMailbox.Delegations, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	identities, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(createdMailbox.Identities, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	identitiesPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(createdMailbox.Identities, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
 
 	plan.ID = types.StringValue(createMailboxID(plan.DomainName, plan.LocalPart))
 	plan.Address = types.StringValue(createdMailbox.Address)
@@ -443,6 +511,10 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 	plan.SenderAllowListPunycode = senderAllowListPunycode
 	plan.RecipientDenyList = recipientDenyList
 	plan.RecipientDenyListPunycode = recipientDenyListPunycode
+	plan.Delegations = delegations
+	plan.DelegationsPunycode = delegationsPunycode
+	plan.Identities = identities
+	plan.IdentitiesPunycode = identitiesPunycode
 	plan.AutoRespondActive = types.BoolValue(createdMailbox.AutoRespondActive)
 	plan.AutoRespondSubject = types.StringValue(createdMailbox.AutoRespondSubject)
 	plan.AutoRespondBody = types.StringValue(createdMailbox.AutoRespondBody)
@@ -487,6 +559,14 @@ func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, re
 	resp.Diagnostics.Append(diags...)
 	recipientDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.RecipientDenyList, &resp.Diagnostics))
 	resp.Diagnostics.Append(diags...)
+	delegations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.Delegations, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	delegationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.Delegations, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	identities, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.Identities, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	identitiesPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.Identities, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
 
 	state.ID = types.StringValue(createMailboxID(state.DomainName, state.LocalPart))
 	state.Address = types.StringValue(mailbox.Address)
@@ -510,6 +590,10 @@ func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, re
 	state.SenderAllowListPunycode = senderAllowListPunycode
 	state.RecipientDenyList = recipientDenyList
 	state.RecipientDenyListPunycode = recipientDenyListPunycode
+	state.Delegations = delegations
+	state.DelegationsPunycode = delegationsPunycode
+	state.Identities = identities
+	state.IdentitiesPunycode = identitiesPunycode
 	state.AutoRespondActive = types.BoolValue(mailbox.AutoRespondActive)
 	state.AutoRespondSubject = types.StringValue(mailbox.AutoRespondSubject)
 	state.AutoRespondBody = types.StringValue(mailbox.AutoRespondBody)
@@ -572,6 +656,32 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 	}
+	var wantedDelegations []string
+	if !plan.Delegations.IsUnknown() {
+		resp.Diagnostics.Append(plan.Delegations.ElementsAs(ctx, &wantedDelegations, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	if !plan.DelegationsPunycode.IsUnknown() {
+		resp.Diagnostics.Append(plan.DelegationsPunycode.ElementsAs(ctx, &wantedDelegations, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	var wantedIdentities []string
+	if !plan.Identities.IsUnknown() {
+		resp.Diagnostics.Append(plan.Identities.ElementsAs(ctx, &wantedIdentities, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+	if !plan.IdentitiesPunycode.IsUnknown() {
+		resp.Diagnostics.Append(plan.IdentitiesPunycode.ElementsAs(ctx, &wantedIdentities, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
 
 	mailbox := &model.Mailbox{
 		Name:                  plan.Name.ValueString(),
@@ -591,6 +701,8 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 		SenderDenyList:        wantedSenderDenyList,
 		SenderAllowList:       wantedSenderAllowList,
 		RecipientDenyList:     wantedRecipientDenyList,
+		Delegations:           wantedDelegations,
+		Identities:            wantedIdentities,
 		AutoRespondActive:     plan.AutoRespondActive.ValueBool(),
 		AutoRespondSubject:    plan.AutoRespondSubject.ValueString(),
 		AutoRespondBody:       plan.AutoRespondBody.ValueString(),
@@ -627,6 +739,14 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 	resp.Diagnostics.Append(diags...)
 	recipientDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(updatedMailbox.RecipientDenyList, &resp.Diagnostics))
 	resp.Diagnostics.Append(diags...)
+	delegations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.Delegations, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	delegationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.Delegations, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	identities, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.Identities, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
+	identitiesPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.Identities, &resp.Diagnostics))
+	resp.Diagnostics.Append(diags...)
 
 	plan.ID = types.StringValue(createMailboxID(plan.DomainName, plan.LocalPart))
 	plan.Address = types.StringValue(updatedMailbox.Address)
@@ -650,6 +770,10 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 	plan.SenderAllowListPunycode = senderAllowListPunycode
 	plan.RecipientDenyList = recipientDenyList
 	plan.RecipientDenyListPunycode = recipientDenyListPunycode
+	plan.Delegations = delegations
+	plan.DelegationsPunycode = delegationsPunycode
+	plan.Identities = identities
+	plan.IdentitiesPunycode = identitiesPunycode
 	plan.AutoRespondActive = types.BoolValue(updatedMailbox.AutoRespondActive)
 	plan.AutoRespondSubject = types.StringValue(updatedMailbox.AutoRespondSubject)
 	plan.AutoRespondBody = types.StringValue(updatedMailbox.AutoRespondBody)
