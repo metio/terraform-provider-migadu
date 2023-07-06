@@ -292,6 +292,22 @@ func TestMigaduClient_CreateMailbox(t *testing.T) {
 			},
 		},
 		{
+			name:   "password-handling",
+			domain: "example.com",
+			state:  []model.Mailbox{},
+			send: &model.Mailbox{
+				Name:     "Some Name",
+				Password: "Sup3r_s3cr3T",
+			},
+			want: &model.Mailbox{
+				LocalPart:  "test",
+				DomainName: "example.com",
+				Address:    "test@example.com",
+				Name:       "Some Name",
+				Password:   "",
+			},
+		},
+		{
 			name:   "idna",
 			domain: "hoß.de",
 			state:  []model.Mailbox{},
@@ -415,6 +431,30 @@ func TestMigaduClient_UpdateMailbox(t *testing.T) {
 				DomainName: "example.com",
 				Address:    "test@example.com",
 				Name:       "Different Name",
+			},
+		},
+		{
+			name:      "password-handling",
+			domain:    "example.com",
+			localPart: "test",
+			state: []model.Mailbox{
+				{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Address:    "test@example.com",
+					Name:       "Some Name",
+				},
+			},
+			send: &model.Mailbox{
+				Name:     "Different Name",
+				Password: "Sup3r_s3cr3T",
+			},
+			want: &model.Mailbox{
+				LocalPart:  "test",
+				DomainName: "example.com",
+				Address:    "test@example.com",
+				Name:       "Different Name",
+				Password:   "",
 			},
 		},
 		{

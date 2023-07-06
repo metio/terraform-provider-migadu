@@ -19,7 +19,7 @@ import (
 	"testing"
 )
 
-func TestMailboxResource_API_Success(t *testing.T) {
+func TestMailboxResource_API_Success_Using_Password(t *testing.T) {
 	tests := []struct {
 		name        string
 		domain      string
@@ -91,6 +91,7 @@ func TestMailboxResource_API_Success(t *testing.T) {
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "domain_name", tt.want.DomainName),
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "name", tt.want.Name),
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "local_part", tt.want.LocalPart),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "password", tt.send.Password),
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "id", fmt.Sprintf("%s@%s", tt.want.LocalPart, tt.want.DomainName)),
 						),
 					},
@@ -115,6 +116,115 @@ func TestMailboxResource_API_Success(t *testing.T) {
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "domain_name", tt.want.DomainName),
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "name", tt.updatedName),
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "local_part", tt.want.LocalPart),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "password", tt.send.Password),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "id", fmt.Sprintf("%s@%s", tt.want.LocalPart, tt.want.DomainName)),
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestMailboxResource_API_Success_Using_RecoveryEmail(t *testing.T) {
+	tests := []struct {
+		name        string
+		domain      string
+		state       []model.Mailbox
+		send        *model.Mailbox
+		updatedName string
+		want        *model.Mailbox
+	}{
+		{
+			name:   "single",
+			domain: "example.com",
+			state:  []model.Mailbox{},
+			send: &model.Mailbox{
+				LocalPart:             "test",
+				Name:                  "Some Name",
+				PasswordRecoveryEmail: "someone@example.com",
+			},
+			want: &model.Mailbox{
+				LocalPart:             "test",
+				DomainName:            "example.com",
+				Address:               "test@example.com",
+				Name:                  "Some Name",
+				PasswordRecoveryEmail: "someone@example.com",
+			},
+			updatedName: "Different Name",
+		},
+		{
+			name:   "multiple",
+			domain: "example.com",
+			state: []model.Mailbox{
+				{
+					LocalPart:  "test",
+					DomainName: "different.com",
+					Address:    "test@different.com",
+					Name:       "Some Name",
+				},
+			},
+			send: &model.Mailbox{
+				LocalPart:             "test",
+				Name:                  "Some Name",
+				PasswordRecoveryEmail: "someone@example.com",
+			},
+			want: &model.Mailbox{
+				LocalPart:             "test",
+				DomainName:            "example.com",
+				Address:               "test@example.com",
+				Name:                  "Some Name",
+				PasswordRecoveryEmail: "someone@example.com",
+			},
+			updatedName: "Different Name",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Mailboxes: tt.state}))
+			defer server.Close()
+
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: providerConfig(server.URL) + fmt.Sprintf(`
+							resource "migadu_mailbox" "test" {
+								domain_name             = "%s"
+								local_part              = "%s"
+								password_recovery_email = "%s"
+								name                    = "%s"
+							}
+						`, tt.domain, tt.send.LocalPart, tt.send.PasswordRecoveryEmail, tt.send.Name),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "domain_name", tt.want.DomainName),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "name", tt.want.Name),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "local_part", tt.want.LocalPart),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "password", ""),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "password_recovery_email", tt.want.PasswordRecoveryEmail),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "id", fmt.Sprintf("%s@%s", tt.want.LocalPart, tt.want.DomainName)),
+						),
+					},
+					{
+						ResourceName:      "migadu_mailbox.test",
+						ImportState:       true,
+						ImportStateVerify: true,
+					},
+					{
+						Config: providerConfig(server.URL) + fmt.Sprintf(`
+							resource "migadu_mailbox" "test" {
+								domain_name             = "%s"
+								local_part              = "%s"
+								password_recovery_email = "%s"
+								name                    = "%s"
+							}
+						`, tt.domain, tt.send.LocalPart, tt.send.PasswordRecoveryEmail, tt.updatedName),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "domain_name", tt.want.DomainName),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "name", tt.updatedName),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "local_part", tt.want.LocalPart),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "password", ""),
+							resource.TestCheckResourceAttr("migadu_mailbox.test", "password_recovery_email", tt.want.PasswordRecoveryEmail),
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "id", fmt.Sprintf("%s@%s", tt.want.LocalPart, tt.want.DomainName)),
 						),
 					},
@@ -192,23 +302,23 @@ func TestMailboxResource_Configuration_Success(t *testing.T) {
 		state         []model.Mailbox
 		want          *model.Mailbox
 	}{
-		//{
-		//	testcase: "invitation",
-		//	configuration: `
-		//		name                    = "Some Name"
-		//		domain_name             = "example.com"
-		//		local_part              = "test"
-		//		password_recovery_email = "someone@example.com"
-		//	`,
-		//	state: []model.Mailbox{},
-		//	want: &model.Mailbox{
-		//		Name:                  "Some Name",
-		//		DomainName:            "example.com",
-		//		LocalPart:             "test",
-		//		Address:               "test@example.com",
-		//		PasswordRecoveryEmail: "someone@example.com",
-		//	},
-		//},
+		{
+			testcase: "invitation",
+			configuration: `
+				name                    = "Some Name"
+				domain_name             = "example.com"
+				local_part              = "test"
+				password_recovery_email = "someone@example.com"
+			`,
+			state: []model.Mailbox{},
+			want: &model.Mailbox{
+				Name:                  "Some Name",
+				DomainName:            "example.com",
+				LocalPart:             "test",
+				Address:               "test@example.com",
+				PasswordRecoveryEmail: "someone@example.com",
+			},
+		},
 		{
 			testcase: "managed-password",
 			configuration: `

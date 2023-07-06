@@ -130,6 +130,7 @@ func handleUpdateMailbox(w http.ResponseWriter, r *http.Request, t *testing.T, m
 	requestMailbox.DomainName = domain
 	requestMailbox.LocalPart = localPart
 	requestMailbox.Address = fmt.Sprintf("%s@%s", requestMailbox.LocalPart, domain)
+	requestMailbox.Password = ""
 
 	missing := true
 	for index, mailbox := range *mailboxes {
@@ -171,6 +172,7 @@ func handleCreateMailbox(w http.ResponseWriter, r *http.Request, t *testing.T, m
 
 	mailbox.DomainName = domain
 	mailbox.Address = fmt.Sprintf("%s@%s", mailbox.LocalPart, domain)
+	mailbox.Password = ""
 
 	for _, existingMailbox := range *mailboxes {
 		if existingMailbox.DomainName == mailbox.DomainName && existingMailbox.LocalPart == mailbox.LocalPart {
