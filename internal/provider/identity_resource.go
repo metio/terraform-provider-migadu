@@ -256,10 +256,11 @@ func (r *identityResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	identity, err := r.migaduClient.GetIdentity(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString(), state.Identity.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error reading identity",
-			fmt.Sprintf("Could not read identity %s: %v", createIdentityID(state.LocalPart, state.DomainName, state.Identity), err),
+			fmt.Sprintf("Could not read identity %s: %v. We are going to remove this resource from your state", createIdentityID(state.LocalPart, state.DomainName, state.Identity), err),
 		)
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

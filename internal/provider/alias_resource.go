@@ -241,10 +241,11 @@ func (r *aliasResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	alias, err := r.migaduClient.GetAlias(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error reading alias",
-			fmt.Sprintf("Could not read alias %s: %v", createAliasID(state.LocalPart, state.DomainName), err),
+			fmt.Sprintf("Could not read alias %s: %v. We are going to remove this resource from your state", createAliasID(state.LocalPart, state.DomainName), err),
 		)
+		resp.State.RemoveResource(ctx)
 		return
 	}
 

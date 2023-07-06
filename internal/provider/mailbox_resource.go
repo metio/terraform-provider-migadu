@@ -541,10 +541,11 @@ func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	mailbox, err := r.migaduClient.GetMailbox(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error reading mailbox",
-			fmt.Sprintf("Could not read mailbox %s: %v", createMailboxID(state.DomainName, state.LocalPart), err),
+			fmt.Sprintf("Could not read mailbox %s: %v. We are going to remove this resource from your state", createMailboxID(state.DomainName, state.LocalPart), err),
 		)
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
