@@ -499,6 +499,7 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 	plan.MayAccessImap = types.BoolValue(createdMailbox.MayAccessImap)
 	plan.MayAccessPop3 = types.BoolValue(createdMailbox.MayAccessPop3)
 	plan.MayAccessManageSieve = types.BoolValue(createdMailbox.MayAccessManageSieve)
+	plan.Password = types.StringValue(plan.Password.ValueString())
 	plan.PasswordRecoveryEmail = types.StringValue(createdMailbox.PasswordRecoveryEmail)
 	plan.SpamAction = types.StringValue(createdMailbox.SpamAction)
 	plan.SpamAggressiveness = types.StringValue(createdMailbox.SpamAggressiveness)
@@ -578,6 +579,9 @@ func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, re
 	state.MayAccessImap = types.BoolValue(mailbox.MayAccessImap)
 	state.MayAccessPop3 = types.BoolValue(mailbox.MayAccessPop3)
 	state.MayAccessManageSieve = types.BoolValue(mailbox.MayAccessManageSieve)
+	if state.Password.IsUnknown() || state.Password.IsNull() {
+		state.Password = types.StringValue("")
+	}
 	state.PasswordRecoveryEmail = types.StringValue(mailbox.PasswordRecoveryEmail)
 	state.SpamAction = types.StringValue(mailbox.SpamAction)
 	state.SpamAggressiveness = types.StringValue(mailbox.SpamAggressiveness)
@@ -758,6 +762,7 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 	plan.MayAccessImap = types.BoolValue(updatedMailbox.MayAccessImap)
 	plan.MayAccessPop3 = types.BoolValue(updatedMailbox.MayAccessPop3)
 	plan.MayAccessManageSieve = types.BoolValue(updatedMailbox.MayAccessManageSieve)
+	plan.Password = types.StringValue(plan.Password.ValueString())
 	plan.PasswordRecoveryEmail = types.StringValue(updatedMailbox.PasswordRecoveryEmail)
 	plan.SpamAction = types.StringValue(updatedMailbox.SpamAction)
 	plan.SpamAggressiveness = types.StringValue(updatedMailbox.SpamAggressiveness)
