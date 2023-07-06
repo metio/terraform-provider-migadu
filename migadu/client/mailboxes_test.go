@@ -271,7 +271,7 @@ func TestMigaduClient_CreateMailbox(t *testing.T) {
 			},
 		},
 		{
-			name:   "multple",
+			name:   "multiple",
 			domain: "example.com",
 			state: []model.Mailbox{
 				{
