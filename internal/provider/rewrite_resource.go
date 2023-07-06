@@ -220,10 +220,11 @@ func (r *rewriteResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	rewrite, err := r.migaduClient.GetRewrite(ctx, state.DomainName.ValueString(), state.Name.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			"Error reading rewrite rule",
-			fmt.Sprintf("Could not read rewrite rule %s: %v", createRewriteID(state.DomainName, state.Name), err),
+			fmt.Sprintf("Could not read rewrite rule %s: %v. We are going to remove this resource from your state", createRewriteID(state.DomainName, state.Name), err),
 		)
+		resp.State.RemoveResource(ctx)
 		return
 	}
 
