@@ -7,6 +7,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
+	"net/http"
 	"strings"
 )
 
@@ -241,11 +243,17 @@ func (r *aliasResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	alias, err := r.migaduClient.GetAlias(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddWarning(
+		var requestError *client.RequestError
+		if errors.As(err, &requestError) {
+			if requestError.StatusCode == http.StatusNotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+		}
+		resp.Diagnostics.AddError(
 			fmt.Sprintf("Could not read alias %s", createAliasID(state.LocalPart, state.DomainName)),
 			fmt.Sprintf("We are going to recreate this resource if it is still part of your configuration, otherwise it will be removed from your state. Client error was: %v", err),
 		)
-		resp.State.RemoveResource(ctx)
 		return
 	}
 
