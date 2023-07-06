@@ -222,7 +222,7 @@ func (r *rewriteResource) Read(ctx context.Context, req resource.ReadRequest, re
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			fmt.Sprintf("Could not read rewrite rule %s", createRewriteID(state.DomainName, state.Name)),
-			fmt.Sprintf("We are going to recreate this resource. Client error was: %v", err),
+			fmt.Sprintf("We are going to recreate this resource if it is still part of your configuration, otherwise it will be removed from your state. Client error was: %v", err),
 		)
 		resp.State.RemoveResource(ctx)
 		return

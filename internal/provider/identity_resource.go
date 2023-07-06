@@ -258,7 +258,7 @@ func (r *identityResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			fmt.Sprintf("Could not read identity %s", createIdentityID(state.LocalPart, state.DomainName, state.Identity)),
-			fmt.Sprintf("We are going to recreate this resource. Client error was: %v", err),
+			fmt.Sprintf("We are going to recreate this resource if it is still part of your configuration, otherwise it will be removed from your state. Client error was: %v", err),
 		)
 		resp.State.RemoveResource(ctx)
 		return

@@ -243,7 +243,7 @@ func (r *aliasResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	if err != nil {
 		resp.Diagnostics.AddWarning(
 			fmt.Sprintf("Could not read alias %s", createAliasID(state.LocalPart, state.DomainName)),
-			fmt.Sprintf("We are going to recreate this resource. Client error was: %v", err),
+			fmt.Sprintf("We are going to recreate this resource if it is still part of your configuration, otherwise it will be removed from your state. Client error was: %v", err),
 		)
 		resp.State.RemoveResource(ctx)
 		return
