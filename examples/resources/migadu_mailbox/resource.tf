@@ -10,6 +10,7 @@ resource "migadu_mailbox" "invitation" {
   name                    = "Mailbox Name"
   domain_name             = "example.com"
   local_part              = "some-mailbox"
+  password_method         = "invitation"
   password_recovery_email = "old@address.example"
 }
 

@@ -341,6 +341,16 @@ func TestMigaduClient_CreateMailbox(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name:   "error-empty-recovery-email",
+			domain: "example.com",
+			state:  []model.Mailbox{},
+			send: &model.Mailbox{
+				Name:           "Some Name",
+				PasswordMethod: "invitation",
+			},
+			wantErr: true,
+		},
+		{
 			name:       "error-404",
 			domain:     "example.com",
 			statusCode: http.StatusNotFound,

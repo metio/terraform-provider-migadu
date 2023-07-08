@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -52,6 +53,7 @@ type mailboxResourceModel struct {
 	MayAccessManageSieve      types.Bool   `tfsdk:"may_access_manage_sieve"`
 	Password                  types.String `tfsdk:"password"`
 	PasswordRecoveryEmail     types.String `tfsdk:"password_recovery_email"`
+	PasswordMethod            types.String `tfsdk:"password_method"`
 	SpamAction                types.String `tfsdk:"spam_action"`
 	SpamAggressiveness        types.String `tfsdk:"spam_aggressiveness"`
 	Expirable                 types.Bool   `tfsdk:"expirable"`
@@ -174,19 +176,29 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Computed:            true,
 				Sensitive:           true,
 				Validators: []validator.String{
-					stringvalidator.ExactlyOneOf(path.MatchRoot("password_recovery_email")),
+					stringvalidator.AtLeastOneOf(path.MatchRoot("password_recovery_email")),
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
 			"password_recovery_email": schema.StringAttribute{
-				Description:         "The recovery email address of this mailbox. If this is set instead of 'password' an invitation to that address will be send to the user and they can set their own password.",
-				MarkdownDescription: "The recovery email address of this mailbox. If this is set instead of `password` an invitation to that address will be send to the user and they can set their own password.",
+				Description:         "The recovery email address of this mailbox.",
+				MarkdownDescription: "The recovery email address of this mailbox.",
 				Optional:            true,
 				Computed:            true,
 				Validators: []validator.String{
-					stringvalidator.ExactlyOneOf(path.MatchRoot("password")),
+					stringvalidator.AtLeastOneOf(path.MatchRoot("password")),
 					stringvalidator.LengthAtLeast(1),
 				},
+			},
+			"password_method": schema.StringAttribute{
+				Description:         "The password method of this mailbox. If this is set to 'invitation' an email will be send to the 'password_recovery_email' and users can set their own password.",
+				MarkdownDescription: "The password method of this mailbox. If this is set to 'invitation' an email will be send to the 'password_recovery_email' and users can set their own password.",
+				Optional:            true,
+				Computed:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("password", "invitation"),
+				},
+				Default: stringdefault.StaticString("password"),
 			},
 			"spam_action": schema.StringAttribute{
 				Description:         "The action to take once spam arrives in this mailbox.",
@@ -359,6 +371,21 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	if plan.PasswordMethod.ValueString() == "password" && plan.Password.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Error creating mailbox",
+			"Cannot use 'password_method = password' without a 'password'",
+		)
+		return
+	}
+	if plan.PasswordMethod.ValueString() == "invitation" && plan.PasswordRecoveryEmail.ValueString() == "" {
+		resp.Diagnostics.AddError(
+			"Error creating mailbox",
+			"Cannot use 'password_method = invitation' without a 'password_recovery_email'",
+		)
+		return
+	}
+
 	var wantedSenderDenyList []string
 	if !plan.SenderDenyList.IsUnknown() {
 		resp.Diagnostics.Append(plan.SenderDenyList.ElementsAs(ctx, &wantedSenderDenyList, false)...)
@@ -436,6 +463,7 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 		MayAccessManageSieve:  plan.MayAccessManageSieve.ValueBool(),
 		Password:              plan.Password.ValueString(),
 		PasswordRecoveryEmail: plan.PasswordRecoveryEmail.ValueString(),
+		PasswordMethod:        plan.PasswordMethod.ValueString(),
 		SpamAction:            plan.SpamAction.ValueString(),
 		SpamAggressiveness:    plan.SpamAggressiveness.ValueString(),
 		Expirable:             plan.Expirable.ValueBool(),
@@ -453,12 +481,6 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 		FooterActive:          plan.FooterActive.ValueBool(),
 		FooterPlainBody:       plan.FooterPlainBody.ValueString(),
 		FooterHtmlBody:        plan.FooterHtmlBody.ValueString(),
-	}
-
-	if plan.Password.ValueString() != "" {
-		mailbox.PasswordMethod = "password"
-	} else if plan.PasswordRecoveryEmail.ValueString() != "" {
-		mailbox.PasswordMethod = "invitation"
 	}
 
 	createdMailbox, err := r.migaduClient.CreateMailbox(ctx, plan.DomainName.ValueString(), mailbox)
@@ -592,6 +614,9 @@ func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, re
 		state.Password = types.StringValue("")
 	}
 	state.PasswordRecoveryEmail = types.StringValue(mailbox.PasswordRecoveryEmail)
+	if state.PasswordMethod.IsUnknown() || state.PasswordMethod.IsNull() {
+		state.PasswordMethod = types.StringValue("password")
+	}
 	state.SpamAction = types.StringValue(mailbox.SpamAction)
 	state.SpamAggressiveness = types.StringValue(mailbox.SpamAggressiveness)
 	state.Expirable = types.BoolValue(mailbox.Expirable)
@@ -723,12 +748,6 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 		FooterActive:          plan.FooterActive.ValueBool(),
 		FooterPlainBody:       plan.FooterPlainBody.ValueString(),
 		FooterHtmlBody:        plan.FooterHtmlBody.ValueString(),
-	}
-
-	if plan.Password.ValueString() != "" {
-		mailbox.PasswordMethod = "password"
-	} else if plan.PasswordRecoveryEmail.ValueString() != "" {
-		mailbox.PasswordMethod = "invitation"
 	}
 
 	updatedMailbox, err := r.migaduClient.UpdateMailbox(ctx, plan.DomainName.ValueString(), plan.LocalPart.ValueString(), mailbox)
