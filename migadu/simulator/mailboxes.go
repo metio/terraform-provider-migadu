@@ -170,6 +170,11 @@ func handleCreateMailbox(w http.ResponseWriter, r *http.Request, t *testing.T, m
 		return
 	}
 
+	if mailbox.PasswordMethod == "invitation" && mailbox.PasswordRecoveryEmail == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	mailbox.DomainName = domain
 	mailbox.Address = fmt.Sprintf("%s@%s", mailbox.LocalPart, domain)
 	mailbox.Password = ""

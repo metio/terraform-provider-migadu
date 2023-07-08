@@ -149,6 +149,7 @@ func TestMailboxResource_API_Success_Using_RecoveryEmail(t *testing.T) {
 				DomainName:            "example.com",
 				Address:               "test@example.com",
 				Name:                  "Some Name",
+				PasswordMethod:        "invitation",
 				PasswordRecoveryEmail: "someone@example.com",
 			},
 			updatedName: "Different Name",
@@ -174,6 +175,7 @@ func TestMailboxResource_API_Success_Using_RecoveryEmail(t *testing.T) {
 				DomainName:            "example.com",
 				Address:               "test@example.com",
 				Name:                  "Some Name",
+				PasswordMethod:        "invitation",
 				PasswordRecoveryEmail: "someone@example.com",
 			},
 			updatedName: "Different Name",
@@ -192,6 +194,7 @@ func TestMailboxResource_API_Success_Using_RecoveryEmail(t *testing.T) {
 							resource "migadu_mailbox" "test" {
 								domain_name             = "%s"
 								local_part              = "%s"
+								password_method         = "invitation"
 								password_recovery_email = "%s"
 								name                    = "%s"
 							}
@@ -209,6 +212,9 @@ func TestMailboxResource_API_Success_Using_RecoveryEmail(t *testing.T) {
 						ResourceName:      "migadu_mailbox.test",
 						ImportState:       true,
 						ImportStateVerify: true,
+						ImportStateVerifyIgnore: []string{
+							"password_method", // Migadu API does not allow reading password_method
+						},
 					},
 					{
 						Config: providerConfig(server.URL) + fmt.Sprintf(`
@@ -309,6 +315,7 @@ func TestMailboxResource_Configuration_Success(t *testing.T) {
 				domain_name             = "example.com"
 				local_part              = "test"
 				password_recovery_email = "someone@example.com"
+				password_method         = "invitation"
 			`,
 			state: []model.Mailbox{},
 			want: &model.Mailbox{
@@ -317,6 +324,7 @@ func TestMailboxResource_Configuration_Success(t *testing.T) {
 				LocalPart:             "test",
 				Address:               "test@example.com",
 				PasswordRecoveryEmail: "someone@example.com",
+				PasswordMethod:        "invitation",
 			},
 		},
 		{
@@ -334,6 +342,25 @@ func TestMailboxResource_Configuration_Success(t *testing.T) {
 				LocalPart:  "test",
 				Address:    "test@example.com",
 				Password:   "secret",
+			},
+		},
+		{
+			testcase: "passwords",
+			configuration: `
+				name                    = "Some Name"
+				domain_name             = "example.com"
+				local_part              = "test"
+				password                = "secret"
+				password_recovery_email = "someone@example.com"
+			`,
+			state: []model.Mailbox{},
+			want: &model.Mailbox{
+				Name:                  "Some Name",
+				DomainName:            "example.com",
+				LocalPart:             "test",
+				Address:               "test@example.com",
+				Password:              "secret",
+				PasswordRecoveryEmail: "someone@example.com",
 			},
 		},
 		{
@@ -467,7 +494,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 				domain_name = "example.com"
 				local_part  = "test"
 			`,
-			error: `No attribute specified when one \(and only one\) of \[password\] is required`,
+			error: `At least one attribute out of \[password\] must be specified`,
 		},
 		{
 			name: "empty-password-recovery-email",
@@ -486,7 +513,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 				domain_name = "example.com"
 				local_part  = "test"
 			`,
-			error: `(?s)No attribute specified when one \(and only one\) of \[password_recovery_email\](.*)is required`,
+			error: `At least one attribute out of \[password_recovery_email\] must be specified`,
 		},
 		{
 			name: "empty-name",
@@ -508,15 +535,37 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 			error: `The argument "name" is required, but no definition was found`,
 		},
 		{
-			name: "duplicate-passwords",
+			name: "missing-recovery-email",
+			configuration: `
+				name            = "Some Name"
+				domain_name     = "example.com"
+				local_part      = "test"
+				password_method = "invitation"
+				password        = "abc"
+			`,
+			error: "Cannot use 'password_method = invitation' without a 'password_recovery_email'",
+		},
+		{
+			name: "missing-password",
 			configuration: `
 				name                    = "Some Name"
 				domain_name             = "example.com"
 				local_part              = "test"
-				password                = "secret"
+				password_method         = "password"
 				password_recovery_email = "someone@example.com"
 			`,
-			error: `2 attributes specified when one \(and only one\) of \[password\] is required`,
+			error: "Cannot use 'password_method = password' without a 'password'",
+		},
+		{
+			name: "unsupported-password-method",
+			configuration: `
+				name            = "Some Name"
+				domain_name     = "example.com"
+				local_part      = "test"
+				password_method = "something"
+				password        = "abc"
+			`,
+			error: "Attribute password_method value must be one of",
 		},
 	}
 	for _, tt := range tests {

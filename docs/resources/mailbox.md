@@ -25,6 +25,7 @@ resource "migadu_mailbox" "invitation" {
   name                    = "Mailbox Name"
   domain_name             = "example.com"
   local_part              = "some-mailbox"
+  password_method         = "invitation"
   password_recovery_email = "old@address.example"
 }
 
@@ -68,7 +69,8 @@ resource "migadu_mailbox" "idn" {
 - `may_receive` (Boolean) Whether this mailbox is allowed to receive emails.
 - `may_send` (Boolean) Whether this mailbox is allowed to send emails.
 - `password` (String, Sensitive) The password of this mailbox.
-- `password_recovery_email` (String) The recovery email address of this mailbox. If this is set instead of `password` an invitation to that address will be send to the user and they can set their own password.
+- `password_method` (String) The password method of this mailbox. If this is set to 'invitation' an email will be send to the 'password_recovery_email' and users can set their own password.
+- `password_recovery_email` (String) The recovery email address of this mailbox.
 - `recipient_denylist` (List of String) The email addresses of recipients that will always be denied delivery in unicode.
 - `recipient_denylist_punycode` (List of String) The email addresses of recipients that will always be denied delivery in punycode.
 - `remove_upon_expiry` (Boolean) Whether this mailbox will be removed upon expiry.
