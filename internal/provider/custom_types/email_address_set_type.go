@@ -1,14 +1,17 @@
+/*
+ * SPDX-FileCopyrightText: The terraform-provider-migadu Authors
+ * SPDX-License-Identifier: 0BSD
+ */
+
 package custom_types
 
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
@@ -17,10 +20,6 @@ var (
 	_ basetypes.SetTypable   = (*EmailAddressSetType)(nil)
 	_ xattr.TypeWithValidate = (*EmailAddressSetType)(nil)
 )
-
-var emailAddressSetType = types.SetType{
-	ElemType: EmailAddressType{},
-}
 
 type EmailAddressSetType struct {
 	basetypes.SetType
