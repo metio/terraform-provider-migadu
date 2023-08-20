@@ -18,7 +18,7 @@ type State struct {
 	Mailboxes  []model.Mailbox
 	Aliases    []model.Alias
 	Identities []model.Identity
-	Rewrites   []model.Rewrite
+	Rewrites   []model.RewriteRule
 	StatusCode int
 }
 
@@ -30,7 +30,7 @@ func MigaduAPI(t *testing.T, state *State) http.HandlerFunc {
 		} else if identitiesUrlPattern.MatchString(r.URL.Path) {
 			handleIdentities(t, &state.Identities, state.StatusCode).ServeHTTP(w, r)
 		} else if rewritesPattern.MatchString(r.URL.Path) {
-			handleRewrites(t, &state.Rewrites, state.StatusCode).ServeHTTP(w, r)
+			handleRewriteRules(t, &state.Rewrites, state.StatusCode).ServeHTTP(w, r)
 		} else if mailboxesPattern.MatchString(r.URL.Path) {
 			handleMailboxes(t, &state.Mailboxes, state.StatusCode).ServeHTTP(w, r)
 		} else {

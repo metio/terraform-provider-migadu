@@ -21,6 +21,10 @@ import (
 	"time"
 )
 
+var (
+	_ provider.Provider = (*MigaduProvider)(nil)
+)
+
 type MigaduProvider struct{}
 
 type MigaduProviderModel struct {
@@ -30,20 +34,16 @@ type MigaduProviderModel struct {
 	Timeout  types.Int64  `tfsdk:"timeout"`
 }
 
-var (
-	_ provider.Provider = (*MigaduProvider)(nil)
-)
-
 func New() provider.Provider {
 	return &MigaduProvider{}
 }
 
-func (p *MigaduProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
-	resp.TypeName = "migadu"
+func (p *MigaduProvider) Metadata(_ context.Context, _ provider.MetadataRequest, response *provider.MetadataResponse) {
+	response.TypeName = "migadu"
 }
 
-func (p *MigaduProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (p *MigaduProvider) Schema(_ context.Context, _ provider.SchemaRequest, response *provider.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Description:         "Provider for the Migadu API. Requires Terraform 1.0 or later.",
 		MarkdownDescription: "Provider for the [Migadu](https://www.migadu.com/api/) API. Requires Terraform 1.0 or later.",
 		Attributes: map[string]schema.Attribute{
@@ -73,17 +73,17 @@ func (p *MigaduProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 	}
 }
 
-func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+func (p *MigaduProvider) Configure(ctx context.Context, request provider.ConfigureRequest, response *provider.ConfigureResponse) {
 	tflog.Info(ctx, "Configuring Migadu client")
 
 	var config MigaduProviderModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if config.Endpoint.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
+		response.Diagnostics.AddAttributeError(
 			path.Root("endpoint"),
 			"Unknown Migadu API Endpoint",
 			"The provider cannot create the Migadu API client as there is an unknown configuration value for the Migadu API endpoint. "+
@@ -92,7 +92,7 @@ func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	if config.Username.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
+		response.Diagnostics.AddAttributeError(
 			path.Root("username"),
 			"Unknown Migadu API Username",
 			"The provider cannot create the Migadu API client as there is an unknown configuration value for the Migadu API username. "+
@@ -101,7 +101,7 @@ func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	if config.Token.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
+		response.Diagnostics.AddAttributeError(
 			path.Root("token"),
 			"Unknown Migadu API Token",
 			"The provider cannot create the Migadu API client as there is an unknown configuration value for the Migadu API token. "+
@@ -110,7 +110,7 @@ func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	if config.Timeout.IsUnknown() {
-		resp.Diagnostics.AddAttributeError(
+		response.Diagnostics.AddAttributeError(
 			path.Root("timeout"),
 			"Unknown Migadu API Timeout",
 			"The provider cannot create the Migadu API client as there is an unknown configuration value for the Migadu API timeout. "+
@@ -118,7 +118,7 @@ func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		)
 	}
 
-	if resp.Diagnostics.HasError() {
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -152,7 +152,7 @@ func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	if username == "" {
-		resp.Diagnostics.AddAttributeError(
+		response.Diagnostics.AddAttributeError(
 			path.Root("username"),
 			"Missing Migadu API Username",
 			"The provider cannot create the Migadu API client as there is a missing or empty value for the Migadu API username. "+
@@ -162,7 +162,7 @@ func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRe
 	}
 
 	if token == "" {
-		resp.Diagnostics.AddAttributeError(
+		response.Diagnostics.AddAttributeError(
 			path.Root("token"),
 			"Missing Migadu API Token",
 			"The provider cannot create the Migadu API client as there is a missing or empty value for the Migadu API token. "+
@@ -173,14 +173,14 @@ func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 	duration, err := time.ParseDuration(fmt.Sprintf("%ss", timeout))
 	if err != nil {
-		resp.Diagnostics.AddAttributeError(
+		response.Diagnostics.AddAttributeError(
 			path.Root("timeout"),
 			"Invalid Migadu API Timeout",
 			"The supplied timeout value cannot be parsed into a duration: "+err.Error(),
 		)
 	}
 
-	if resp.Diagnostics.HasError() {
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -195,7 +195,7 @@ func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRe
 
 	c, err := client.New(&endpoint, &username, &token, duration)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			"Unable to Create Migadu API Client",
 			"An unexpected error occurred when creating the Migadu API client. "+
 				"If the error is not clear, please contact the provider developers.\n\n"+
@@ -204,8 +204,8 @@ func (p *MigaduProvider) Configure(ctx context.Context, req provider.ConfigureRe
 		return
 	}
 
-	resp.DataSourceData = c
-	resp.ResourceData = c
+	response.DataSourceData = c
+	response.ResourceData = c
 
 	tflog.Info(ctx, "Configured Migadu client")
 }
@@ -218,8 +218,8 @@ func (p *MigaduProvider) DataSources(_ context.Context) []func() datasource.Data
 		NewIdentityDataSource,
 		NewMailboxDataSource,
 		NewMailboxesDataSource,
-		NewRewriteDataSource,
-		NewRewritesDataSource,
+		NewRewriteRuleDataSource,
+		NewRewriteRulesDataSource,
 	}
 }
 
@@ -228,6 +228,6 @@ func (p *MigaduProvider) Resources(_ context.Context) []func() resource.Resource
 		NewAliasResource,
 		NewIdentityResource,
 		NewMailboxResource,
-		NewRewriteResource,
+		NewRewriteRuleResource,
 	}
 }

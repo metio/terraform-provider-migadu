@@ -8,8 +8,11 @@
 package provider_test
 
 import (
+	"context"
 	"fmt"
+	fwdatasource "github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/metio/terraform-provider-migadu/internal/provider"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"github.com/metio/terraform-provider-migadu/migadu/simulator"
 	"net/http"
@@ -18,20 +21,37 @@ import (
 	"testing"
 )
 
+func TestIdentitiesDataSource_Schema(t *testing.T) {
+	ctx := context.Background()
+	schemaRequest := fwdatasource.SchemaRequest{}
+	schemaResponse := &fwdatasource.SchemaResponse{}
+
+	provider.NewIdentitiesDataSource().Schema(ctx, schemaRequest, schemaResponse)
+
+	if schemaResponse.Diagnostics.HasError() {
+		t.Fatalf("Schema method diagnostics: %+v", schemaResponse.Diagnostics)
+	}
+
+	diagnostics := schemaResponse.Schema.ValidateImplementation(ctx)
+	if diagnostics.HasError() {
+		t.Fatalf("Schema validation diagnostics: %+v", diagnostics)
+	}
+}
+
 func TestIdentitiesDataSource_API_Success(t *testing.T) {
 	tests := []struct {
 		name      string
 		domain    string
 		localPart string
 		state     []model.Identity
-		want      *model.Identities
+		want      model.Identities
 	}{
 		{
 			name:      "empty",
 			domain:    "example.com",
 			localPart: "test",
 			state:     []model.Identity{},
-			want:      &model.Identities{},
+			want:      model.Identities{},
 		},
 		{
 			name:      "single",
@@ -54,7 +74,7 @@ func TestIdentitiesDataSource_API_Success(t *testing.T) {
 					FooterHtmlBody:       "",
 				},
 			},
-			want: &model.Identities{
+			want: model.Identities{
 				Identities: []model.Identity{
 					{
 						LocalPart:            "other",
@@ -92,7 +112,7 @@ func TestIdentitiesDataSource_API_Success(t *testing.T) {
 					Name:       "Another Name",
 				},
 			},
-			want: &model.Identities{
+			want: model.Identities{
 				Identities: []model.Identity{
 					{
 						LocalPart:  "other",
@@ -127,7 +147,7 @@ func TestIdentitiesDataSource_API_Success(t *testing.T) {
 					Name:       "Another Name",
 				},
 			},
-			want: &model.Identities{
+			want: model.Identities{
 				Identities: []model.Identity{
 					{
 						LocalPart:  "other",
@@ -150,7 +170,7 @@ func TestIdentitiesDataSource_API_Success(t *testing.T) {
 					Name:       "Some Name",
 				},
 			},
-			want: &model.Identities{
+			want: model.Identities{
 				Identities: []model.Identity{
 					{
 						LocalPart:  "other",

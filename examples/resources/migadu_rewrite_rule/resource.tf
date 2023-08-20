@@ -1,4 +1,4 @@
-resource "migadu_rewrite" "example" {
+resource "migadu_rewrite_rule" "example" {
   domain_name     = "example.com"
   name            = "security-mails"
   local_part_rule = "sec-*"
@@ -10,7 +10,7 @@ resource "migadu_rewrite" "example" {
 }
 
 # international domain names are supported
-resource "migadu_rewrite" "idn" {
+resource "migadu_rewrite_rule" "idn" {
   domain_name     = "bücher.example"
   name            = "security-mails"
   local_part_rule = "sec-*"

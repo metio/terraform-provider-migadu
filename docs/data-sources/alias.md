@@ -36,8 +36,7 @@ data "migadu_alias" "idn" {
 ### Read-Only
 
 - `address` (String) The email address of the alias `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.
-- `destinations` (List of String) List of email addresses that act as destinations of the alias in unicode.
-- `destinations_punycode` (List of String) List of email addresses that act as destinations of the alias in punycode.
+- `destinations` (Set of String) List of email addresses that act as destinations of the alias.
 - `expirable` (Boolean) Whether the alias expires at some time.
 - `expires_on` (String) The expiration date of the alias.
 - `id` (String) Contains the value `local_part@domain_name`.

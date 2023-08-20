@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"github.com/metio/terraform-provider-migadu/migadu/idn"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
+	"golang.org/x/net/idna"
 	"io"
 	"net/http"
 	"regexp"
@@ -26,7 +27,11 @@ func handleAliases(t *testing.T, aliases *[]model.Alias, forcedStatusCode int) h
 		if matches == nil {
 			t.Errorf("Expected to request to match %s, got: %s", aliasesUrlPattern, r.URL.Path)
 		}
-		domain := matches[1]
+
+		domain, err := idna.ToASCII(matches[1])
+		if err != nil {
+			t.Errorf("Could not convert %s to ASCII because of: %v", matches[1], err)
+		}
 		localPart := matches[2]
 
 		if forcedStatusCode > 0 {

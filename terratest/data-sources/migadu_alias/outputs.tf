@@ -21,10 +21,6 @@ output "destinations" {
   value = data.migadu_alias.alias.destinations
 }
 
-output "destinations_punycode" {
-  value = data.migadu_alias.alias.destinations_punycode
-}
-
 output "expirable" {
   value = data.migadu_alias.alias.expirable
 }

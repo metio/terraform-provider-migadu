@@ -18,18 +18,16 @@ import (
 )
 
 func TestRewriteDataSource(t *testing.T) {
-	tests := []struct {
-		name   string
+	testCases := map[string]struct {
 		domain string
-		slug   string
-		state  []model.Rewrite
-		want   *model.Rewrite
+		name   string
+		state  []model.RewriteRule
+		want   model.RewriteRule
 	}{
-		{
-			name:   "single",
+		"single": {
 			domain: "example.com",
-			slug:   "test",
-			state: []model.Rewrite{
+			name:   "test",
+			state: []model.RewriteRule{
 				{
 					DomainName:    "example.com",
 					Name:          "test",
@@ -40,7 +38,7 @@ func TestRewriteDataSource(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrite{
+			want: model.RewriteRule{
 				DomainName:    "example.com",
 				Name:          "test",
 				LocalPartRule: "prefix-*",
@@ -50,11 +48,10 @@ func TestRewriteDataSource(t *testing.T) {
 				},
 			},
 		},
-		{
-			name:   "multiple",
+		"multiple": {
 			domain: "example.com",
-			slug:   "test",
-			state: []model.Rewrite{
+			name:   "test",
+			state: []model.RewriteRule{
 				{
 					DomainName:    "different.com",
 					Name:          "test",
@@ -74,7 +71,7 @@ func TestRewriteDataSource(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrite{
+			want: model.RewriteRule{
 				DomainName:    "example.com",
 				Name:          "test",
 				LocalPartRule: "prefix-*",
@@ -84,11 +81,10 @@ func TestRewriteDataSource(t *testing.T) {
 				},
 			},
 		},
-		{
-			name:   "idna",
+		"idna": {
 			domain: "hoß.de",
-			slug:   "test",
-			state: []model.Rewrite{
+			name:   "test",
+			state: []model.RewriteRule{
 				{
 					DomainName:    "xn--ho-hia.de",
 					Name:          "test",
@@ -99,7 +95,7 @@ func TestRewriteDataSource(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrite{
+			want: model.RewriteRule{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "test",
 				LocalPartRule: "prefix-*",
@@ -110,28 +106,28 @@ func TestRewriteDataSource(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Rewrites: tt.state}))
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Rewrites: testCase.state}))
 			defer server.Close()
 
 			terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
-				TerraformDir: "../data-sources/migadu_rewrite",
+				TerraformDir: "../data-sources/migadu_rewrite_rule",
 				Vars: map[string]interface{}{
 					"endpoint":    server.URL,
-					"domain_name": tt.domain,
-					"name":        tt.slug,
+					"domain_name": testCase.domain,
+					"name":        testCase.name,
 				},
 			})
 
 			defer terraform.Destroy(t, terraformOptions)
 			terraform.InitAndApplyAndIdempotent(t, terraformOptions)
 
-			assert.Equal(t, fmt.Sprintf("%s/%s", tt.domain, tt.slug), terraform.Output(t, terraformOptions, "id"), "id")
-			assert.Equal(t, tt.domain, terraform.Output(t, terraformOptions, "domain_name"), "domain_name")
-			assert.Equal(t, tt.slug, terraform.Output(t, terraformOptions, "name"), "name")
-			assert.Equal(t, tt.want.LocalPartRule, terraform.Output(t, terraformOptions, "local_part_rule"), "local_part_rule")
-			assert.Equal(t, fmt.Sprintf("%v", tt.want.OrderNum), terraform.Output(t, terraformOptions, "order_num"), "order_num")
+			assert.Equal(t, fmt.Sprintf("%s/%s", testCase.domain, testCase.name), terraform.Output(t, terraformOptions, "id"), "id")
+			assert.Equal(t, testCase.domain, terraform.Output(t, terraformOptions, "domain_name"), "domain_name")
+			assert.Equal(t, testCase.name, terraform.Output(t, terraformOptions, "name"), "name")
+			assert.Equal(t, testCase.want.LocalPartRule, terraform.Output(t, terraformOptions, "local_part_rule"), "local_part_rule")
+			assert.Equal(t, fmt.Sprintf("%v", testCase.want.OrderNum), terraform.Output(t, terraformOptions, "order_num"), "order_num")
 		})
 	}
 }

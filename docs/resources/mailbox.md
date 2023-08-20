@@ -53,15 +53,13 @@ resource "migadu_mailbox" "idn" {
 - `auto_respond_body` (String) The body of the automatic response.
 - `auto_respond_expires_on` (String) The expiration date of the automatic response.
 - `auto_respond_subject` (String) The subject of the automatic response.
-- `delegations` (List of String) The delegations of the mailbox in unicode.
-- `delegations_punycode` (List of String) The delegations of the mailbox in punycode.
+- `delegations` (Set of String) The delegations of the mailbox.
 - `expirable` (Boolean) Whether this mailbox expires in the future.
 - `expires_on` (String) The expiration date of this mailbox.
 - `footer_active` (Boolean) Whether the footer of this mailbox is active.
 - `footer_html_body` (String) The footer of this mailbox in text/html format.
 - `footer_plain_body` (String) The footer of this mailbox in text/plain format.
-- `identities` (List of String) The identities of the mailbox in unicode.
-- `identities_punycode` (List of String) The identities of the mailbox in punycode.
+- `identities` (Set of String) The identities of the mailbox.
 - `is_internal` (Boolean) Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.
 - `may_access_imap` (Boolean) Whether this mailbox is allowed to use IMAP.
 - `may_access_manage_sieve` (Boolean) Whether this mailbox is allowed to manage the mail sieve.
@@ -71,13 +69,10 @@ resource "migadu_mailbox" "idn" {
 - `password` (String, Sensitive) The password of this mailbox.
 - `password_method` (String) The password method of this mailbox. If this is set to 'invitation' an email will be send to the 'password_recovery_email' and users can set their own password.
 - `password_recovery_email` (String) The recovery email address of this mailbox.
-- `recipient_denylist` (List of String) The email addresses of recipients that will always be denied delivery in unicode.
-- `recipient_denylist_punycode` (List of String) The email addresses of recipients that will always be denied delivery in punycode.
+- `recipient_denylist` (Set of String) The email addresses of recipients that will always be denied delivery.
 - `remove_upon_expiry` (Boolean) Whether this mailbox will be removed upon expiry.
-- `sender_allowlist` (List of String) The email addresses of senders that will always be allowed delivery in unicode.
-- `sender_allowlist_punycode` (List of String) The email addresses of senders that will always be denied delivery in punycode.
-- `sender_denylist` (List of String) The email addresses of senders that will always be denied delivery in unicode.
-- `sender_denylist_punycode` (List of String) The email addresses of senders that will always be denied delivery in punycode.
+- `sender_allowlist` (Set of String) The email addresses of senders that will always be allowed delivery.
+- `sender_denylist` (Set of String) The email addresses of senders that will always be denied delivery.
 - `spam_action` (String) The action to take once spam arrives in this mailbox.
 - `spam_aggressiveness` (String) How aggressive will spam be detected in this mailbox.
 

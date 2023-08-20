@@ -20,7 +20,7 @@ import (
 
 var rewritesPattern = regexp.MustCompile("/domains/(.*)/rewrites/?(.*)?")
 
-func handleRewrites(t *testing.T, rewrites *[]model.Rewrite, forcedStatusCode int) http.HandlerFunc {
+func handleRewriteRules(t *testing.T, rewrites *[]model.RewriteRule, forcedStatusCode int) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		matches := rewritesPattern.FindStringSubmatch(r.URL.Path)
 		if matches == nil {
@@ -35,39 +35,39 @@ func handleRewrites(t *testing.T, rewrites *[]model.Rewrite, forcedStatusCode in
 		}
 
 		if r.Method == http.MethodPost {
-			handleCreateRewrite(w, r, t, rewrites, domain)
+			handleCreateRewriteRule(w, r, t, rewrites, domain)
 		}
 		if r.Method == http.MethodPut {
-			handleUpdateRewrite(w, r, t, rewrites, domain, slug)
+			handleUpdateRewriteRule(w, r, t, rewrites, domain, slug)
 		}
 		if r.Method == http.MethodDelete {
-			handleDeleteRewrite(w, r, t, rewrites, domain, slug)
+			handleDeleteRewriteRule(w, r, t, rewrites, domain, slug)
 		}
 		if r.Method == http.MethodGet && slug != "" {
-			handleGetRewrite(w, r, t, rewrites, domain, slug)
+			handleGetRewriteRule(w, r, t, rewrites, domain, slug)
 		}
 		if r.Method == http.MethodGet && slug == "" {
-			handleGetRewrites(w, r, t, rewrites, domain)
+			handleGetRewriteRules(w, r, t, rewrites, domain)
 		}
 	}
 }
 
-func handleGetRewrites(w http.ResponseWriter, r *http.Request, t *testing.T, rewrites *[]model.Rewrite, domain string) {
+func handleGetRewriteRules(w http.ResponseWriter, r *http.Request, t *testing.T, rewrites *[]model.RewriteRule, domain string) {
 	if r.URL.Path != fmt.Sprintf("/domains/%s/rewrites", domain) {
 		t.Errorf("Expected to request '/domains/%s/rewrites', got: %s", domain, r.URL.Path)
 	}
 
-	var found []model.Rewrite
+	var found []model.RewriteRule
 	for _, rewrite := range *rewrites {
 		if rewrite.DomainName == domain {
 			found = append(found, rewrite)
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	writeJsonResponse(t, w, model.Rewrites{Rewrites: found})
+	writeJsonResponse(t, w, model.RewriteRules{RewriteRules: found})
 }
 
-func handleGetRewrite(w http.ResponseWriter, r *http.Request, t *testing.T, rewrites *[]model.Rewrite, domain string, slug string) {
+func handleGetRewriteRule(w http.ResponseWriter, r *http.Request, t *testing.T, rewrites *[]model.RewriteRule, domain string, slug string) {
 	if r.URL.Path != fmt.Sprintf("/domains/%s/rewrites/%s", domain, slug) {
 		t.Errorf("Expected to request '/domains/%s/rewrites/%s', got: %s", domain, slug, r.URL.Path)
 	}
@@ -85,7 +85,7 @@ func handleGetRewrite(w http.ResponseWriter, r *http.Request, t *testing.T, rewr
 	}
 }
 
-func handleDeleteRewrite(w http.ResponseWriter, r *http.Request, t *testing.T, rewrites *[]model.Rewrite, domain string, slug string) {
+func handleDeleteRewriteRule(w http.ResponseWriter, r *http.Request, t *testing.T, rewrites *[]model.RewriteRule, domain string, slug string) {
 	if r.URL.Path != fmt.Sprintf("/domains/%s/rewrites/%s", domain, slug) {
 		t.Errorf("Expected to request '/domains/%s/rewrites/%s', got: %s", domain, slug, r.URL.Path)
 	}
@@ -107,7 +107,7 @@ func handleDeleteRewrite(w http.ResponseWriter, r *http.Request, t *testing.T, r
 	}
 }
 
-func handleUpdateRewrite(w http.ResponseWriter, r *http.Request, t *testing.T, rewrites *[]model.Rewrite, domain string, slug string) {
+func handleUpdateRewriteRule(w http.ResponseWriter, r *http.Request, t *testing.T, rewrites *[]model.RewriteRule, domain string, slug string) {
 	if r.URL.Path != fmt.Sprintf("/domains/%s/rewrites/%s", domain, slug) {
 		t.Errorf("Expected to request '/domains/%s/rewrites/%s', got: %s", domain, slug, r.URL.Path)
 	}
@@ -130,7 +130,7 @@ func handleUpdateRewrite(w http.ResponseWriter, r *http.Request, t *testing.T, r
 	for index, rewrite := range *rewrites {
 		if rewrite.DomainName == domain && rewrite.Name == slug {
 			missing = false
-			responseRewrite := model.Rewrite{
+			responseRewrite := model.RewriteRule{
 				DomainName:    domain,
 				Name:          requestRewrite.Name,
 				LocalPartRule: requestRewrite.LocalPartRule,
@@ -150,7 +150,7 @@ func handleUpdateRewrite(w http.ResponseWriter, r *http.Request, t *testing.T, r
 	}
 }
 
-func handleCreateRewrite(w http.ResponseWriter, r *http.Request, t *testing.T, rewrites *[]model.Rewrite, domain string) {
+func handleCreateRewriteRule(w http.ResponseWriter, r *http.Request, t *testing.T, rewrites *[]model.RewriteRule, domain string) {
 	if r.URL.Path != fmt.Sprintf("/domains/%s/rewrites", domain) {
 		t.Errorf("Expected to request '/domains/%s/rewrites', got: %s", domain, r.URL.Path)
 	}
@@ -173,7 +173,7 @@ func handleCreateRewrite(w http.ResponseWriter, r *http.Request, t *testing.T, r
 		}
 	}
 
-	rewrite := model.Rewrite{
+	rewrite := model.RewriteRule{
 		DomainName:    domain,
 		Name:          requestRewrite.Name,
 		LocalPartRule: requestRewrite.LocalPartRule,
@@ -188,6 +188,6 @@ func handleCreateRewrite(w http.ResponseWriter, r *http.Request, t *testing.T, r
 }
 
 type RewriteServerModel struct {
-	model.Rewrite
+	model.RewriteRule
 	Destinations string `json:"destinations"`
 }

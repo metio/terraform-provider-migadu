@@ -5,13 +5,13 @@
 
 package model
 
-// Rewrites is the data model that wraps multiple rewrite rules
-type Rewrites struct {
-	Rewrites []Rewrite `json:"rewrites"`
+// RewriteRules is the data model that wraps multiple rewrite rules
+type RewriteRules struct {
+	RewriteRules []RewriteRule `json:"rewrites"`
 }
 
-// Rewrite is the data model for a single rewrite rule
-type Rewrite struct {
+// RewriteRule is the data model for a single rewrite rule
+type RewriteRule struct {
 	DomainName    string   `json:"domain_name"`
 	Name          string   `json:"name"`
 	LocalPartRule string   `json:"local_part_rule"`

@@ -9,7 +9,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/metio/terraform-provider-migadu/internal/provider/custom_types"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"net/http"
@@ -26,56 +27,57 @@ import (
 )
 
 var (
-	_ resource.Resource                = &aliasResource{}
-	_ resource.ResourceWithConfigure   = &aliasResource{}
-	_ resource.ResourceWithImportState = &aliasResource{}
+	_ resource.Resource                = (*AliasResource)(nil)
+	_ resource.ResourceWithConfigure   = (*AliasResource)(nil)
+	_ resource.ResourceWithImportState = (*AliasResource)(nil)
 )
 
 func NewAliasResource() resource.Resource {
-	return &aliasResource{}
+	return &AliasResource{}
 }
 
-type aliasResource struct {
-	migaduClient *client.MigaduClient
+type AliasResource struct {
+	MigaduClient *client.MigaduClient
 }
 
-type aliasResourceModel struct {
-	ID                   types.String `tfsdk:"id"`
-	LocalPart            types.String `tfsdk:"local_part"`
-	DomainName           types.String `tfsdk:"domain_name"`
-	Address              types.String `tfsdk:"address"`
-	Destinations         types.List   `tfsdk:"destinations"`
-	DestinationsPunycode types.List   `tfsdk:"destinations_punycode"`
-	IsInternal           types.Bool   `tfsdk:"is_internal"`
-	Expirable            types.Bool   `tfsdk:"expirable"`
-	ExpiresOn            types.String `tfsdk:"expires_on"`
-	RemoveUponExpiry     types.Bool   `tfsdk:"remove_upon_expiry"`
+type AliasResourceModel struct {
+	ID               custom_types.EmailAddressValue    `tfsdk:"id"`
+	LocalPart        types.String                      `tfsdk:"local_part"`
+	DomainName       custom_types.DomainNameValue      `tfsdk:"domain_name"`
+	Address          custom_types.EmailAddressValue    `tfsdk:"address"`
+	Destinations     custom_types.EmailAddressSetValue `tfsdk:"destinations"`
+	IsInternal       types.Bool                        `tfsdk:"is_internal"`
+	Expirable        types.Bool                        `tfsdk:"expirable"`
+	ExpiresOn        types.String                      `tfsdk:"expires_on"`
+	RemoveUponExpiry types.Bool                        `tfsdk:"remove_upon_expiry"`
 }
 
-func (r *aliasResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_alias"
+func (r *AliasResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = request.ProviderTypeName + "_alias"
 }
 
-func (r *aliasResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *AliasResource) Schema(_ context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Description:         "Provides an email alias.",
 		MarkdownDescription: "Provides an email alias.",
 		Attributes: map[string]schema.Attribute{
-			"domain_name": schema.StringAttribute{
-				Description:         "The domain name of the alias.",
-				MarkdownDescription: "The domain name of the alias.",
-				Required:            true,
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
+			"id": schema.StringAttribute{
+				Description:         "Contains the value 'local_part@domain_name'.",
+				MarkdownDescription: "Contains the value `local_part@domain_name`.",
+				Required:            false,
+				Optional:            false,
+				Computed:            true,
+				CustomType:          custom_types.EmailAddressType{},
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"local_part": schema.StringAttribute{
 				Description:         "The local part of the alias.",
 				MarkdownDescription: "The local part of the alias.",
 				Required:            true,
+				Optional:            false,
+				Computed:            false,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
@@ -83,109 +85,103 @@ func (r *aliasResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": schema.StringAttribute{
-				Description:         "Contains the value 'local_part@domain_name'.",
-				MarkdownDescription: "Contains the value `local_part@domain_name`.",
-				Computed:            true,
+			"domain_name": schema.StringAttribute{
+				Description:         "The domain name of the alias.",
+				MarkdownDescription: "The domain name of the alias.",
+				Required:            true,
+				Optional:            false,
+				Computed:            false,
+				CustomType:          custom_types.DomainNameType{},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"address": schema.StringAttribute{
 				Description:         "The email address 'local_part@domain_name' as returned by the Migadu API. This might be different from the 'id' attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
 				MarkdownDescription: "The email address `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
+				Required:            false,
+				Optional:            false,
 				Computed:            true,
+				CustomType:          custom_types.EmailAddressType{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"destinations": schema.ListAttribute{
-				Description:         "List of email addresses that act as destinations of the alias in unicode.",
-				MarkdownDescription: "List of email addresses that act as destinations of the alias in unicode.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-				Validators: []validator.List{
-					listvalidator.ExactlyOneOf(path.MatchRoot("destinations_punycode")),
-					listvalidator.SizeAtLeast(1),
+			"destinations": schema.SetAttribute{
+				Description:         "Set of email addresses that act as destinations of the alias.",
+				MarkdownDescription: "Set of email addresses that act as destinations of the alias.",
+				Required:            true,
+				Optional:            false,
+				Computed:            false,
+				CustomType: custom_types.EmailAddressSetType{
+					SetType: types.SetType{
+						ElemType: custom_types.EmailAddressType{},
+					},
 				},
-			},
-			"destinations_punycode": schema.ListAttribute{
-				Description:         "List of email addresses that act as destinations of the alias in punycode. Use this attribute instead of 'destinations' in case you want/must use the punycode representation of your domain.",
-				MarkdownDescription: "List of email addresses that act as destinations of the alias in punycode. Use this attribute instead of `destinations` in case you want/must use the punycode representation of your domain.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-				Validators: []validator.List{
-					listvalidator.ExactlyOneOf(path.MatchRoot("destinations")),
-					listvalidator.SizeAtLeast(1),
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
 				},
 			},
 			"is_internal": schema.BoolAttribute{
 				Description:         "Internal aliases can only receive emails from Migadu email servers.",
 				MarkdownDescription: "Internal aliases can only receive emails from Migadu email servers.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"expirable": schema.BoolAttribute{
 				Description:         "Whether this alias expires at some time.",
 				MarkdownDescription: "Whether this alias expires at some time.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"expires_on": schema.StringAttribute{
 				Description:         "The expiration date of this alias.",
 				MarkdownDescription: "The expiration date of this alias.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"remove_upon_expiry": schema.BoolAttribute{
 				Description:         "Whether to remove this alias upon expiry.",
 				MarkdownDescription: "Whether to remove this alias upon expiry.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 		},
 	}
 }
-func (r *aliasResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (r *AliasResource) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if request.ProviderData == nil {
 		return
 	}
 
-	migaduClient, ok := req.ProviderData.(*client.MigaduClient)
-
-	if !ok {
-		resp.Diagnostics.AddError(
+	if migaduClient, ok := request.ProviderData.(*client.MigaduClient); ok {
+		r.MigaduClient = migaduClient
+	} else {
+		response.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client.MigaduClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *client.MigaduClient, got: %T. Please report this issue to the provider developers.", request.ProviderData),
 		)
-		return
 	}
-
-	r.migaduClient = migaduClient
 }
 
-func (r *aliasResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan aliasResourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *AliasResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var plan AliasResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	var destinations []string
-	if !plan.Destinations.IsUnknown() {
-		resp.Diagnostics.Append(plan.Destinations.ElementsAs(ctx, &destinations, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	if !plan.DestinationsPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.DestinationsPunycode.ElementsAs(ctx, &destinations, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	response.Diagnostics.Append(plan.Destinations.ElementsAs(ctx, &destinations, false)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	alias := &model.Alias{
@@ -197,113 +193,73 @@ func (r *aliasResource) Create(ctx context.Context, req resource.CreateRequest, 
 		RemoveUponExpiry: plan.RemoveUponExpiry.ValueBool(),
 	}
 
-	createdAlias, err := r.migaduClient.CreateAlias(ctx, plan.DomainName.ValueString(), alias)
+	createdAlias, err := r.MigaduClient.CreateAlias(ctx, plan.DomainName.ValueString(), alias)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating alias",
-			"Could not create alias, unexpected error: "+err.Error(),
-		)
+		response.Diagnostics.Append(AliasCreateError(err))
 		return
 	}
 
-	receivedDestinations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(createdAlias.Destinations, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	receivedDestinationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, createdAlias.Destinations)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	plan.Destinations = receivedDestinations
-	plan.DestinationsPunycode = receivedDestinationsPunycode
-	plan.ID = types.StringValue(createAliasID(plan.LocalPart, plan.DomainName))
-	plan.Address = types.StringValue(createdAlias.Address)
+	plan.ID = custom_types.NewEmailAddressValue(CreateAliasID(plan.LocalPart, plan.DomainName))
+	plan.Address = custom_types.NewEmailAddressValue(createdAlias.Address)
 	plan.IsInternal = types.BoolValue(createdAlias.IsInternal)
 	plan.Expirable = types.BoolValue(createdAlias.Expirable)
 	plan.ExpiresOn = types.StringValue(createdAlias.ExpiresOn)
 	plan.RemoveUponExpiry = types.BoolValue(createdAlias.RemoveUponExpiry)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *aliasResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state aliasResourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *AliasResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var state AliasResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	alias, err := r.migaduClient.GetAlias(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
+	alias, err := r.MigaduClient.GetAlias(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
 	if err != nil {
 		var requestError *client.RequestError
 		if errors.As(err, &requestError) {
 			if requestError.StatusCode == http.StatusNotFound {
-				resp.State.RemoveResource(ctx)
+				response.State.RemoveResource(ctx)
 				return
 			}
 		}
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Could not read alias %s", createAliasID(state.LocalPart, state.DomainName)),
-			fmt.Sprintf("We are going to recreate this resource if it is still part of your configuration, otherwise it will be removed from your state. Client error was: %v", err),
-		)
+		response.Diagnostics.Append(AliasReadError(err))
 		return
 	}
 
-	receivedDestinations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(alias.Destinations, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	receivedDestinationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, alias.Destinations)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+	receivedDestinations, diags := custom_types.NewEmailAddressSetValueFrom(ctx, alias.Destinations)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	state.Destinations = receivedDestinations
-	state.DestinationsPunycode = receivedDestinationsPunycode
-	state.ID = types.StringValue(createAliasID(state.LocalPart, state.DomainName))
-	state.Address = types.StringValue(alias.Address)
+	if equal, _ := state.Destinations.SetSemanticEquals(ctx, receivedDestinations); !equal {
+		state.Destinations = receivedDestinations
+	}
+
+	state.ID = custom_types.NewEmailAddressValue(CreateAliasID(state.LocalPart, state.DomainName))
+	state.Address = custom_types.NewEmailAddressValue(alias.Address)
 	state.IsInternal = types.BoolValue(alias.IsInternal)
 	state.Expirable = types.BoolValue(alias.Expirable)
 	state.ExpiresOn = types.StringValue(alias.ExpiresOn)
 	state.RemoveUponExpiry = types.BoolValue(alias.RemoveUponExpiry)
 
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *aliasResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan aliasResourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *AliasResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var plan AliasResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	var destinations []string
-	if !plan.Destinations.IsUnknown() {
-		resp.Diagnostics.Append(plan.Destinations.ElementsAs(ctx, &destinations, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	if !plan.DestinationsPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.DestinationsPunycode.ElementsAs(ctx, &destinations, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	response.Diagnostics.Append(plan.Destinations.ElementsAs(ctx, &destinations, false)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	alias := &model.Alias{
@@ -315,68 +271,41 @@ func (r *aliasResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		RemoveUponExpiry: plan.RemoveUponExpiry.ValueBool(),
 	}
 
-	updatedAlias, err := r.migaduClient.UpdateAlias(ctx, plan.DomainName.ValueString(), plan.LocalPart.ValueString(), alias)
+	updatedAlias, err := r.MigaduClient.UpdateAlias(ctx, plan.DomainName.ValueString(), plan.LocalPart.ValueString(), alias)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating alias",
-			fmt.Sprintf("Could not update alias %s: %v", createAliasID(plan.LocalPart, plan.DomainName), err),
-		)
+		response.Diagnostics.Append(AliasUpdateError(err))
 		return
 	}
 
-	receivedDestinations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(updatedAlias.Destinations, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-	receivedDestinationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, updatedAlias.Destinations)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	plan.Destinations = receivedDestinations
-	plan.DestinationsPunycode = receivedDestinationsPunycode
-	plan.ID = types.StringValue(createAliasID(plan.LocalPart, plan.DomainName))
-	plan.Address = types.StringValue(updatedAlias.Address)
+	plan.ID = custom_types.NewEmailAddressValue(CreateAliasID(plan.LocalPart, plan.DomainName))
+	plan.Address = custom_types.NewEmailAddressValue(updatedAlias.Address)
 	plan.IsInternal = types.BoolValue(updatedAlias.IsInternal)
 	plan.Expirable = types.BoolValue(updatedAlias.Expirable)
 	plan.ExpiresOn = types.StringValue(updatedAlias.ExpiresOn)
 	plan.RemoveUponExpiry = types.BoolValue(updatedAlias.RemoveUponExpiry)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *aliasResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state aliasResourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *AliasResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var state AliasResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := r.migaduClient.DeleteAlias(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
+	_, err := r.MigaduClient.DeleteAlias(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting alias",
-			fmt.Sprintf("Could not delete alias %s: %v", createAliasID(state.LocalPart, state.DomainName), err),
-		)
+		response.Diagnostics.Append(AliasDeleteError(err))
 		return
 	}
 }
 
-func (r *aliasResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, "@")
+func (r *AliasResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	idParts := strings.Split(request.ID, "@")
 
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		resp.Diagnostics.AddError(
-			"Error importing alias",
-			fmt.Sprintf("Expected import identifier with format: 'local_part@domain_name' Got: '%q'", req.ID),
-		)
+		response.Diagnostics.Append(AliasImportError(request.ID))
 		return
 	}
 
@@ -387,13 +316,8 @@ func (r *aliasResource) ImportState(ctx context.Context, req resource.ImportStat
 		"domain_name": domainName,
 	})
 
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-	resource.ImportStatePassthroughID(ctx, path.Root("address"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("local_part"), localPart)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_name"), domainName)...)
-}
-
-func createAliasID(localPart, domainName types.String) string {
-	return fmt.Sprintf("%s@%s", localPart.ValueString(), domainName.ValueString())
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("local_part"), localPart)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("domain_name"), domainName)...)
 }

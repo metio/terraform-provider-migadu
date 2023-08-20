@@ -13,61 +13,67 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/metio/terraform-provider-migadu/internal/provider/custom_types"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 )
 
 var (
-	_ datasource.DataSource              = &aliasesDataSource{}
-	_ datasource.DataSourceWithConfigure = &aliasesDataSource{}
+	_ datasource.DataSource              = (*AliasesDataSource)(nil)
+	_ datasource.DataSourceWithConfigure = (*AliasesDataSource)(nil)
 )
 
 func NewAliasesDataSource() datasource.DataSource {
-	return &aliasesDataSource{}
+	return &AliasesDataSource{}
 }
 
-type aliasesDataSource struct {
-	migaduClient *client.MigaduClient
+type AliasesDataSource struct {
+	MigaduClient *client.MigaduClient
 }
 
-type aliasesDataSourceModel struct {
-	ID         types.String `tfsdk:"id"`
-	DomainName types.String `tfsdk:"domain_name"`
-	Aliases    []aliasModel `tfsdk:"aliases"`
+type AliasesDataSourceModel struct {
+	ID         custom_types.DomainNameValue `tfsdk:"id"`
+	DomainName custom_types.DomainNameValue `tfsdk:"domain_name"`
+	Aliases    []AliasModel                 `tfsdk:"aliases"`
 }
 
-type aliasModel struct {
-	LocalPart            types.String `tfsdk:"local_part"`
-	DomainName           types.String `tfsdk:"domain_name"`
-	Address              types.String `tfsdk:"address"`
-	Destinations         types.List   `tfsdk:"destinations"`
-	DestinationsPunycode types.List   `tfsdk:"destinations_punycode"`
-	IsInternal           types.Bool   `tfsdk:"is_internal"`
-	Expirable            types.Bool   `tfsdk:"expirable"`
-	ExpiresOn            types.String `tfsdk:"expires_on"`
-	RemoveUponExpiry     types.Bool   `tfsdk:"remove_upon_expiry"`
+type AliasModel struct {
+	LocalPart        types.String                      `tfsdk:"local_part"`
+	DomainName       custom_types.DomainNameValue      `tfsdk:"domain_name"`
+	Address          custom_types.EmailAddressValue    `tfsdk:"address"`
+	Destinations     custom_types.EmailAddressSetValue `tfsdk:"destinations"`
+	IsInternal       types.Bool                        `tfsdk:"is_internal"`
+	Expirable        types.Bool                        `tfsdk:"expirable"`
+	ExpiresOn        types.String                      `tfsdk:"expires_on"`
+	RemoveUponExpiry types.Bool                        `tfsdk:"remove_upon_expiry"`
 }
 
-func (d *aliasesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_aliases"
+func (d *AliasesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = request.ProviderTypeName + "_aliases"
 }
 
-func (d *aliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *AliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Description:         "Get information about all email aliases of a domain.",
 		MarkdownDescription: "Get information about all email aliases of a domain.",
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Description:         "Same value as the 'domain_name' attribute.",
+				MarkdownDescription: "Same value as the `domain_name` attribute.",
+				Required:            false,
+				Optional:            false,
+				Computed:            true,
+				CustomType:          custom_types.DomainNameType{},
+			},
 			"domain_name": schema.StringAttribute{
 				Description:         "The domain name of all aliases.",
 				MarkdownDescription: "The domain name of all aliases.",
 				Required:            true,
+				Optional:            false,
+				Computed:            false,
+				CustomType:          custom_types.DomainNameType{},
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
-			},
-			"id": schema.StringAttribute{
-				Description:         "Same value as the 'domain_name' attribute.",
-				MarkdownDescription: "Same value as the `domain_name` attribute.",
-				Computed:            true,
 			},
 			"aliases": schema.ListNestedAttribute{
 				Description:         "The configured aliases for the given 'domain_name'.",
@@ -75,51 +81,67 @@ func (d *aliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"domain_name": schema.StringAttribute{
-							Description:         "The domain name of the alias.",
-							MarkdownDescription: "The domain name of the alias.",
-							Computed:            true,
-						},
 						"local_part": schema.StringAttribute{
 							Description:         "The local part of the alias.",
 							MarkdownDescription: "The local part of the alias.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
+						},
+						"domain_name": schema.StringAttribute{
+							Description:         "The domain name of the alias.",
+							MarkdownDescription: "The domain name of the alias.",
+							Required:            false,
+							Optional:            false,
+							Computed:            true,
+							CustomType:          custom_types.DomainNameType{},
 						},
 						"address": schema.StringAttribute{
 							Description:         "The email address 'local_part@domain_name' as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
 							MarkdownDescription: "The email address `local_part@domain_name` as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
+							CustomType:          custom_types.EmailAddressType{},
 						},
-						"destinations": schema.ListAttribute{
-							Description:         "List of email addresses that act as destinations of the alias in unicode.",
-							MarkdownDescription: "List of email addresses that act as destinations of the alias in unicode.",
+						"destinations": schema.SetAttribute{
+							Description:         "List of email addresses that act as destinations of the alias.",
+							MarkdownDescription: "List of email addresses that act as destinations of the alias.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
-							ElementType:         types.StringType,
-						},
-						"destinations_punycode": schema.ListAttribute{
-							Description:         "List of email addresses that act as destinations of the alias in punycode.",
-							MarkdownDescription: "List of email addresses that act as destinations of the alias in punycode.",
-							Computed:            true,
-							ElementType:         types.StringType,
+							CustomType: custom_types.EmailAddressSetType{
+								SetType: types.SetType{
+									ElemType: custom_types.EmailAddressType{},
+								},
+							},
 						},
 						"is_internal": schema.BoolAttribute{
 							Description:         "Whether the alias is internal and can only receive emails from Migadu servers.",
 							MarkdownDescription: "Whether the alias is internal and can only receive emails from Migadu servers.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"expirable": schema.BoolAttribute{
 							Description:         "Whether the alias expires some time in the future.",
 							MarkdownDescription: "Whether the alias expires some time in the future.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"expires_on": schema.StringAttribute{
 							Description:         "The expiration date of the alias.",
 							MarkdownDescription: "The expiration date of the alias.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"remove_upon_expiry": schema.BoolAttribute{
 							Description:         "Whether the alias is removed once it is expired.",
 							MarkdownDescription: "Whether the alias is removed once it is expired.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 					},
@@ -129,59 +151,50 @@ func (d *aliasesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 	}
 }
 
-func (d *aliasesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (d *AliasesDataSource) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	if request.ProviderData == nil {
 		return
 	}
 
-	migaduClient, ok := req.ProviderData.(*client.MigaduClient)
-
-	if !ok {
-		resp.Diagnostics.AddError(
+	if migaduClient, ok := request.ProviderData.(*client.MigaduClient); ok {
+		d.MigaduClient = migaduClient
+	} else {
+		response.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.MigaduClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *client.MigaduClient, got: %T. Please report this issue to the provider developers.", request.ProviderData),
 		)
-		return
 	}
-
-	d.migaduClient = migaduClient
 }
 
-func (d *aliasesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data aliasesDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (d *AliasesDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data AliasesDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	aliases, err := d.migaduClient.GetAliases(ctx, data.DomainName.ValueString())
+	aliases, err := d.MigaduClient.GetAliases(ctx, data.DomainName.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Migadu Client Error", "Request failed with: "+err.Error())
+		response.Diagnostics.Append(AliasReadError(err))
 		return
 	}
 
 	for _, alias := range aliases.Aliases {
-		destinations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(alias.Destinations, &resp.Diagnostics))
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		destinationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(alias.Destinations, &resp.Diagnostics))
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
+		destinations, diags := custom_types.NewEmailAddressSetValueFrom(ctx, alias.Destinations)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		model := aliasModel{
-			LocalPart:            types.StringValue(alias.LocalPart),
-			DomainName:           types.StringValue(alias.DomainName),
-			Destinations:         destinations,
-			DestinationsPunycode: destinationsPunycode,
-			Address:              types.StringValue(alias.Address),
-			IsInternal:           types.BoolValue(alias.IsInternal),
-			Expirable:            types.BoolValue(alias.Expirable),
-			ExpiresOn:            types.StringValue(alias.ExpiresOn),
-			RemoveUponExpiry:     types.BoolValue(alias.RemoveUponExpiry),
+		model := AliasModel{
+			LocalPart:        types.StringValue(alias.LocalPart),
+			DomainName:       custom_types.NewDomainNameValue(alias.DomainName),
+			Destinations:     destinations,
+			Address:          custom_types.NewEmailAddressValue(alias.Address),
+			IsInternal:       types.BoolValue(alias.IsInternal),
+			Expirable:        types.BoolValue(alias.Expirable),
+			ExpiresOn:        types.StringValue(alias.ExpiresOn),
+			RemoveUponExpiry: types.BoolValue(alias.RemoveUponExpiry),
 		}
 
 		data.Aliases = append(data.Aliases, model)
@@ -189,8 +202,5 @@ func (d *aliasesDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 	data.ID = data.DomainName
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

@@ -13,73 +13,82 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/metio/terraform-provider-migadu/internal/provider/custom_types"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 )
 
 var (
-	_ datasource.DataSource              = &identitiesDataSource{}
-	_ datasource.DataSourceWithConfigure = &identitiesDataSource{}
+	_ datasource.DataSource              = (*IdentitiesDataSource)(nil)
+	_ datasource.DataSourceWithConfigure = (*IdentitiesDataSource)(nil)
 )
 
 func NewIdentitiesDataSource() datasource.DataSource {
-	return &identitiesDataSource{}
+	return &IdentitiesDataSource{}
 }
 
-type identitiesDataSource struct {
-	migaduClient *client.MigaduClient
+type IdentitiesDataSource struct {
+	MigaduClient *client.MigaduClient
 }
 
-type identitiesDataSourceModel struct {
-	ID         types.String    `tfsdk:"id"`
-	DomainName types.String    `tfsdk:"domain_name"`
-	LocalPart  types.String    `tfsdk:"local_part"`
-	Identities []identityModel `tfsdk:"identities"`
+type IdentitiesDataSourceModel struct {
+	ID         custom_types.EmailAddressValue `tfsdk:"id"`
+	LocalPart  types.String                   `tfsdk:"local_part"`
+	DomainName custom_types.DomainNameValue   `tfsdk:"domain_name"`
+	Identities []IdentityModel                `tfsdk:"identities"`
 }
 
-type identityModel struct {
-	LocalPart            types.String `tfsdk:"local_part"`
-	DomainName           types.String `tfsdk:"domain_name"`
-	Address              types.String `tfsdk:"address"`
-	Name                 types.String `tfsdk:"name"`
-	MaySend              types.Bool   `tfsdk:"may_send"`
-	MayReceive           types.Bool   `tfsdk:"may_receive"`
-	MayAccessImap        types.Bool   `tfsdk:"may_access_imap"`
-	MayAccessPop3        types.Bool   `tfsdk:"may_access_pop3"`
-	MayAccessManageSieve types.Bool   `tfsdk:"may_access_manage_sieve"`
-	FooterActive         types.Bool   `tfsdk:"footer_active"`
-	FooterPlainBody      types.String `tfsdk:"footer_plain_body"`
-	FooterHtmlBody       types.String `tfsdk:"footer_html_body"`
+type IdentityModel struct {
+	LocalPart            types.String                   `tfsdk:"local_part"`
+	DomainName           custom_types.DomainNameValue   `tfsdk:"domain_name"`
+	Address              custom_types.EmailAddressValue `tfsdk:"address"`
+	Name                 types.String                   `tfsdk:"name"`
+	MaySend              types.Bool                     `tfsdk:"may_send"`
+	MayReceive           types.Bool                     `tfsdk:"may_receive"`
+	MayAccessImap        types.Bool                     `tfsdk:"may_access_imap"`
+	MayAccessPop3        types.Bool                     `tfsdk:"may_access_pop3"`
+	MayAccessManageSieve types.Bool                     `tfsdk:"may_access_manage_sieve"`
+	FooterActive         types.Bool                     `tfsdk:"footer_active"`
+	FooterPlainBody      types.String                   `tfsdk:"footer_plain_body"`
+	FooterHtmlBody       types.String                   `tfsdk:"footer_html_body"`
 }
 
-func (d *identitiesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_identities"
+func (d *IdentitiesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = request.ProviderTypeName + "_identities"
 }
 
-func (d *identitiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *IdentitiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Description:         "Get information about all identities owned by mailbox.",
 		MarkdownDescription: "Get information about all identities owned by mailbox.",
 		Attributes: map[string]schema.Attribute{
-			"domain_name": schema.StringAttribute{
-				Description:         "The domain name of the mailbox/identities.",
-				MarkdownDescription: "The domain name of the mailbox/identities.",
-				Required:            true,
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
+			"id": schema.StringAttribute{
+				Description:         "Contains the value 'local_part@domain_name'.",
+				MarkdownDescription: "Contains the value `local_part@domain_name`.",
+				Required:            false,
+				Optional:            false,
+				Computed:            true,
+				CustomType:          custom_types.EmailAddressType{},
 			},
 			"local_part": schema.StringAttribute{
 				Description:         "The local part of the mailbox that owns the identities.",
 				MarkdownDescription: "The local part of the mailbox that owns the identities.",
 				Required:            true,
+				Optional:            false,
+				Computed:            false,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
-			"id": schema.StringAttribute{
-				Description:         "Contains the value 'local_part@domain_name'.",
-				MarkdownDescription: "Contains the value `local_part@domain_name`.",
-				Computed:            true,
+			"domain_name": schema.StringAttribute{
+				Description:         "The domain name of the mailbox/identities.",
+				MarkdownDescription: "The domain name of the mailbox/identities.",
+				Required:            true,
+				Optional:            false,
+				Computed:            false,
+				CustomType:          custom_types.DomainNameType{},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"identities": schema.ListNestedAttribute{
 				Description:         "The configured identities for the given 'domain_name' and 'local_part'.",
@@ -87,64 +96,90 @@ func (d *identitiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"domain_name": schema.StringAttribute{
-							Description:         "The domain of the identity.",
-							MarkdownDescription: "The domain of the identity.",
-							Computed:            true,
-						},
 						"local_part": schema.StringAttribute{
 							Description:         "The local part of the identity.",
 							MarkdownDescription: "The local part of the identity.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
+						},
+						"domain_name": schema.StringAttribute{
+							Description:         "The domain of the identity.",
+							MarkdownDescription: "The domain of the identity.",
+							Required:            false,
+							Optional:            false,
+							Computed:            true,
+							CustomType:          custom_types.DomainNameType{},
 						},
 						"address": schema.StringAttribute{
 							Description:         "The email address of the identity 'identity@domain_name' as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
 							MarkdownDescription: "The email address of the identity `identity@domain_name` as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
+							CustomType:          custom_types.EmailAddressType{},
 						},
 						"name": schema.StringAttribute{
 							Description:         "The name of the identity.",
 							MarkdownDescription: "The name of the identity.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"may_send": schema.BoolAttribute{
 							Description:         "Whether the identity is allowed to send emails.",
 							MarkdownDescription: "Whether the identity is allowed to send emails.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"may_receive": schema.BoolAttribute{
 							Description:         "Whether the identity is allowed to receive emails.",
 							MarkdownDescription: "Whether the identity is allowed to receive emails.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"may_access_imap": schema.BoolAttribute{
 							Description:         "Whether the identity is allowed to use IMAP.",
 							MarkdownDescription: "Whether the identity is allowed to use IMAP.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"may_access_pop3": schema.BoolAttribute{
 							Description:         "Whether the identity is allowed to use POP3.",
 							MarkdownDescription: "Whether the identity is allowed to use POP3.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"may_access_manage_sieve": schema.BoolAttribute{
 							Description:         "Whether the identity is allowed to manage the mail sieve.",
 							MarkdownDescription: "Whether the identity is allowed to manage the mail sieve.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"footer_active": schema.BoolAttribute{
 							Description:         "Whether the footer of the identity is active.",
 							MarkdownDescription: "Whether the footer of the identity is active.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"footer_plain_body": schema.StringAttribute{
 							Description:         "The footer of the identity in 'text/plain' format.",
 							MarkdownDescription: "The footer of the identity in `text/plain` format.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 						"footer_html_body": schema.StringAttribute{
 							Description:         "The footer of the identity in 'text/html' format.",
 							MarkdownDescription: "The footer of the identity in `text/html` format.",
+							Required:            false,
+							Optional:            false,
 							Computed:            true,
 						},
 					},
@@ -154,42 +189,39 @@ func (d *identitiesDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 	}
 }
 
-func (d *identitiesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (d *IdentitiesDataSource) Configure(_ context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	if request.ProviderData == nil {
 		return
 	}
 
-	migaduClient, ok := req.ProviderData.(*client.MigaduClient)
-
-	if !ok {
-		resp.Diagnostics.AddError(
+	if migaduClient, ok := request.ProviderData.(*client.MigaduClient); ok {
+		d.MigaduClient = migaduClient
+	} else {
+		response.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.MigaduClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *client.MigaduClient, got: %T. Please report this issue to the provider developers.", request.ProviderData),
 		)
-		return
 	}
-
-	d.migaduClient = migaduClient
 }
 
-func (d *identitiesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data identitiesDataSourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (d *IdentitiesDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data IdentitiesDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	identities, err := d.migaduClient.GetIdentities(ctx, data.DomainName.ValueString(), data.LocalPart.ValueString())
+	identities, err := d.MigaduClient.GetIdentities(ctx, data.DomainName.ValueString(), data.LocalPart.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Migadu Client Error", "Request failed with: "+err.Error())
+		response.Diagnostics.Append(IdentityReadError(err))
 		return
 	}
 
 	for _, identity := range identities.Identities {
-		identityModel := identityModel{
+		model := IdentityModel{
 			LocalPart:            types.StringValue(identity.LocalPart),
-			DomainName:           types.StringValue(identity.DomainName),
-			Address:              types.StringValue(identity.Address),
+			DomainName:           custom_types.NewDomainNameValue(identity.DomainName),
+			Address:              custom_types.NewEmailAddressValue(identity.Address),
 			Name:                 types.StringValue(identity.Name),
 			MaySend:              types.BoolValue(identity.MaySend),
 			MayReceive:           types.BoolValue(identity.MayReceive),
@@ -200,14 +232,10 @@ func (d *identitiesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 			FooterPlainBody:      types.StringValue(identity.FooterPlainBody),
 			FooterHtmlBody:       types.StringValue(identity.FooterHtmlBody),
 		}
-
-		data.Identities = append(data.Identities, identityModel)
+		data.Identities = append(data.Identities, model)
 	}
 
-	data.ID = types.StringValue(fmt.Sprintf("%s@%s", data.LocalPart.ValueString(), data.DomainName.ValueString()))
+	data.ID = custom_types.NewEmailAddressValue(fmt.Sprintf("%s@%s", data.LocalPart.ValueString(), data.DomainName.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
