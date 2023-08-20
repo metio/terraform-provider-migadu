@@ -10,6 +10,7 @@ package provider_test
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/metio/terraform-provider-migadu/internal/provider"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"github.com/metio/terraform-provider-migadu/migadu/simulator"
 	"net/http"
@@ -20,227 +21,206 @@ import (
 )
 
 func TestAliasResource_API_Success(t *testing.T) {
-	tests := []struct {
-		name         string
-		domain       string
-		localPart    string
-		destinations []string
-		want         *model.Alias
-	}{
-		{
-			name:      "single",
-			domain:    "example.com",
-			localPart: "test",
-			destinations: []string{
-				"other@example.com",
-			},
-			want: &model.Alias{
-				Address: "test@example.com",
-				Destinations: []string{
-					"other@example.com",
+	testCases := map[string]ResourceTestCase[model.Alias]{
+		"single-destination": {
+			Create: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Destinations: []string{
+						"other@example.com",
+					},
 				},
-				IsInternal:       false,
-				Expirable:        false,
-				ExpiresOn:        "",
-				RemoveUponExpiry: false,
+				Want: model.Alias{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Address:    "test@example.com",
+					Destinations: []string{
+						"other@example.com",
+					},
+				},
+			},
+			Update: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Destinations: []string{
+						"another@example.com",
+					},
+				},
+				Want: model.Alias{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Address:    "test@example.com",
+					Destinations: []string{
+						"another@example.com",
+					},
+				},
 			},
 		},
-		{
-			name:      "multiple",
-			domain:    "example.com",
-			localPart: "test",
-			destinations: []string{
-				"other@example.com",
-				"some@example.com",
+		"multiple-destinations": {
+			Create: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Destinations: []string{
+						"other@example.com",
+						"some@example.com",
+					},
+				},
+				Want: model.Alias{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Address:    "test@example.com",
+					Destinations: []string{
+						"other@example.com",
+						"some@example.com",
+					},
+				},
 			},
-			want: &model.Alias{
-				Address: "test@example.com",
-				Destinations: []string{
-					"other@example.com",
-					"some@example.com",
+			Update: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Destinations: []string{
+						"another@example.com",
+						"some@example.com",
+					},
+				},
+				Want: model.Alias{
+					LocalPart:  "test",
+					DomainName: "example.com",
+					Address:    "test@example.com",
+					Destinations: []string{
+						"another@example.com",
+						"some@example.com",
+					},
+				},
+			},
+		},
+		"idna-domain": {
+			Create: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "hoß.de",
+					Destinations: []string{"other@hoß.de"},
+				},
+				Want: model.Alias{
+					LocalPart:  "test",
+					DomainName: "hoß.de",
+					Address:    "test@xn--ho-hia.de",
+					Destinations: []string{
+						"other@hoß.de",
+					},
+				},
+			},
+			Update: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:  "test",
+					DomainName: "hoß.de",
+					Destinations: []string{
+						"another@hoß.de",
+					},
+				},
+				Want: model.Alias{
+					LocalPart:  "test",
+					DomainName: "hoß.de",
+					Address:    "test@xn--ho-hia.de",
+					Destinations: []string{
+						"another@hoß.de",
+					},
+				},
+			},
+			ImportIgnore: []string{"destinations"}, // ImportStateVerify does not work with SemanticEquals
+		},
+		"change-local-part": {
+			Create: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "example.com",
+					Destinations: []string{"other@example.com"},
+				},
+				Want: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "example.com",
+					Address:      "test@example.com",
+					Destinations: []string{"other@example.com"},
+				},
+			},
+			Update: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:    "different",
+					DomainName:   "example.com",
+					Destinations: []string{"another@example.com"},
+				},
+				Want: model.Alias{
+					LocalPart:    "different",
+					DomainName:   "example.com",
+					Address:      "different@example.com",
+					Destinations: []string{"another@example.com"},
+				},
+			},
+		},
+		"change-domain-name": {
+			Create: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "example.com",
+					Destinations: []string{"other@example.com"},
+				},
+				Want: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "example.com",
+					Address:      "test@example.com",
+					Destinations: []string{"other@example.com"},
+				},
+			},
+			Update: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "different.com",
+					Destinations: []string{"another@different.com"},
+				},
+				Want: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "different.com",
+					Address:      "test@different.com",
+					Destinations: []string{"another@different.com"},
+				},
+			},
+		},
+		"change-punycode-domain-name": {
+			Create: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "xn--ho-hia.de",
+					Destinations: []string{"other@xn--ho-hia.de"},
+				},
+				Want: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "xn--ho-hia.de",
+					Address:      "test@xn--ho-hia.de",
+					Destinations: []string{"other@xn--ho-hia.de"},
+				},
+			},
+			Update: ResourceTestStep[model.Alias]{
+				Send: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "hoß.de",
+					Destinations: []string{"another@hoß.de"},
+				},
+				Want: model.Alias{
+					LocalPart:    "test",
+					DomainName:   "hoß.de",
+					Address:      "test@xn--ho-hia.de",
+					Destinations: []string{"another@hoß.de"},
 				},
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
 			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{}))
-			defer server.Close()
-
-			config := providerConfig(server.URL) + fmt.Sprintf(`
-					resource "migadu_alias" "test" {
-						domain_name  = "%s"
-						local_part   = "%s"
-						destinations = %s
-					}
-				`, tt.domain, tt.localPart, strings.ReplaceAll(fmt.Sprintf("%+q", tt.destinations), "\" \"", "\",\""))
-
-			resource.UnitTest(t, resource.TestCase{
-				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-				Steps: []resource.TestStep{
-					{
-						Config: config,
-						Check: resource.ComposeAggregateTestCheckFunc(
-							resource.TestCheckResourceAttr("migadu_alias.test", "domain_name", tt.domain),
-							resource.TestCheckResourceAttr("migadu_alias.test", "local_part", tt.localPart),
-							resource.TestCheckResourceAttr("migadu_alias.test", "address", tt.want.Address),
-							resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", fmt.Sprintf("%v", len(tt.want.Destinations))),
-							resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", tt.want.Destinations[0]),
-							resource.TestCheckResourceAttr("migadu_alias.test", "id", fmt.Sprintf("%s@%s", tt.localPart, tt.domain)),
-						),
-					},
-					{
-						ResourceName:      "migadu_alias.test",
-						ImportState:       true,
-						ImportStateVerify: true,
-					},
-				},
-			})
-		})
-	}
-}
-
-func TestAliasResource_IDN_Punycode(t *testing.T) {
-	server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{}))
-	defer server.Close()
-
-	resource.UnitTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: providerConfig(server.URL) + `
-					resource "migadu_alias" "test" {
-						domain_name           = "hoß.de"
-						local_part            = "test"
-						destinations_punycode = ["first@xn--ho-hia.de", "second@xn--ho-hia.de"]
-					}
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("migadu_alias.test", "domain_name", "hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "local_part", "test"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "address", "test@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", "2"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "first@hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.1", "second@hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.#", "2"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.0", "first@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.1", "second@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "id", "test@hoß.de"),
-				),
-			},
-			{
-				ResourceName:      "migadu_alias.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: providerConfig(server.URL) + `
-					resource "migadu_alias" "test" {
-						domain_name           = "hoß.de"
-						local_part            = "test"
-						destinations_punycode = ["third@xn--ho-hia.de"]
-					}
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("migadu_alias.test", "domain_name", "hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "local_part", "test"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "address", "test@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", "1"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "third@hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.#", "1"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.0", "third@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "id", "test@hoß.de"),
-				),
-			},
-		},
-	})
-}
-
-func TestAliasResource_IDN_Unicode(t *testing.T) {
-	server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{}))
-	defer server.Close()
-
-	resource.UnitTest(t, resource.TestCase{
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: providerConfig(server.URL) + `
-					resource "migadu_alias" "test" {
-						domain_name  = "hoß.de"
-						local_part   = "test"
-						destinations = ["first@hoß.de", "second@hoß.de"]
-					}
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("migadu_alias.test", "domain_name", "hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "local_part", "test"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "address", "test@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", "2"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "first@hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.1", "second@hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.#", "2"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.0", "first@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.1", "second@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "id", "test@hoß.de"),
-				),
-			},
-			{
-				ResourceName:      "migadu_alias.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: providerConfig(server.URL) + `
-					resource "migadu_alias" "test" {
-						domain_name  = "hoß.de"
-						local_part   = "test"
-						destinations = ["third@hoß.de"]
-					}
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("migadu_alias.test", "domain_name", "hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "local_part", "test"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "address", "test@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", "1"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", "third@hoß.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.#", "1"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "destinations_punycode.0", "third@xn--ho-hia.de"),
-					resource.TestCheckResourceAttr("migadu_alias.test", "id", "test@hoß.de"),
-				),
-			},
-		},
-	})
-}
-
-func TestAliasResource_API_Errors(t *testing.T) {
-	tests := []struct {
-		name        string
-		domain      string
-		localPart   string
-		destination string
-		statusCode  int
-		error       string
-	}{
-		{
-			name:        "error-404",
-			domain:      "example.com",
-			localPart:   "test",
-			destination: "other@example.com",
-			statusCode:  http.StatusNotFound,
-			error:       "CreateAlias: status: 404",
-		},
-		{
-			name:        "error-500",
-			domain:      "example.com",
-			localPart:   "test",
-			destination: "other@example.com",
-			statusCode:  http.StatusInternalServerError,
-			error:       "CreateAlias: status: 500",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{StatusCode: tt.statusCode}))
 			defer server.Close()
 
 			resource.UnitTest(t, resource.TestCase{
@@ -249,12 +229,89 @@ func TestAliasResource_API_Errors(t *testing.T) {
 					{
 						Config: providerConfig(server.URL) + fmt.Sprintf(`
 							resource "migadu_alias" "test" {
-								domain_name  = "%s"
 								local_part   = "%s"
-								destinations = ["%s"]
+								domain_name  = "%s"
+								destinations = %s
 							}
-						`, tt.domain, tt.localPart, tt.destination),
-						ExpectError: regexp.MustCompile(tt.error),
+						`, testCase.Create.Send.LocalPart, testCase.Create.Send.DomainName, strings.ReplaceAll(fmt.Sprintf("%+q", testCase.Create.Send.Destinations), "\" \"", "\",\"")),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr("migadu_alias.test", "id", provider.CreateAliasIDString(testCase.Create.Want.LocalPart, testCase.Create.Want.DomainName)),
+							resource.TestCheckResourceAttr("migadu_alias.test", "local_part", testCase.Create.Want.LocalPart),
+							resource.TestCheckResourceAttr("migadu_alias.test", "domain_name", testCase.Create.Want.DomainName),
+							resource.TestCheckResourceAttr("migadu_alias.test", "address", testCase.Create.Want.Address),
+							resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", fmt.Sprintf("%v", len(testCase.Create.Want.Destinations))),
+							resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", testCase.Create.Want.Destinations[0]),
+							resource.TestCheckResourceAttr("migadu_alias.test", "is_internal", fmt.Sprintf("%v", testCase.Create.Want.IsInternal)),
+							resource.TestCheckResourceAttr("migadu_alias.test", "expirable", fmt.Sprintf("%v", testCase.Create.Want.Expirable)),
+							resource.TestCheckResourceAttr("migadu_alias.test", "expires_on", testCase.Create.Want.ExpiresOn),
+							resource.TestCheckResourceAttr("migadu_alias.test", "remove_upon_expiry", fmt.Sprintf("%v", testCase.Create.Want.RemoveUponExpiry)),
+						),
+					},
+					{
+						ResourceName:            "migadu_alias.test",
+						ImportState:             true,
+						ImportStateVerify:       true,
+						ImportStateVerifyIgnore: testCase.ImportIgnore,
+					},
+					{
+						Config: providerConfig(server.URL) + fmt.Sprintf(`
+							resource "migadu_alias" "test" {
+								local_part   = "%s"
+								domain_name  = "%s"
+								destinations = %s
+							}
+						`, testCase.Update.Send.LocalPart, testCase.Update.Send.DomainName, strings.ReplaceAll(fmt.Sprintf("%+q", testCase.Update.Send.Destinations), "\" \"", "\",\"")),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr("migadu_alias.test", "id", provider.CreateAliasIDString(testCase.Update.Want.LocalPart, testCase.Update.Want.DomainName)),
+							resource.TestCheckResourceAttr("migadu_alias.test", "local_part", testCase.Update.Want.LocalPart),
+							resource.TestCheckResourceAttr("migadu_alias.test", "domain_name", testCase.Update.Want.DomainName),
+							resource.TestCheckResourceAttr("migadu_alias.test", "address", testCase.Update.Want.Address),
+							resource.TestCheckResourceAttr("migadu_alias.test", "destinations.#", fmt.Sprintf("%v", len(testCase.Update.Want.Destinations))),
+							resource.TestCheckResourceAttr("migadu_alias.test", "destinations.0", testCase.Update.Want.Destinations[0]),
+							resource.TestCheckResourceAttr("migadu_alias.test", "is_internal", fmt.Sprintf("%v", testCase.Update.Want.IsInternal)),
+							resource.TestCheckResourceAttr("migadu_alias.test", "expirable", fmt.Sprintf("%v", testCase.Update.Want.Expirable)),
+							resource.TestCheckResourceAttr("migadu_alias.test", "expires_on", testCase.Update.Want.ExpiresOn),
+							resource.TestCheckResourceAttr("migadu_alias.test", "remove_upon_expiry", fmt.Sprintf("%v", testCase.Update.Want.RemoveUponExpiry)),
+						),
+					},
+				},
+			})
+		})
+	}
+}
+
+func TestAliasResource_API_Errors(t *testing.T) {
+	testCases := map[string]APIErrorTestCase{
+		"error-404": {
+			StatusCode: http.StatusNotFound,
+			ErrorRegex: "CreateAlias: status: 404",
+		},
+		"error-409": {
+			StatusCode: http.StatusConflict,
+			ErrorRegex: "CreateAlias: status: 409",
+		},
+		"error-500": {
+			StatusCode: http.StatusInternalServerError,
+			ErrorRegex: "CreateAlias: status: 500",
+		},
+	}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{StatusCode: testCase.StatusCode}))
+			defer server.Close()
+
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{
+					{
+						Config: providerConfig(server.URL) + `
+							resource "migadu_alias" "test" {
+								local_part   = "test"
+								domain_name  = "example.com"
+								destinations = ["other@example.com"]
+							}
+						`,
+						ExpectError: regexp.MustCompile(testCase.ErrorRegex),
 					},
 				},
 			})
@@ -263,80 +320,79 @@ func TestAliasResource_API_Errors(t *testing.T) {
 }
 
 func TestAliasResource_Configuration_Errors(t *testing.T) {
-	tests := []struct {
-		name          string
-		configuration string
-		error         string
-	}{
-		{
-			name: "empty-domain-name",
-			configuration: `
-				domain_name = ""
-				local_part = "test"
-			`,
-			error: "Attribute domain_name string length must be at least 1",
-		},
-		{
-			name: "empty-local-part",
-			configuration: `
-				domain_name = "example.com"
-				local_part = ""
-			`,
-			error: "Attribute local_part string length must be at least 1",
-		},
-		{
-			name: "missing-domain-name",
-			configuration: `
-				local_part = "test"
-			`,
-			error: `The argument "domain_name" is required, but no definition was found`,
-		},
-		{
-			name: "missing-local-part",
-			configuration: `
-				domain_name = "example.com"
-			`,
-			error: `The argument "local_part" is required, but no definition was found`,
-		},
-		{
-			name: "missing-destinations",
-			configuration: `
-				domain_name = "example.com"
-				local_part = "test"
-			`,
-			error: `No attribute specified when one \(and only one\) of \[destinations\] is required`,
-		},
-		{
-			name: "empty-destinations",
-			configuration: `
-				domain_name  = "example.com"
+	testCases := map[string]ConfigurationErrorTestCase{
+		"empty-domain-name": {
+			Configuration: `
 				local_part   = "test"
+				domain_name  = ""
+				destinations = ["someone@example.com"]
+			`,
+			ErrorRegex: "Attribute domain_name string length must be at least 1",
+		},
+		"empty-local-part": {
+			Configuration: `
+				local_part   = ""
+				domain_name  = "example.com"
+				destinations = ["someone@example.com"]
+			`,
+			ErrorRegex: "Attribute local_part string length must be at least 1",
+		},
+		"missing-domain-name": {
+			Configuration: `
+				local_part   = "test"
+				destinations = ["someone@example.com"]
+			`,
+			ErrorRegex: `The argument "domain_name" is required, but no definition was found`,
+		},
+		"missing-local-part": {
+			Configuration: `
+				domain_name  = "example.com"
+				destinations = ["someone@example.com"]
+			`,
+			ErrorRegex: `The argument "local_part" is required, but no definition was found`,
+		},
+		"missing-destinations": {
+			Configuration: `
+				local_part = "test"
+				domain_name = "example.com"
+			`,
+			ErrorRegex: `The argument "destinations" is required, but no definition was found`,
+		},
+		"empty-destinations": {
+			Configuration: `
+				local_part   = "test"
+				domain_name  = "example.com"
 				destinations = []
 			`,
-			error: `Attribute destinations list must contain at least 1 elements`,
+			ErrorRegex: `Attribute destinations set must contain at least 1 elements`,
 		},
-		{
-			name: "empty-destinations-punycode",
-			configuration: `
-				domain_name           = "example.com"
-				local_part            = "test"
-				destinations_punycode = []
+		"wrong-email-format": {
+			Configuration: `
+				local_part   = "test"
+				domain_name  = "example.com"
+				destinations = ["someone"]
 			`,
-			error: `Attribute destinations_punycode list must contain at least 1 elements`,
+			ErrorRegex: `An email must match the format 'local_part@domain'`,
 		},
-		{
-			name: "multiple-destination-attributes",
-			configuration: `
-				domain_name           = "example.com"
-				local_part            = "test"
-				destinations          = ["test@example.com"]
-				destinations_punycode = ["test@example.com"]
+		"duplicate-emails": {
+			Configuration: `
+				local_part   = "test"
+				domain_name  = "example.com"
+				destinations = ["someone@hoß.de", "someone@xn--ho-hia.de"]
 			`,
-			error: `2 attributes specified when one \(and only one\) of \[destinations\] is required`,
+			ErrorRegex: `This attribute contains duplicate values of: "someone@xn--ho-hia.de"`,
+		},
+		"invalid-domain-name": {
+			Configuration: `
+				local_part   = "test"
+				domain_name  = "*.example.com"
+				destinations = ["someone@example.com"]
+			`,
+			ErrorRegex: "Domain names must be convertible to ASCII",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
 			resource.UnitTest(t, resource.TestCase{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Steps: []resource.TestStep{
@@ -345,8 +401,8 @@ func TestAliasResource_Configuration_Errors(t *testing.T) {
 							resource "migadu_alias" "test" {
 								%s
 							}
-						`, tt.configuration),
-						ExpectError: regexp.MustCompile(tt.error),
+						`, testCase.Configuration),
+						ExpectError: regexp.MustCompile(testCase.ErrorRegex),
 					},
 				},
 			})

@@ -22,19 +22,19 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 		name       string
 		domain     string
 		statusCode int
-		state      []model.Rewrite
-		want       *model.Rewrites
+		state      []model.RewriteRule
+		want       *model.RewriteRules
 		wantErr    bool
 	}{
 		{
 			name:   "empty",
 			domain: "example.com",
-			want:   &model.Rewrites{},
+			want:   &model.RewriteRules{},
 		},
 		{
 			name:   "single",
 			domain: "example.com",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "example.com",
 					Name:          "test",
@@ -45,8 +45,8 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrites{
-				Rewrites: []model.Rewrite{
+			want: &model.RewriteRules{
+				RewriteRules: []model.RewriteRule{
 					{
 						DomainName:    "example.com",
 						Name:          "test",
@@ -62,7 +62,7 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 		{
 			name:   "multiple",
 			domain: "example.com",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "example.com",
 					Name:          "test",
@@ -82,8 +82,8 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrites{
-				Rewrites: []model.Rewrite{
+			want: &model.RewriteRules{
+				RewriteRules: []model.RewriteRule{
 					{
 						DomainName:    "example.com",
 						Name:          "test",
@@ -99,7 +99,7 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 		{
 			name:   "idna",
 			domain: "hoß.de",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "xn--ho-hia.de",
 					Name:          "test",
@@ -110,8 +110,8 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrites{
-				Rewrites: []model.Rewrite{
+			want: &model.RewriteRules{
+				RewriteRules: []model.RewriteRule{
 					{
 						DomainName:    "xn--ho-hia.de",
 						Name:          "test",
@@ -144,13 +144,13 @@ func TestMigaduClient_GetRewrites(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.GetRewrites(context.Background(), tt.domain)
+			got, err := c.GetRewriteRules(context.Background(), tt.domain)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetRewrites() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetRewriteRules() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetRewrites() got = %v, want %v", got, tt.want)
+				t.Errorf("GetRewriteRules() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -162,15 +162,15 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 		domain     string
 		slug       string
 		statusCode int
-		state      []model.Rewrite
-		want       *model.Rewrite
+		state      []model.RewriteRule
+		want       *model.RewriteRule
 		wantErr    bool
 	}{
 		{
 			name:   "single",
 			domain: "example.com",
 			slug:   "slug",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "example.com",
 					Name:          "slug",
@@ -181,7 +181,7 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrite{
+			want: &model.RewriteRule{
 				DomainName:    "example.com",
 				Name:          "slug",
 				LocalPartRule: "rule-*",
@@ -195,7 +195,7 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 			name:   "multiple",
 			domain: "example.com",
 			slug:   "slug",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "example.com",
 					Name:          "slug",
@@ -215,7 +215,7 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrite{
+			want: &model.RewriteRule{
 				DomainName:    "example.com",
 				Name:          "slug",
 				LocalPartRule: "rule-*",
@@ -229,7 +229,7 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 			name:   "idna",
 			domain: "hoß.de",
 			slug:   "slug",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "xn--ho-hia.de",
 					Name:          "slug",
@@ -240,7 +240,7 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrite{
+			want: &model.RewriteRule{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "slug",
 				LocalPartRule: "rule-*",
@@ -254,7 +254,7 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 			name:    "error-404",
 			domain:  "example.com",
 			slug:    "slug",
-			state:   []model.Rewrite{},
+			state:   []model.RewriteRule{},
 			wantErr: true,
 		},
 		{
@@ -272,13 +272,13 @@ func TestMigaduClient_GetRewrite(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.GetRewrite(context.Background(), tt.domain, tt.slug)
+			got, err := c.GetRewriteRule(context.Background(), tt.domain, tt.slug)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("GetRewrite() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("GetRewriteRule() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetRewrite() got = %v, want %v", got, tt.want)
+				t.Errorf("GetRewriteRule() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -289,15 +289,15 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 		name       string
 		domain     string
 		statusCode int
-		state      []model.Rewrite
-		send       *model.Rewrite
-		want       *model.Rewrite
+		state      []model.RewriteRule
+		send       *model.RewriteRule
+		want       *model.RewriteRule
 		wantErr    bool
 	}{
 		{
 			name:   "single",
 			domain: "example.com",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "different.com",
 					Name:          "sec",
@@ -308,7 +308,7 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 					},
 				},
 			},
-			send: &model.Rewrite{
+			send: &model.RewriteRule{
 				Name:          "sec",
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
@@ -316,7 +316,7 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 					"security@example.com",
 				},
 			},
-			want: &model.Rewrite{
+			want: &model.RewriteRule{
 				DomainName:    "example.com",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
@@ -329,7 +329,7 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 		{
 			name:   "idna",
 			domain: "hoß.de",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "example.com",
 					Name:          "sec",
@@ -340,7 +340,7 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 					},
 				},
 			},
-			send: &model.Rewrite{
+			send: &model.RewriteRule{
 				Name:          "slug",
 				LocalPartRule: "rule-*",
 				OrderNum:      1,
@@ -348,7 +348,7 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 					"another@xn--ho-hia.de",
 				},
 			},
-			want: &model.Rewrite{
+			want: &model.RewriteRule{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "slug",
 				LocalPartRule: "rule-*",
@@ -361,7 +361,7 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 		{
 			name:   "error-404",
 			domain: "example.com",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "example.com",
 					Name:          "sec",
@@ -372,7 +372,7 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 					},
 				},
 			},
-			send: &model.Rewrite{
+			send: &model.RewriteRule{
 				Name:          "sec",
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
@@ -396,13 +396,13 @@ func TestMigaduClient_CreateRewrite(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.CreateRewrite(context.Background(), tt.domain, tt.send)
+			got, err := c.CreateRewriteRule(context.Background(), tt.domain, tt.send)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CreateRewrite() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("CreateRewriteRule() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CreateRewrite() got = %v, want %v", got, tt.want)
+				t.Errorf("CreateRewriteRule() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -414,16 +414,16 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 		domain     string
 		slug       string
 		statusCode int
-		state      []model.Rewrite
-		send       *model.Rewrite
-		want       *model.Rewrite
+		state      []model.RewriteRule
+		send       *model.RewriteRule
+		want       *model.RewriteRule
 		wantErr    bool
 	}{
 		{
 			name:   "single",
 			domain: "example.com",
 			slug:   "slug",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "example.com",
 					Name:          "slug",
@@ -434,14 +434,14 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 					},
 				},
 			},
-			send: &model.Rewrite{
+			send: &model.RewriteRule{
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
 				Destinations: []string{
 					"another@example.com",
 				},
 			},
-			want: &model.Rewrite{
+			want: &model.RewriteRule{
 				DomainName:    "example.com",
 				Name:          "slug",
 				LocalPartRule: "sec-*",
@@ -455,7 +455,7 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 			name:   "idna",
 			domain: "hoß.de",
 			slug:   "sec",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "xn--ho-hia.de",
 					Name:          "sec",
@@ -466,14 +466,14 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 					},
 				},
 			},
-			send: &model.Rewrite{
+			send: &model.RewriteRule{
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
 				Destinations: []string{
 					"another@xn--ho-hia.de",
 				},
 			},
-			want: &model.Rewrite{
+			want: &model.RewriteRule{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "sec",
 				LocalPartRule: "sec-*",
@@ -487,7 +487,7 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 			name:   "error-404",
 			domain: "example.com",
 			slug:   "slug",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "different.com",
 					Name:          "slug",
@@ -498,7 +498,7 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 					},
 				},
 			},
-			send: &model.Rewrite{
+			send: &model.RewriteRule{
 				LocalPartRule: "sec-*",
 				OrderNum:      0,
 				Destinations: []string{
@@ -522,13 +522,13 @@ func TestMigaduClient_UpdateRewrite(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.UpdateRewrite(context.Background(), tt.domain, tt.slug, tt.send)
+			got, err := c.UpdateRewriteRule(context.Background(), tt.domain, tt.slug, tt.send)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("UpdateRewrite() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("UpdateRewriteRule() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("UpdateRewrite() got = %v, want %v", got, tt.want)
+				t.Errorf("UpdateRewriteRule() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -540,15 +540,15 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 		domain     string
 		slug       string
 		statusCode int
-		state      []model.Rewrite
-		want       *model.Rewrite
+		state      []model.RewriteRule
+		want       *model.RewriteRule
 		wantErr    bool
 	}{
 		{
 			name:   "single",
 			domain: "example.com",
 			slug:   "slug",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "example.com",
 					Name:          "slug",
@@ -559,7 +559,7 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrite{
+			want: &model.RewriteRule{
 				DomainName:    "example.com",
 				Name:          "slug",
 				LocalPartRule: "sec-*",
@@ -573,7 +573,7 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 			name:   "multiple",
 			domain: "example.com",
 			slug:   "slug",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "example.com",
 					Name:          "slug",
@@ -593,7 +593,7 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrite{
+			want: &model.RewriteRule{
 				DomainName:    "example.com",
 				Name:          "slug",
 				LocalPartRule: "sec-*",
@@ -607,7 +607,7 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 			name:   "idna",
 			domain: "hoß.de",
 			slug:   "slug",
-			state: []model.Rewrite{
+			state: []model.RewriteRule{
 				{
 					DomainName:    "xn--ho-hia.de",
 					Name:          "slug",
@@ -618,7 +618,7 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 					},
 				},
 			},
-			want: &model.Rewrite{
+			want: &model.RewriteRule{
 				DomainName:    "xn--ho-hia.de",
 				Name:          "slug",
 				LocalPartRule: "sec-*",
@@ -632,7 +632,7 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 			name:    "error-404",
 			domain:  "example.com",
 			slug:    "slug",
-			state:   []model.Rewrite{},
+			state:   []model.RewriteRule{},
 			wantErr: true,
 		},
 		{
@@ -650,13 +650,13 @@ func TestMigaduClient_DeleteRewrite(t *testing.T) {
 
 			c := newTestClient(server.URL)
 
-			got, err := c.DeleteRewrite(context.Background(), tt.domain, tt.slug)
+			got, err := c.DeleteRewriteRule(context.Background(), tt.domain, tt.slug)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("DeleteRewrite() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("DeleteRewriteRule() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DeleteRewrite() got = %v, want %v", got, tt.want)
+				t.Errorf("DeleteRewriteRule() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

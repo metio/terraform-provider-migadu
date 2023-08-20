@@ -18,17 +18,15 @@ import (
 )
 
 func TestMailboxDataSource(t *testing.T) {
-	tests := []struct {
-		name      string
-		domain    string
+	testCases := map[string]struct {
 		localPart string
+		domain    string
 		state     []model.Mailbox
-		want      *model.Mailbox
+		want      model.Mailbox
 	}{
-		{
-			name:      "single",
-			domain:    "example.com",
+		"single": {
 			localPart: "some",
+			domain:    "example.com",
 			state: []model.Mailbox{
 				{
 					LocalPart:        "some",
@@ -41,7 +39,7 @@ func TestMailboxDataSource(t *testing.T) {
 					RemoveUponExpiry: false,
 				},
 			},
-			want: &model.Mailbox{
+			want: model.Mailbox{
 				LocalPart:        "some",
 				DomainName:       "example.com",
 				Address:          "some@example.com",
@@ -52,10 +50,9 @@ func TestMailboxDataSource(t *testing.T) {
 				RemoveUponExpiry: false,
 			},
 		},
-		{
-			name:      "multiple",
-			domain:    "example.com",
+		"multiple": {
 			localPart: "some",
+			domain:    "example.com",
 			state: []model.Mailbox{
 				{
 					LocalPart:        "some",
@@ -78,7 +75,7 @@ func TestMailboxDataSource(t *testing.T) {
 					RemoveUponExpiry: false,
 				},
 			},
-			want: &model.Mailbox{
+			want: model.Mailbox{
 				LocalPart:        "some",
 				DomainName:       "example.com",
 				Address:          "some@example.com",
@@ -89,10 +86,9 @@ func TestMailboxDataSource(t *testing.T) {
 				RemoveUponExpiry: false,
 			},
 		},
-		{
-			name:      "idna",
-			domain:    "hoß.de",
+		"idna": {
 			localPart: "test",
+			domain:    "hoß.de",
 			state: []model.Mailbox{
 				{
 					LocalPart:        "test",
@@ -105,7 +101,7 @@ func TestMailboxDataSource(t *testing.T) {
 					RemoveUponExpiry: false,
 				},
 			},
-			want: &model.Mailbox{
+			want: model.Mailbox{
 				LocalPart:        "test",
 				DomainName:       "xn--ho-hia.de",
 				Address:          "test@xn--ho-hia.de",
@@ -117,28 +113,28 @@ func TestMailboxDataSource(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Mailboxes: tt.state}))
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Mailboxes: testCase.state}))
 			defer server.Close()
 
 			terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 				TerraformDir: "../data-sources/migadu_mailbox",
 				Vars: map[string]interface{}{
 					"endpoint":    server.URL,
-					"domain_name": tt.domain,
-					"local_part":  tt.localPart,
+					"local_part":  testCase.localPart,
+					"domain_name": testCase.domain,
 				},
 			})
 
 			defer terraform.Destroy(t, terraformOptions)
 			terraform.InitAndApplyAndIdempotent(t, terraformOptions)
 
-			assert.Equal(t, fmt.Sprintf("%s@%s", tt.localPart, tt.domain), terraform.Output(t, terraformOptions, "id"), "id")
-			assert.Equal(t, tt.domain, terraform.Output(t, terraformOptions, "domain_name"), "domain_name")
-			assert.Equal(t, tt.localPart, terraform.Output(t, terraformOptions, "local_part"), "local_part")
-			assert.Equal(t, tt.want.Address, terraform.Output(t, terraformOptions, "address"), "address")
-			assert.Equal(t, tt.want.ExpiresOn, terraform.Output(t, terraformOptions, "expires_on"), "expires_on")
+			assert.Equal(t, fmt.Sprintf("%s@%s", testCase.localPart, testCase.domain), terraform.Output(t, terraformOptions, "id"), "id")
+			assert.Equal(t, testCase.localPart, terraform.Output(t, terraformOptions, "local_part"), "local_part")
+			assert.Equal(t, testCase.domain, terraform.Output(t, terraformOptions, "domain_name"), "domain_name")
+			assert.Equal(t, testCase.want.Address, terraform.Output(t, terraformOptions, "address"), "address")
+			assert.Equal(t, testCase.want.ExpiresOn, terraform.Output(t, terraformOptions, "expires_on"), "expires_on")
 		})
 	}
 }

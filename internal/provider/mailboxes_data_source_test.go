@@ -8,8 +8,11 @@
 package provider_test
 
 import (
+	"context"
 	"fmt"
+	fwdatasource "github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/metio/terraform-provider-migadu/internal/provider"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"github.com/metio/terraform-provider-migadu/migadu/simulator"
 	"net/http"
@@ -18,22 +21,36 @@ import (
 	"testing"
 )
 
+func TestMailboxesDataSource_Schema(t *testing.T) {
+	ctx := context.Background()
+	schemaRequest := fwdatasource.SchemaRequest{}
+	schemaResponse := &fwdatasource.SchemaResponse{}
+
+	provider.NewMailboxesDataSource().Schema(ctx, schemaRequest, schemaResponse)
+
+	if schemaResponse.Diagnostics.HasError() {
+		t.Fatalf("Schema method diagnostics: %+v", schemaResponse.Diagnostics)
+	}
+
+	diagnostics := schemaResponse.Schema.ValidateImplementation(ctx)
+	if diagnostics.HasError() {
+		t.Fatalf("Schema validation diagnostics: %+v", diagnostics)
+	}
+}
+
 func TestMailboxesDataSource_API_Success(t *testing.T) {
-	tests := []struct {
-		name   string
+	testCases := map[string]struct {
 		domain string
 		state  []model.Mailbox
-		want   *model.Mailboxes
+		want   model.Mailboxes
 	}{
-		{
-			name:   "empty",
+		"empty": {
 			domain: "example.com",
-			want: &model.Mailboxes{
+			want: model.Mailboxes{
 				Mailboxes: []model.Mailbox{},
 			},
 		},
-		{
-			name:   "single",
+		"single": {
 			domain: "example.com",
 			state: []model.Mailbox{
 				{
@@ -43,7 +60,7 @@ func TestMailboxesDataSource_API_Success(t *testing.T) {
 					Name:       "test",
 				},
 			},
-			want: &model.Mailboxes{
+			want: model.Mailboxes{
 				Mailboxes: []model.Mailbox{
 					{
 						LocalPart:  "test",
@@ -54,8 +71,7 @@ func TestMailboxesDataSource_API_Success(t *testing.T) {
 				},
 			},
 		},
-		{
-			name:   "multiple",
+		"multiple": {
 			domain: "example.com",
 			state: []model.Mailbox{
 				{
@@ -71,7 +87,7 @@ func TestMailboxesDataSource_API_Success(t *testing.T) {
 					Name:       "Other Name",
 				},
 			},
-			want: &model.Mailboxes{
+			want: model.Mailboxes{
 				Mailboxes: []model.Mailbox{
 					{
 						LocalPart:  "test",
@@ -88,8 +104,7 @@ func TestMailboxesDataSource_API_Success(t *testing.T) {
 				},
 			},
 		},
-		{
-			name:   "filtered",
+		"filtered": {
 			domain: "example.com",
 			state: []model.Mailbox{
 				{
@@ -105,7 +120,7 @@ func TestMailboxesDataSource_API_Success(t *testing.T) {
 					Name:       "Other Name",
 				},
 			},
-			want: &model.Mailboxes{
+			want: model.Mailboxes{
 				Mailboxes: []model.Mailbox{
 					{
 						LocalPart:  "other",
@@ -116,8 +131,7 @@ func TestMailboxesDataSource_API_Success(t *testing.T) {
 				},
 			},
 		},
-		{
-			name:   "idna",
+		"idna": {
 			domain: "hoß.de",
 			state: []model.Mailbox{
 				{
@@ -127,7 +141,28 @@ func TestMailboxesDataSource_API_Success(t *testing.T) {
 					Name:       "Some Name",
 				},
 			},
-			want: &model.Mailboxes{
+			want: model.Mailboxes{
+				Mailboxes: []model.Mailbox{
+					{
+						LocalPart:  "test",
+						DomainName: "xn--ho-hia.de",
+						Address:    "test@xn--ho-hia.de",
+						Name:       "Some Name",
+					},
+				},
+			},
+		},
+		"idna-punycode": {
+			domain: "xn--ho-hia.de",
+			state: []model.Mailbox{
+				{
+					LocalPart:  "test",
+					DomainName: "xn--ho-hia.de",
+					Address:    "test@xn--ho-hia.de",
+					Name:       "Some Name",
+				},
+			},
+			want: model.Mailboxes{
 				Mailboxes: []model.Mailbox{
 					{
 						LocalPart:  "test",
@@ -139,9 +174,9 @@ func TestMailboxesDataSource_API_Success(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Mailboxes: tt.state}))
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Mailboxes: testCase.state}))
 			defer server.Close()
 
 			resource.UnitTest(t, resource.TestCase{
@@ -152,11 +187,11 @@ func TestMailboxesDataSource_API_Success(t *testing.T) {
 							data "migadu_mailboxes" "test" {
 								domain_name = "%s"
 							}
-						`, tt.domain),
+						`, testCase.domain),
 						Check: resource.ComposeAggregateTestCheckFunc(
-							resource.TestCheckResourceAttr("data.migadu_mailboxes.test", "domain_name", tt.domain),
-							resource.TestCheckResourceAttr("data.migadu_mailboxes.test", "mailboxes.#", fmt.Sprintf("%v", len(tt.want.Mailboxes))),
-							resource.TestCheckResourceAttr("data.migadu_mailboxes.test", "id", tt.domain),
+							resource.TestCheckResourceAttr("data.migadu_mailboxes.test", "id", testCase.domain),
+							resource.TestCheckResourceAttr("data.migadu_mailboxes.test", "domain_name", testCase.domain),
+							resource.TestCheckResourceAttr("data.migadu_mailboxes.test", "mailboxes.#", fmt.Sprintf("%v", len(testCase.want.Mailboxes))),
 						),
 					},
 				},
@@ -166,46 +201,35 @@ func TestMailboxesDataSource_API_Success(t *testing.T) {
 }
 
 func TestMailboxesDataSource_API_Error(t *testing.T) {
-	tests := []struct {
-		name       string
-		domain     string
-		statusCode int
-		error      string
-	}{
-		{
-			name:       "error-401",
-			domain:     "example.com",
-			statusCode: http.StatusUnauthorized,
-			error:      "status: 401",
+	testCases := map[string]APIErrorTestCase{
+		"error-401": {
+			StatusCode: http.StatusUnauthorized,
+			ErrorRegex: "GetMailboxes: status: 401",
 		},
-		{
-			name:       "error-404",
-			domain:     "example.com",
-			statusCode: http.StatusNotFound,
-			error:      "status: 404",
+		"error-404": {
+			StatusCode: http.StatusNotFound,
+			ErrorRegex: "GetMailboxes: status: 404",
 		},
-		{
-			name:       "error-500",
-			domain:     "example.com",
-			statusCode: http.StatusInternalServerError,
-			error:      "status: 500",
+		"error-500": {
+			StatusCode: http.StatusInternalServerError,
+			ErrorRegex: "GetMailboxes: status: 500",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{StatusCode: tt.statusCode}))
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{StatusCode: testCase.StatusCode}))
 			defer server.Close()
 
 			resource.UnitTest(t, resource.TestCase{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Steps: []resource.TestStep{
 					{
-						Config: providerConfig(server.URL) + fmt.Sprintf(`
+						Config: providerConfig(server.URL) + `
 							data "migadu_mailboxes" "test" {
-								domain_name = "%s"
+								domain_name = "example.com"
 							}
-						`, tt.domain),
-						ExpectError: regexp.MustCompile(tt.error),
+						`,
+						ExpectError: regexp.MustCompile(testCase.ErrorRegex),
 					},
 				},
 			})
@@ -214,26 +238,26 @@ func TestMailboxesDataSource_API_Error(t *testing.T) {
 }
 
 func TestMailboxesDataSource_Configuration_Errors(t *testing.T) {
-	tests := []struct {
-		name          string
-		configuration string
-		error         string
-	}{
-		{
-			name: "empty-domain-name",
-			configuration: `
+	testCases := map[string]ConfigurationErrorTestCase{
+		"empty-domain-name": {
+			Configuration: `
 				domain_name = ""
 			`,
-			error: "Attribute domain_name string length must be at least 1",
+			ErrorRegex: "Attribute domain_name string length must be at least 1",
 		},
-		{
-			name:          "missing-domain-name",
-			configuration: ``,
-			error:         `The argument "domain_name" is required, but no definition was found`,
+		"missing-domain-name": {
+			Configuration: ``,
+			ErrorRegex:    `The argument "domain_name" is required, but no definition was found`,
+		},
+		"invalid-domain-name": {
+			Configuration: `
+				domain_name = "*.example.com"
+			`,
+			ErrorRegex: "Domain names must be convertible to ASCII",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
 			resource.UnitTest(t, resource.TestCase{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Steps: []resource.TestStep{
@@ -242,8 +266,8 @@ func TestMailboxesDataSource_Configuration_Errors(t *testing.T) {
 							data "migadu_mailboxes" "test" {
 								%s
 							}
-						`, tt.configuration),
-						ExpectError: regexp.MustCompile(tt.error),
+						`, testCase.Configuration),
+						ExpectError: regexp.MustCompile(testCase.ErrorRegex),
 					},
 				},
 			})

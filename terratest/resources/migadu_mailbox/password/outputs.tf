@@ -25,16 +25,8 @@ output "delegations" {
   value = migadu_mailbox.mailbox.delegations
 }
 
-output "delegations_punycode" {
-  value = migadu_mailbox.mailbox.delegations_punycode
-}
-
 output "identities" {
   value = migadu_mailbox.mailbox.identities
-}
-
-output "identities_punycode" {
-  value = migadu_mailbox.mailbox.identities_punycode
 }
 
 output "auto_respond_active" {

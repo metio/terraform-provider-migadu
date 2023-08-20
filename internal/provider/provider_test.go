@@ -41,3 +41,24 @@ var (
 		"migadu": providerserver.NewProtocol6WithError(internal.New()),
 	}
 )
+
+type ConfigurationErrorTestCase struct {
+	Configuration string
+	ErrorRegex    string
+}
+
+type APIErrorTestCase struct {
+	StatusCode int
+	ErrorRegex string
+}
+
+type ResourceTestCase[T any] struct {
+	Create       ResourceTestStep[T]
+	Update       ResourceTestStep[T]
+	ImportIgnore []string
+}
+
+type ResourceTestStep[T any] struct {
+	Send T
+	Want T
+}

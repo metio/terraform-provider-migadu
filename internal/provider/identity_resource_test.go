@@ -24,21 +24,21 @@ func TestIdentityResource_API_Success(t *testing.T) {
 		domain      string
 		localPart   string
 		state       []model.Identity
-		send        *model.Identity
+		send        model.Identity
 		updatedName string
-		want        *model.Identity
+		want        model.Identity
 	}{
 		{
 			name:      "single",
 			domain:    "example.com",
 			localPart: "test",
 			state:     []model.Identity{},
-			send: &model.Identity{
+			send: model.Identity{
 				LocalPart: "other",
 				Name:      "Some Name",
 				Password:  "secret",
 			},
-			want: &model.Identity{
+			want: model.Identity{
 				LocalPart:  "other",
 				DomainName: "example.com",
 				Address:    "other@example.com",
@@ -58,12 +58,12 @@ func TestIdentityResource_API_Success(t *testing.T) {
 					Address:    "some@example.com",
 				},
 			},
-			send: &model.Identity{
+			send: model.Identity{
 				LocalPart: "other",
 				Name:      "Some Name",
 				Password:  "secret",
 			},
-			want: &model.Identity{
+			want: model.Identity{
 				LocalPart:  "other",
 				DomainName: "example.com",
 				Address:    "other@example.com",
@@ -136,59 +136,34 @@ func TestIdentityResource_API_Success(t *testing.T) {
 }
 
 func TestIdentityResource_API_Errors(t *testing.T) {
-	tests := []struct {
-		name       string
-		domain     string
-		localPart  string
-		identity   string
-		password   string
-		statusCode int
-		state      []model.Identity
-		error      string
-	}{
-		{
-			name:      "error-400",
-			domain:    "example.com",
-			localPart: "test",
-			identity:  "someone",
-			password:  "secret",
-			state: []model.Identity{
-				{
-					LocalPart:  "someone",
-					DomainName: "example.com",
-					Address:    "some@example.com",
-				},
-			},
-			error: "CreateIdentity: status:\n400",
+	testCases := map[string]APIErrorTestCase{
+		"error-404": {
+			StatusCode: http.StatusNotFound,
+			ErrorRegex: "CreateIdentity: status: 404",
 		},
-		{
-			name:       "error-500",
-			domain:     "example.com",
-			localPart:  "test",
-			identity:   "identity",
-			password:   "secret",
-			statusCode: http.StatusInternalServerError,
-			error:      "CreateIdentity: status:\n500",
+		"error-500": {
+			StatusCode: http.StatusInternalServerError,
+			ErrorRegex: "CreateIdentity: status: 500",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{Identities: tt.state, StatusCode: tt.statusCode}))
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			server := httptest.NewServer(simulator.MigaduAPI(t, &simulator.State{StatusCode: testCase.StatusCode}))
 			defer server.Close()
 
 			resource.UnitTest(t, resource.TestCase{
 				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 				Steps: []resource.TestStep{
 					{
-						Config: providerConfig(server.URL) + fmt.Sprintf(`
+						Config: providerConfig(server.URL) + `
 							resource "migadu_identity" "test" {
-								domain_name = "%s"
-								local_part  = "%s"
-								identity    = "%s"
-								password    = "%s"
+								local_part  = "test"
+								domain_name = "example.com"
+								identity    = "someone"
+								password    = "supers3cret"
 							}
-						`, tt.domain, tt.localPart, tt.identity, tt.password),
-						ExpectError: regexp.MustCompile(tt.error),
+						`,
+						ExpectError: regexp.MustCompile(testCase.ErrorRegex),
 					},
 				},
 			})

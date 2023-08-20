@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/metio/terraform-provider-migadu/internal/provider/custom_types"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"net/http"
@@ -26,82 +27,79 @@ import (
 )
 
 var (
-	_ resource.Resource                = &mailboxResource{}
-	_ resource.ResourceWithConfigure   = &mailboxResource{}
-	_ resource.ResourceWithImportState = &mailboxResource{}
+	_ resource.Resource                = (*MailboxResource)(nil)
+	_ resource.ResourceWithConfigure   = (*MailboxResource)(nil)
+	_ resource.ResourceWithImportState = (*MailboxResource)(nil)
 )
 
 func NewMailboxResource() resource.Resource {
-	return &mailboxResource{}
+	return &MailboxResource{}
 }
 
-type mailboxResource struct {
-	migaduClient *client.MigaduClient
+type MailboxResource struct {
+	MigaduClient *client.MigaduClient
 }
 
-type mailboxResourceModel struct {
-	ID                        types.String `tfsdk:"id"`
-	LocalPart                 types.String `tfsdk:"local_part"`
-	DomainName                types.String `tfsdk:"domain_name"`
-	Address                   types.String `tfsdk:"address"`
-	Name                      types.String `tfsdk:"name"`
-	IsInternal                types.Bool   `tfsdk:"is_internal"`
-	MaySend                   types.Bool   `tfsdk:"may_send"`
-	MayReceive                types.Bool   `tfsdk:"may_receive"`
-	MayAccessImap             types.Bool   `tfsdk:"may_access_imap"`
-	MayAccessPop3             types.Bool   `tfsdk:"may_access_pop3"`
-	MayAccessManageSieve      types.Bool   `tfsdk:"may_access_manage_sieve"`
-	Password                  types.String `tfsdk:"password"`
-	PasswordRecoveryEmail     types.String `tfsdk:"password_recovery_email"`
-	PasswordMethod            types.String `tfsdk:"password_method"`
-	SpamAction                types.String `tfsdk:"spam_action"`
-	SpamAggressiveness        types.String `tfsdk:"spam_aggressiveness"`
-	Expirable                 types.Bool   `tfsdk:"expirable"`
-	ExpiresOn                 types.String `tfsdk:"expires_on"`
-	RemoveUponExpiry          types.Bool   `tfsdk:"remove_upon_expiry"`
-	SenderDenyList            types.List   `tfsdk:"sender_denylist"`
-	SenderDenyListPunycode    types.List   `tfsdk:"sender_denylist_punycode"`
-	SenderAllowList           types.List   `tfsdk:"sender_allowlist"`
-	SenderAllowListPunycode   types.List   `tfsdk:"sender_allowlist_punycode"`
-	RecipientDenyList         types.List   `tfsdk:"recipient_denylist"`
-	RecipientDenyListPunycode types.List   `tfsdk:"recipient_denylist_punycode"`
-	Delegations               types.List   `tfsdk:"delegations"`
-	DelegationsPunycode       types.List   `tfsdk:"delegations_punycode"`
-	Identities                types.List   `tfsdk:"identities"`
-	IdentitiesPunycode        types.List   `tfsdk:"identities_punycode"`
-	AutoRespondActive         types.Bool   `tfsdk:"auto_respond_active"`
-	AutoRespondSubject        types.String `tfsdk:"auto_respond_subject"`
-	AutoRespondBody           types.String `tfsdk:"auto_respond_body"`
-	AutoRespondExpiresOn      types.String `tfsdk:"auto_respond_expires_on"`
-	FooterActive              types.Bool   `tfsdk:"footer_active"`
-	FooterPlainBody           types.String `tfsdk:"footer_plain_body"`
-	FooterHtmlBody            types.String `tfsdk:"footer_html_body"`
+type MailboxResourceModel struct {
+	ID                    custom_types.EmailAddressValue    `tfsdk:"id"`
+	LocalPart             types.String                      `tfsdk:"local_part"`
+	DomainName            custom_types.DomainNameValue      `tfsdk:"domain_name"`
+	Address               custom_types.EmailAddressValue    `tfsdk:"address"`
+	Name                  types.String                      `tfsdk:"name"`
+	IsInternal            types.Bool                        `tfsdk:"is_internal"`
+	MaySend               types.Bool                        `tfsdk:"may_send"`
+	MayReceive            types.Bool                        `tfsdk:"may_receive"`
+	MayAccessImap         types.Bool                        `tfsdk:"may_access_imap"`
+	MayAccessPop3         types.Bool                        `tfsdk:"may_access_pop3"`
+	MayAccessManageSieve  types.Bool                        `tfsdk:"may_access_manage_sieve"`
+	Password              types.String                      `tfsdk:"password"`
+	PasswordRecoveryEmail custom_types.EmailAddressValue    `tfsdk:"password_recovery_email"`
+	PasswordMethod        types.String                      `tfsdk:"password_method"`
+	SpamAction            types.String                      `tfsdk:"spam_action"`
+	SpamAggressiveness    types.String                      `tfsdk:"spam_aggressiveness"`
+	Expirable             types.Bool                        `tfsdk:"expirable"`
+	ExpiresOn             types.String                      `tfsdk:"expires_on"`
+	RemoveUponExpiry      types.Bool                        `tfsdk:"remove_upon_expiry"`
+	SenderDenyList        custom_types.EmailAddressSetValue `tfsdk:"sender_denylist"`
+	SenderAllowList       custom_types.EmailAddressSetValue `tfsdk:"sender_allowlist"`
+	RecipientDenyList     custom_types.EmailAddressSetValue `tfsdk:"recipient_denylist"`
+	Delegations           custom_types.EmailAddressSetValue `tfsdk:"delegations"`
+	Identities            custom_types.EmailAddressSetValue `tfsdk:"identities"`
+	AutoRespondActive     types.Bool                        `tfsdk:"auto_respond_active"`
+	AutoRespondSubject    types.String                      `tfsdk:"auto_respond_subject"`
+	AutoRespondBody       types.String                      `tfsdk:"auto_respond_body"`
+	AutoRespondExpiresOn  types.String                      `tfsdk:"auto_respond_expires_on"`
+	FooterActive          types.Bool                        `tfsdk:"footer_active"`
+	FooterPlainBody       types.String                      `tfsdk:"footer_plain_body"`
+	FooterHtmlBody        types.String                      `tfsdk:"footer_html_body"`
 }
 
-func (r *mailboxResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_mailbox"
+func (r *MailboxResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = request.ProviderTypeName + "_mailbox"
 }
 
-func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *MailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Description:         "Provides a mailbox.",
 		MarkdownDescription: "Provides a mailbox.",
 		Attributes: map[string]schema.Attribute{
-			"domain_name": schema.StringAttribute{
-				Description:         "The domain name of the mailbox.",
-				MarkdownDescription: "The domain name of the mailbox.",
-				Required:            true,
-				Validators: []validator.String{
-					stringvalidator.LengthAtLeast(1),
-				},
+			"id": schema.StringAttribute{
+				Description:         "Contains the value 'local_part@domain_name'.",
+				MarkdownDescription: "Contains the value `local_part@domain_name`.",
+				Required:            false,
+				Optional:            false,
+				Computed:            true,
+				CustomType:          custom_types.EmailAddressType{},
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"local_part": schema.StringAttribute{
 				Description:         "The local part of the mailbox.",
 				MarkdownDescription: "The local part of the mailbox.",
 				Required:            true,
+				Optional:            false,
+				Computed:            false,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
@@ -109,18 +107,27 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": schema.StringAttribute{
-				Description:         "Contains the value 'local_part@domain_name'.",
-				MarkdownDescription: "Contains the value `local_part@domain_name`.",
-				Computed:            true,
+			"domain_name": schema.StringAttribute{
+				Description:         "The domain name of the mailbox.",
+				MarkdownDescription: "The domain name of the mailbox.",
+				Required:            true,
+				Optional:            false,
+				Computed:            false,
+				CustomType:          custom_types.DomainNameType{},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"address": schema.StringAttribute{
 				Description:         "The email address of the mailbox 'local_part@domain_name' as returned by the Migadu API. This might be different from the 'id' attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
 				MarkdownDescription: "The email address of the mailbox `local_part@domain_name` as returned by the Migadu API. This might be different from the `id` attribute in case you are using international domain names. The Migadu API always returns the punycode version of a domain.",
+				Required:            false,
+				Optional:            false,
 				Computed:            true,
+				CustomType:          custom_types.EmailAddressType{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -129,6 +136,8 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Description:         "The name of the mailbox.",
 				MarkdownDescription: "The name of the mailbox.",
 				Required:            true,
+				Optional:            false,
+				Computed:            false,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
@@ -136,42 +145,49 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"is_internal": schema.BoolAttribute{
 				Description:         "Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.",
 				MarkdownDescription: "Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_send": schema.BoolAttribute{
 				Description:         "Whether this mailbox is allowed to send emails.",
 				MarkdownDescription: "Whether this mailbox is allowed to send emails.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_receive": schema.BoolAttribute{
 				Description:         "Whether this mailbox is allowed to receive emails.",
 				MarkdownDescription: "Whether this mailbox is allowed to receive emails.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_access_imap": schema.BoolAttribute{
 				Description:         "Whether this mailbox is allowed to use IMAP.",
 				MarkdownDescription: "Whether this mailbox is allowed to use IMAP.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_access_pop3": schema.BoolAttribute{
 				Description:         "Whether this mailbox is allowed to use POP3.",
 				MarkdownDescription: "Whether this mailbox is allowed to use POP3.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_access_manage_sieve": schema.BoolAttribute{
 				Description:         "Whether this mailbox is allowed to manage the mail sieve.",
 				MarkdownDescription: "Whether this mailbox is allowed to manage the mail sieve.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"password": schema.StringAttribute{
 				Description:         "The password of this mailbox.",
 				MarkdownDescription: "The password of this mailbox.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 				Sensitive:           true,
@@ -183,8 +199,10 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"password_recovery_email": schema.StringAttribute{
 				Description:         "The recovery email address of this mailbox.",
 				MarkdownDescription: "The recovery email address of this mailbox.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
+				CustomType:          custom_types.EmailAddressType{},
 				Validators: []validator.String{
 					stringvalidator.AtLeastOneOf(path.MatchRoot("password")),
 					stringvalidator.LengthAtLeast(1),
@@ -193,6 +211,7 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"password_method": schema.StringAttribute{
 				Description:         "The password method of this mailbox. If this is set to 'invitation' an email will be send to the 'password_recovery_email' and users can set their own password.",
 				MarkdownDescription: "The password method of this mailbox. If this is set to 'invitation' an email will be send to the 'password_recovery_email' and users can set their own password.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 				Validators: []validator.String{
@@ -203,251 +222,233 @@ func (r *mailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"spam_action": schema.StringAttribute{
 				Description:         "The action to take once spam arrives in this mailbox.",
 				MarkdownDescription: "The action to take once spam arrives in this mailbox.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"spam_aggressiveness": schema.StringAttribute{
 				Description:         "How aggressive will spam be detected in this mailbox.",
 				MarkdownDescription: "How aggressive will spam be detected in this mailbox.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"expirable": schema.BoolAttribute{
 				Description:         "Whether this mailbox expires in the future.",
 				MarkdownDescription: "Whether this mailbox expires in the future.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"expires_on": schema.StringAttribute{
 				Description:         "The expiration date of this mailbox.",
 				MarkdownDescription: "The expiration date of this mailbox.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"remove_upon_expiry": schema.BoolAttribute{
 				Description:         "Whether this mailbox will be removed upon expiry.",
 				MarkdownDescription: "Whether this mailbox will be removed upon expiry.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
-			"sender_denylist": schema.ListAttribute{
-				Description:         "The email addresses of senders that will always be denied delivery in unicode.",
-				MarkdownDescription: "The email addresses of senders that will always be denied delivery in unicode.",
+			"sender_denylist": schema.SetAttribute{
+				Description:         "The email addresses of senders that will always be denied delivery.",
+				MarkdownDescription: "The email addresses of senders that will always be denied delivery.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
-				ElementType:         types.StringType,
+				CustomType: custom_types.EmailAddressSetType{
+					SetType: types.SetType{
+						ElemType: custom_types.EmailAddressType{},
+					},
+				},
 			},
-			"sender_denylist_punycode": schema.ListAttribute{
-				Description:         "The email addresses of senders that will always be denied delivery in punycode.",
-				MarkdownDescription: "The email addresses of senders that will always be denied delivery in punycode.",
+			"sender_allowlist": schema.SetAttribute{
+				Description:         "The email addresses of senders that will always be allowed delivery.",
+				MarkdownDescription: "The email addresses of senders that will always be allowed delivery.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
-				ElementType:         types.StringType,
+				CustomType: custom_types.EmailAddressSetType{
+					SetType: types.SetType{
+						ElemType: custom_types.EmailAddressType{},
+					},
+				},
 			},
-			"sender_allowlist": schema.ListAttribute{
-				Description:         "The email addresses of senders that will always be allowed delivery in unicode.",
-				MarkdownDescription: "The email addresses of senders that will always be allowed delivery in unicode.",
+			"recipient_denylist": schema.SetAttribute{
+				Description:         "The email addresses of recipients that will always be denied delivery.",
+				MarkdownDescription: "The email addresses of recipients that will always be denied delivery.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
-				ElementType:         types.StringType,
+				CustomType: custom_types.EmailAddressSetType{
+					SetType: types.SetType{
+						ElemType: custom_types.EmailAddressType{},
+					},
+				},
 			},
-			"sender_allowlist_punycode": schema.ListAttribute{
-				Description:         "The email addresses of senders that will always be denied delivery in punycode.",
-				MarkdownDescription: "The email addresses of senders that will always be denied delivery in punycode.",
+			"delegations": schema.SetAttribute{
+				Description:         "The delegations of the mailbox.",
+				MarkdownDescription: "The delegations of the mailbox.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
-				ElementType:         types.StringType,
+				CustomType: custom_types.EmailAddressSetType{
+					SetType: types.SetType{
+						ElemType: custom_types.EmailAddressType{},
+					},
+				},
 			},
-			"recipient_denylist": schema.ListAttribute{
-				Description:         "The email addresses of recipients that will always be denied delivery in unicode.",
-				MarkdownDescription: "The email addresses of recipients that will always be denied delivery in unicode.",
+			"identities": schema.SetAttribute{
+				Description:         "The identities of the mailbox.",
+				MarkdownDescription: "The identities of the mailbox.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
-				ElementType:         types.StringType,
-			},
-			"recipient_denylist_punycode": schema.ListAttribute{
-				Description:         "The email addresses of recipients that will always be denied delivery in punycode.",
-				MarkdownDescription: "The email addresses of recipients that will always be denied delivery in punycode.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-			},
-			"delegations": schema.ListAttribute{
-				Description:         "The delegations of the mailbox in unicode.",
-				MarkdownDescription: "The delegations of the mailbox in unicode.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-			},
-			"delegations_punycode": schema.ListAttribute{
-				Description:         "The delegations of the mailbox in punycode.",
-				MarkdownDescription: "The delegations of the mailbox in punycode.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-			},
-			"identities": schema.ListAttribute{
-				Description:         "The identities of the mailbox in unicode.",
-				MarkdownDescription: "The identities of the mailbox in unicode.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
-			},
-			"identities_punycode": schema.ListAttribute{
-				Description:         "The identities of the mailbox in punycode.",
-				MarkdownDescription: "The identities of the mailbox in punycode.",
-				Optional:            true,
-				Computed:            true,
-				ElementType:         types.StringType,
+				CustomType: custom_types.EmailAddressSetType{
+					SetType: types.SetType{
+						ElemType: custom_types.EmailAddressType{},
+					},
+				},
 			},
 			"auto_respond_active": schema.BoolAttribute{
 				Description:         "Whether an automatic response is active in this mailbox.",
 				MarkdownDescription: "Whether an automatic response is active in this mailbox.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"auto_respond_subject": schema.StringAttribute{
 				Description:         "The subject of the automatic response.",
 				MarkdownDescription: "The subject of the automatic response.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"auto_respond_body": schema.StringAttribute{
 				Description:         "The body of the automatic response.",
 				MarkdownDescription: "The body of the automatic response.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"auto_respond_expires_on": schema.StringAttribute{
 				Description:         "The expiration date of the automatic response.",
 				MarkdownDescription: "The expiration date of the automatic response.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"footer_active": schema.BoolAttribute{
 				Description:         "Whether the footer of this mailbox is active.",
 				MarkdownDescription: "Whether the footer of this mailbox is active.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"footer_plain_body": schema.StringAttribute{
 				Description:         "The footer of this mailbox in text/plain format.",
 				MarkdownDescription: "The footer of this mailbox in text/plain format.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"footer_html_body": schema.StringAttribute{
 				Description:         "The footer of this mailbox in text/html format.",
 				MarkdownDescription: "The footer of this mailbox in text/html format.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 		},
 	}
 }
-func (r *mailboxResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (r *MailboxResource) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if request.ProviderData == nil {
 		return
 	}
 
-	migaduClient, ok := req.ProviderData.(*client.MigaduClient)
-
-	if !ok {
-		resp.Diagnostics.AddError(
+	if migaduClient, ok := request.ProviderData.(*client.MigaduClient); ok {
+		r.MigaduClient = migaduClient
+	} else {
+		response.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client.MigaduClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *client.MigaduClient, got: %T. Please report this issue to the provider developers.", request.ProviderData),
 		)
-		return
 	}
-
-	r.migaduClient = migaduClient
 }
 
-func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan mailboxResourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *MailboxResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var plan MailboxResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if plan.PasswordMethod.ValueString() == "password" && plan.Password.ValueString() == "" {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			"Error creating mailbox",
 			"Cannot use 'password_method = password' without a 'password'",
 		)
 		return
 	}
 	if plan.PasswordMethod.ValueString() == "invitation" && plan.PasswordRecoveryEmail.ValueString() == "" {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			"Error creating mailbox",
 			"Cannot use 'password_method = invitation' without a 'password_recovery_email'",
 		)
 		return
 	}
 
-	var wantedSenderDenyList []string
-	if !plan.SenderDenyList.IsUnknown() {
-		resp.Diagnostics.Append(plan.SenderDenyList.ElementsAs(ctx, &wantedSenderDenyList, false)...)
-		if resp.Diagnostics.HasError() {
+	var senderDenyList []string
+	if plan.SenderDenyList.IsUnknown() {
+		plan.SenderDenyList = custom_types.NewEmailAddressSetNull()
+	} else {
+		response.Diagnostics.Append(plan.SenderDenyList.ElementsAs(ctx, &senderDenyList, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
-	if !plan.SenderDenyListPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.SenderDenyListPunycode.ElementsAs(ctx, &wantedSenderDenyList, false)...)
-		if resp.Diagnostics.HasError() {
+
+	var senderAllowList []string
+	if plan.SenderAllowList.IsUnknown() {
+		plan.SenderAllowList = custom_types.NewEmailAddressSetNull()
+	} else {
+		response.Diagnostics.Append(plan.SenderAllowList.ElementsAs(ctx, &senderAllowList, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
-	var wantedSenderAllowList []string
-	if !plan.SenderAllowList.IsUnknown() {
-		resp.Diagnostics.Append(plan.SenderAllowList.ElementsAs(ctx, &wantedSenderAllowList, false)...)
-		if resp.Diagnostics.HasError() {
+
+	var recipientDenyList []string
+	if plan.RecipientDenyList.IsUnknown() {
+		plan.RecipientDenyList = custom_types.NewEmailAddressSetNull()
+	} else {
+		response.Diagnostics.Append(plan.RecipientDenyList.ElementsAs(ctx, &recipientDenyList, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
-	if !plan.SenderAllowListPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.SenderAllowListPunycode.ElementsAs(ctx, &wantedSenderAllowList, false)...)
-		if resp.Diagnostics.HasError() {
+
+	var delegations []string
+	if plan.Delegations.IsUnknown() {
+		plan.Delegations = custom_types.NewEmailAddressSetNull()
+	} else {
+		response.Diagnostics.Append(plan.Delegations.ElementsAs(ctx, &delegations, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
-	var wantedRecipientDenyList []string
-	if !plan.RecipientDenyList.IsUnknown() {
-		resp.Diagnostics.Append(plan.RecipientDenyList.ElementsAs(ctx, &wantedRecipientDenyList, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	if !plan.RecipientDenyListPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.RecipientDenyListPunycode.ElementsAs(ctx, &wantedRecipientDenyList, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	var wantedDelegations []string
-	if !plan.Delegations.IsUnknown() {
-		resp.Diagnostics.Append(plan.Delegations.ElementsAs(ctx, &wantedDelegations, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	if !plan.DelegationsPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.DelegationsPunycode.ElementsAs(ctx, &wantedDelegations, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	var wantedIdentities []string
-	if !plan.Identities.IsUnknown() {
-		resp.Diagnostics.Append(plan.Identities.ElementsAs(ctx, &wantedIdentities, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	if !plan.IdentitiesPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.IdentitiesPunycode.ElementsAs(ctx, &wantedIdentities, false)...)
-		if resp.Diagnostics.HasError() {
+
+	var identities []string
+	if plan.Identities.IsUnknown() {
+		plan.Identities = custom_types.NewEmailAddressSetNull()
+	} else {
+		response.Diagnostics.Append(plan.Identities.ElementsAs(ctx, &identities, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -469,11 +470,11 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 		Expirable:             plan.Expirable.ValueBool(),
 		ExpiresOn:             plan.ExpiresOn.ValueString(),
 		RemoveUponExpiry:      plan.RemoveUponExpiry.ValueBool(),
-		SenderDenyList:        wantedSenderDenyList,
-		SenderAllowList:       wantedSenderAllowList,
-		RecipientDenyList:     wantedRecipientDenyList,
-		Delegations:           wantedDelegations,
-		Identities:            wantedIdentities,
+		SenderDenyList:        senderDenyList,
+		SenderAllowList:       senderAllowList,
+		RecipientDenyList:     recipientDenyList,
+		Delegations:           delegations,
+		Identities:            identities,
 		AutoRespondActive:     plan.AutoRespondActive.ValueBool(),
 		AutoRespondSubject:    plan.AutoRespondSubject.ValueString(),
 		AutoRespondBody:       plan.AutoRespondBody.ValueString(),
@@ -483,40 +484,15 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 		FooterHtmlBody:        plan.FooterHtmlBody.ValueString(),
 	}
 
-	createdMailbox, err := r.migaduClient.CreateMailbox(ctx, plan.DomainName.ValueString(), mailbox)
+	createdMailbox, err := r.MigaduClient.CreateMailbox(ctx, plan.DomainName.ValueString(), mailbox)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating mailbox",
-			fmt.Sprintf("Could not create mailbox %s: %v", createMailboxID(plan.DomainName, plan.LocalPart), err),
-		)
+		response.Diagnostics.Append(MailboxCreateError(err))
 		return
 	}
 
-	senderDenyList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(createdMailbox.SenderDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	senderDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(createdMailbox.SenderDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	senderAllowList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(createdMailbox.SenderAllowList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	senderAllowListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(createdMailbox.SenderAllowList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	recipientDenyList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(createdMailbox.RecipientDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	recipientDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(createdMailbox.RecipientDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	delegations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(createdMailbox.Delegations, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	delegationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(createdMailbox.Delegations, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	identities, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(createdMailbox.Identities, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	identitiesPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(createdMailbox.Identities, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-
-	plan.ID = types.StringValue(createMailboxID(plan.DomainName, plan.LocalPart))
-	plan.Address = types.StringValue(createdMailbox.Address)
+	plan.ID = custom_types.NewEmailAddressValue(CreateMailboxID(plan.LocalPart, plan.DomainName))
+	plan.Address = custom_types.NewEmailAddressValue(createdMailbox.Address)
 	plan.Name = types.StringValue(createdMailbox.Name)
-	plan.LocalPart = types.StringValue(createdMailbox.LocalPart)
 	plan.IsInternal = types.BoolValue(createdMailbox.IsInternal)
 	plan.MaySend = types.BoolValue(createdMailbox.MaySend)
 	plan.MayReceive = types.BoolValue(createdMailbox.MayReceive)
@@ -524,22 +500,12 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 	plan.MayAccessPop3 = types.BoolValue(createdMailbox.MayAccessPop3)
 	plan.MayAccessManageSieve = types.BoolValue(createdMailbox.MayAccessManageSieve)
 	plan.Password = types.StringValue(plan.Password.ValueString())
-	plan.PasswordRecoveryEmail = types.StringValue(createdMailbox.PasswordRecoveryEmail)
+	plan.PasswordRecoveryEmail = custom_types.NewEmailAddressValue(plan.PasswordRecoveryEmail.ValueString())
 	plan.SpamAction = types.StringValue(createdMailbox.SpamAction)
 	plan.SpamAggressiveness = types.StringValue(createdMailbox.SpamAggressiveness)
 	plan.Expirable = types.BoolValue(createdMailbox.Expirable)
 	plan.ExpiresOn = types.StringValue(createdMailbox.ExpiresOn)
 	plan.RemoveUponExpiry = types.BoolValue(createdMailbox.RemoveUponExpiry)
-	plan.SenderDenyList = senderDenyList
-	plan.SenderDenyListPunycode = senderDenyListPunycode
-	plan.SenderAllowList = senderAllowList
-	plan.SenderAllowListPunycode = senderAllowListPunycode
-	plan.RecipientDenyList = recipientDenyList
-	plan.RecipientDenyListPunycode = recipientDenyListPunycode
-	plan.Delegations = delegations
-	plan.DelegationsPunycode = delegationsPunycode
-	plan.Identities = identities
-	plan.IdentitiesPunycode = identitiesPunycode
 	plan.AutoRespondActive = types.BoolValue(createdMailbox.AutoRespondActive)
 	plan.AutoRespondSubject = types.StringValue(createdMailbox.AutoRespondSubject)
 	plan.AutoRespondBody = types.StringValue(createdMailbox.AutoRespondBody)
@@ -548,60 +514,101 @@ func (r *mailboxResource) Create(ctx context.Context, req resource.CreateRequest
 	plan.FooterPlainBody = types.StringValue(createdMailbox.FooterPlainBody)
 	plan.FooterHtmlBody = types.StringValue(createdMailbox.FooterHtmlBody)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state mailboxResourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *MailboxResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var state MailboxResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	mailbox, err := r.migaduClient.GetMailbox(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
+	mailbox, err := r.MigaduClient.GetMailbox(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
 	if err != nil {
 		var requestError *client.RequestError
 		if errors.As(err, &requestError) {
 			if requestError.StatusCode == http.StatusNotFound {
-				resp.State.RemoveResource(ctx)
+				response.State.RemoveResource(ctx)
 				return
 			}
 		}
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Could not read mailbox %s", createMailboxID(state.DomainName, state.LocalPart)),
-			fmt.Sprintf("Client error was: %v", err),
-		)
+		response.Diagnostics.Append(MailboxReadError(err))
 		return
 	}
 
-	senderDenyList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.SenderDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	senderDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.SenderDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	senderAllowList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.SenderAllowList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	senderAllowListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.SenderAllowList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	recipientDenyList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.RecipientDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	recipientDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.RecipientDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	delegations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.Delegations, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	delegationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.Delegations, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	identities, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.Identities, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	identitiesPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.Identities, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
+	senderDenyList, diags := custom_types.NewEmailAddressSetValueFrom(ctx, mailbox.SenderDenyList)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	senderDenyListEqual, diags := state.SenderDenyList.SetSemanticEquals(ctx, senderDenyList)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if !senderDenyListEqual {
+		state.SenderDenyList = senderDenyList
+	}
 
-	state.ID = types.StringValue(createMailboxID(state.DomainName, state.LocalPart))
-	state.Address = types.StringValue(mailbox.Address)
+	senderAllowList, diags := custom_types.NewEmailAddressSetValueFrom(ctx, mailbox.SenderAllowList)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	senderAllowListEqual, diags := state.SenderAllowList.SetSemanticEquals(ctx, senderAllowList)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if !senderAllowListEqual {
+		state.SenderAllowList = senderAllowList
+	}
+
+	recipientDenyList, diags := custom_types.NewEmailAddressSetValueFrom(ctx, mailbox.RecipientDenyList)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	recipientDenyListEqual, diags := state.RecipientDenyList.SetSemanticEquals(ctx, recipientDenyList)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if !recipientDenyListEqual {
+		state.RecipientDenyList = recipientDenyList
+	}
+
+	delegations, diags := custom_types.NewEmailAddressSetValueFrom(ctx, mailbox.Delegations)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	delegationsEqual, diags := state.Delegations.SetSemanticEquals(ctx, delegations)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if !delegationsEqual {
+		state.Delegations = delegations
+	}
+
+	identities, diags := custom_types.NewEmailAddressSetValueFrom(ctx, mailbox.Identities)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	identitiesEqual, diags := state.Identities.SetSemanticEquals(ctx, identities)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	if !identitiesEqual {
+		state.Identities = identities
+	}
+
+	state.ID = custom_types.NewEmailAddressValue(CreateMailboxID(state.LocalPart, state.DomainName))
+	state.Address = custom_types.NewEmailAddressValue(mailbox.Address)
 	state.Name = types.StringValue(mailbox.Name)
 	state.LocalPart = types.StringValue(mailbox.LocalPart)
 	state.IsInternal = types.BoolValue(mailbox.IsInternal)
@@ -610,10 +617,10 @@ func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, re
 	state.MayAccessImap = types.BoolValue(mailbox.MayAccessImap)
 	state.MayAccessPop3 = types.BoolValue(mailbox.MayAccessPop3)
 	state.MayAccessManageSieve = types.BoolValue(mailbox.MayAccessManageSieve)
-	if state.Password.IsUnknown() || state.Password.IsNull() {
-		state.Password = types.StringValue("")
+	if state.Password.IsUnknown() {
+		state.Password = types.StringNull()
 	}
-	state.PasswordRecoveryEmail = types.StringValue(mailbox.PasswordRecoveryEmail)
+	state.PasswordRecoveryEmail = custom_types.NewEmailAddressValue(mailbox.PasswordRecoveryEmail)
 	if state.PasswordMethod.IsUnknown() || state.PasswordMethod.IsNull() {
 		state.PasswordMethod = types.StringValue("password")
 	}
@@ -622,16 +629,6 @@ func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, re
 	state.Expirable = types.BoolValue(mailbox.Expirable)
 	state.ExpiresOn = types.StringValue(mailbox.ExpiresOn)
 	state.RemoveUponExpiry = types.BoolValue(mailbox.RemoveUponExpiry)
-	state.SenderDenyList = senderDenyList
-	state.SenderDenyListPunycode = senderDenyListPunycode
-	state.SenderAllowList = senderAllowList
-	state.SenderAllowListPunycode = senderAllowListPunycode
-	state.RecipientDenyList = recipientDenyList
-	state.RecipientDenyListPunycode = recipientDenyListPunycode
-	state.Delegations = delegations
-	state.DelegationsPunycode = delegationsPunycode
-	state.Identities = identities
-	state.IdentitiesPunycode = identitiesPunycode
 	state.AutoRespondActive = types.BoolValue(mailbox.AutoRespondActive)
 	state.AutoRespondSubject = types.StringValue(mailbox.AutoRespondSubject)
 	state.AutoRespondBody = types.StringValue(mailbox.AutoRespondBody)
@@ -640,83 +637,62 @@ func (r *mailboxResource) Read(ctx context.Context, req resource.ReadRequest, re
 	state.FooterPlainBody = types.StringValue(mailbox.FooterPlainBody)
 	state.FooterHtmlBody = types.StringValue(mailbox.FooterHtmlBody)
 
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan mailboxResourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *MailboxResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var plan MailboxResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var wantedSenderDenyList []string
-	if !plan.SenderDenyList.IsUnknown() {
-		resp.Diagnostics.Append(plan.SenderDenyList.ElementsAs(ctx, &wantedSenderDenyList, false)...)
-		if resp.Diagnostics.HasError() {
+	var senderDenyList []string
+	if plan.SenderDenyList.IsUnknown() {
+		plan.SenderDenyList = custom_types.NewEmailAddressSetNull()
+	} else {
+		response.Diagnostics.Append(plan.SenderDenyList.ElementsAs(ctx, &senderDenyList, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
-	if !plan.SenderDenyListPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.SenderDenyListPunycode.ElementsAs(ctx, &wantedSenderDenyList, false)...)
-		if resp.Diagnostics.HasError() {
+
+	var senderAllowList []string
+	if plan.SenderAllowList.IsUnknown() {
+		plan.SenderAllowList = custom_types.NewEmailAddressSetNull()
+	} else {
+		response.Diagnostics.Append(plan.SenderAllowList.ElementsAs(ctx, &senderAllowList, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
-	var wantedSenderAllowList []string
-	if !plan.SenderAllowList.IsUnknown() {
-		resp.Diagnostics.Append(plan.SenderAllowList.ElementsAs(ctx, &wantedSenderAllowList, false)...)
-		if resp.Diagnostics.HasError() {
+
+	var recipientDenyList []string
+	if plan.RecipientDenyList.IsUnknown() {
+		plan.RecipientDenyList = custom_types.NewEmailAddressSetNull()
+	} else {
+		response.Diagnostics.Append(plan.RecipientDenyList.ElementsAs(ctx, &recipientDenyList, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
-	if !plan.SenderAllowListPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.SenderAllowListPunycode.ElementsAs(ctx, &wantedSenderAllowList, false)...)
-		if resp.Diagnostics.HasError() {
+
+	var delegations []string
+	if plan.Delegations.IsUnknown() {
+		plan.Delegations = custom_types.NewEmailAddressSetNull()
+	} else {
+		response.Diagnostics.Append(plan.Delegations.ElementsAs(ctx, &delegations, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
-	var wantedRecipientDenyList []string
-	if !plan.RecipientDenyList.IsUnknown() {
-		resp.Diagnostics.Append(plan.RecipientDenyList.ElementsAs(ctx, &wantedRecipientDenyList, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	if !plan.RecipientDenyListPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.RecipientDenyListPunycode.ElementsAs(ctx, &wantedRecipientDenyList, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	var wantedDelegations []string
-	if !plan.Delegations.IsUnknown() {
-		resp.Diagnostics.Append(plan.Delegations.ElementsAs(ctx, &wantedDelegations, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	if !plan.DelegationsPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.DelegationsPunycode.ElementsAs(ctx, &wantedDelegations, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	var wantedIdentities []string
-	if !plan.Identities.IsUnknown() {
-		resp.Diagnostics.Append(plan.Identities.ElementsAs(ctx, &wantedIdentities, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-	if !plan.IdentitiesPunycode.IsUnknown() {
-		resp.Diagnostics.Append(plan.IdentitiesPunycode.ElementsAs(ctx, &wantedIdentities, false)...)
-		if resp.Diagnostics.HasError() {
+
+	var identities []string
+	if plan.Identities.IsUnknown() {
+		plan.Identities = custom_types.NewEmailAddressSetNull()
+	} else {
+		response.Diagnostics.Append(plan.Identities.ElementsAs(ctx, &identities, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -736,11 +712,11 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 		Expirable:             plan.Expirable.ValueBool(),
 		ExpiresOn:             plan.ExpiresOn.ValueString(),
 		RemoveUponExpiry:      plan.RemoveUponExpiry.ValueBool(),
-		SenderDenyList:        wantedSenderDenyList,
-		SenderAllowList:       wantedSenderAllowList,
-		RecipientDenyList:     wantedRecipientDenyList,
-		Delegations:           wantedDelegations,
-		Identities:            wantedIdentities,
+		SenderDenyList:        senderDenyList,
+		SenderAllowList:       senderAllowList,
+		RecipientDenyList:     recipientDenyList,
+		Delegations:           delegations,
+		Identities:            identities,
 		AutoRespondActive:     plan.AutoRespondActive.ValueBool(),
 		AutoRespondSubject:    plan.AutoRespondSubject.ValueString(),
 		AutoRespondBody:       plan.AutoRespondBody.ValueString(),
@@ -750,40 +726,15 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 		FooterHtmlBody:        plan.FooterHtmlBody.ValueString(),
 	}
 
-	updatedMailbox, err := r.migaduClient.UpdateMailbox(ctx, plan.DomainName.ValueString(), plan.LocalPart.ValueString(), mailbox)
+	updatedMailbox, err := r.MigaduClient.UpdateMailbox(ctx, plan.DomainName.ValueString(), plan.LocalPart.ValueString(), mailbox)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating mailbox",
-			fmt.Sprintf("Could not update mailbox %s: %v", createMailboxID(plan.DomainName, plan.LocalPart), err),
-		)
+		response.Diagnostics.Append(MailboxUpdateError(err))
 		return
 	}
 
-	senderDenyList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(updatedMailbox.SenderDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	senderDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(updatedMailbox.SenderDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	senderAllowList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(updatedMailbox.SenderAllowList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	senderAllowListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(updatedMailbox.SenderAllowList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	recipientDenyList, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(updatedMailbox.RecipientDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	recipientDenyListPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(updatedMailbox.RecipientDenyList, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	delegations, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.Delegations, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	delegationsPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.Delegations, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	identities, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToUnicode(mailbox.Identities, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-	identitiesPunycode, diags := types.ListValueFrom(ctx, types.StringType, ConvertEmailsToASCII(mailbox.Identities, &resp.Diagnostics))
-	resp.Diagnostics.Append(diags...)
-
-	plan.ID = types.StringValue(createMailboxID(plan.DomainName, plan.LocalPart))
-	plan.Address = types.StringValue(updatedMailbox.Address)
+	plan.ID = custom_types.NewEmailAddressValue(CreateMailboxID(plan.LocalPart, plan.DomainName))
+	plan.Address = custom_types.NewEmailAddressValue(updatedMailbox.Address)
 	plan.Name = types.StringValue(updatedMailbox.Name)
-	plan.LocalPart = types.StringValue(updatedMailbox.LocalPart)
 	plan.IsInternal = types.BoolValue(updatedMailbox.IsInternal)
 	plan.MaySend = types.BoolValue(updatedMailbox.MaySend)
 	plan.MayReceive = types.BoolValue(updatedMailbox.MayReceive)
@@ -791,22 +742,12 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 	plan.MayAccessPop3 = types.BoolValue(updatedMailbox.MayAccessPop3)
 	plan.MayAccessManageSieve = types.BoolValue(updatedMailbox.MayAccessManageSieve)
 	plan.Password = types.StringValue(plan.Password.ValueString())
-	plan.PasswordRecoveryEmail = types.StringValue(updatedMailbox.PasswordRecoveryEmail)
+	plan.PasswordRecoveryEmail = custom_types.NewEmailAddressValue(plan.PasswordRecoveryEmail.ValueString())
 	plan.SpamAction = types.StringValue(updatedMailbox.SpamAction)
 	plan.SpamAggressiveness = types.StringValue(updatedMailbox.SpamAggressiveness)
 	plan.Expirable = types.BoolValue(updatedMailbox.Expirable)
 	plan.ExpiresOn = types.StringValue(updatedMailbox.ExpiresOn)
 	plan.RemoveUponExpiry = types.BoolValue(updatedMailbox.RemoveUponExpiry)
-	plan.SenderDenyList = senderDenyList
-	plan.SenderDenyListPunycode = senderDenyListPunycode
-	plan.SenderAllowList = senderAllowList
-	plan.SenderAllowListPunycode = senderAllowListPunycode
-	plan.RecipientDenyList = recipientDenyList
-	plan.RecipientDenyListPunycode = recipientDenyListPunycode
-	plan.Delegations = delegations
-	plan.DelegationsPunycode = delegationsPunycode
-	plan.Identities = identities
-	plan.IdentitiesPunycode = identitiesPunycode
 	plan.AutoRespondActive = types.BoolValue(updatedMailbox.AutoRespondActive)
 	plan.AutoRespondSubject = types.StringValue(updatedMailbox.AutoRespondSubject)
 	plan.AutoRespondBody = types.StringValue(updatedMailbox.AutoRespondBody)
@@ -815,39 +756,28 @@ func (r *mailboxResource) Update(ctx context.Context, req resource.UpdateRequest
 	plan.FooterPlainBody = types.StringValue(updatedMailbox.FooterPlainBody)
 	plan.FooterHtmlBody = types.StringValue(updatedMailbox.FooterHtmlBody)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *mailboxResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state mailboxResourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *MailboxResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var state MailboxResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := r.migaduClient.DeleteMailbox(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
+	_, err := r.MigaduClient.DeleteMailbox(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting mailbox",
-			fmt.Sprintf("Could not delete mailbox %s: %v", createMailboxID(state.DomainName, state.LocalPart), err),
-		)
+		response.Diagnostics.Append(MailboxDeleteError(err))
 		return
 	}
 }
 
-func (r *mailboxResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, "@")
+func (r *MailboxResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	idParts := strings.Split(request.ID, "@")
 
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		resp.Diagnostics.AddError(
-			"Error importing mailbox",
-			fmt.Sprintf("Expected import identifier with format: 'local_part@domain_name' Got: '%q'", req.ID),
-		)
+		response.Diagnostics.Append(MailboxImportError(request.ID))
 		return
 	}
 
@@ -858,12 +788,8 @@ func (r *mailboxResource) ImportState(ctx context.Context, req resource.ImportSt
 		"domain_name": domainName,
 	})
 
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("local_part"), localPart)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_name"), domainName)...)
-}
-
-func createMailboxID(domainName, localPart types.String) string {
-	return fmt.Sprintf("%s@%s", localPart.ValueString(), domainName.ValueString())
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("local_part"), localPart)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("domain_name"), domainName)...)
 }

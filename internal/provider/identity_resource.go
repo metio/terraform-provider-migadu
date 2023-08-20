@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/metio/terraform-provider-migadu/internal/provider/custom_types"
 	"github.com/metio/terraform-provider-migadu/migadu/client"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"net/http"
@@ -25,50 +26,62 @@ import (
 )
 
 var (
-	_ resource.Resource                = &identityResource{}
-	_ resource.ResourceWithConfigure   = &identityResource{}
-	_ resource.ResourceWithImportState = &identityResource{}
+	_ resource.Resource                = (*IdentityResource)(nil)
+	_ resource.ResourceWithConfigure   = (*IdentityResource)(nil)
+	_ resource.ResourceWithImportState = (*IdentityResource)(nil)
 )
 
 func NewIdentityResource() resource.Resource {
-	return &identityResource{}
+	return &IdentityResource{}
 }
 
-type identityResource struct {
-	migaduClient *client.MigaduClient
+type IdentityResource struct {
+	MigaduClient *client.MigaduClient
 }
 
-type identityResourceModel struct {
-	ID                   types.String `tfsdk:"id"`
-	LocalPart            types.String `tfsdk:"local_part"`
-	DomainName           types.String `tfsdk:"domain_name"`
-	Identity             types.String `tfsdk:"identity"`
-	Address              types.String `tfsdk:"address"`
-	Name                 types.String `tfsdk:"name"`
-	MaySend              types.Bool   `tfsdk:"may_send"`
-	MayReceive           types.Bool   `tfsdk:"may_receive"`
-	MayAccessImap        types.Bool   `tfsdk:"may_access_imap"`
-	MayAccessPop3        types.Bool   `tfsdk:"may_access_pop3"`
-	MayAccessManageSieve types.Bool   `tfsdk:"may_access_manage_sieve"`
-	Password             types.String `tfsdk:"password"`
-	FooterActive         types.Bool   `tfsdk:"footer_active"`
-	FooterPlainBody      types.String `tfsdk:"footer_plain_body"`
-	FooterHtmlBody       types.String `tfsdk:"footer_html_body"`
+type IdentityResourceModel struct {
+	ID                   types.String                   `tfsdk:"id"`
+	LocalPart            types.String                   `tfsdk:"local_part"`
+	DomainName           custom_types.DomainNameValue   `tfsdk:"domain_name"`
+	Identity             types.String                   `tfsdk:"identity"`
+	Address              custom_types.EmailAddressValue `tfsdk:"address"`
+	Name                 types.String                   `tfsdk:"name"`
+	MaySend              types.Bool                     `tfsdk:"may_send"`
+	MayReceive           types.Bool                     `tfsdk:"may_receive"`
+	MayAccessImap        types.Bool                     `tfsdk:"may_access_imap"`
+	MayAccessPop3        types.Bool                     `tfsdk:"may_access_pop3"`
+	MayAccessManageSieve types.Bool                     `tfsdk:"may_access_manage_sieve"`
+	Password             types.String                   `tfsdk:"password"`
+	FooterActive         types.Bool                     `tfsdk:"footer_active"`
+	FooterPlainBody      types.String                   `tfsdk:"footer_plain_body"`
+	FooterHtmlBody       types.String                   `tfsdk:"footer_html_body"`
 }
 
-func (r *identityResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + "_identity"
+func (r *IdentityResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = request.ProviderTypeName + "_identity"
 }
 
-func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *IdentityResource) Schema(_ context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Description:         "Provides an identity to an existing mailbox.",
 		MarkdownDescription: "Provides an identity to an existing mailbox.",
 		Attributes: map[string]schema.Attribute{
-			"domain_name": schema.StringAttribute{
-				Description:         "The domain name of the mailbox/identity.",
-				MarkdownDescription: "The domain name of the mailbox/identity.",
+			"id": schema.StringAttribute{
+				Description:         "Contains the value 'local_part@domain_name/identity'.",
+				MarkdownDescription: "Contains the value `local_part@domain_name/identity`.",
+				Required:            false,
+				Optional:            false,
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"local_part": schema.StringAttribute{
+				Description:         "The local part of the mailbox that owns the identity.",
+				MarkdownDescription: "The local part of the mailbox that owns the identity.",
 				Required:            true,
+				Optional:            false,
+				Computed:            false,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
@@ -76,10 +89,13 @@ func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"local_part": schema.StringAttribute{
-				Description:         "The local part of the mailbox that owns the identity.",
-				MarkdownDescription: "The local part of the mailbox that owns the identity.",
+			"domain_name": schema.StringAttribute{
+				Description:         "The domain name of the mailbox/identity.",
+				MarkdownDescription: "The domain name of the mailbox/identity.",
 				Required:            true,
+				Optional:            false,
+				Computed:            false,
+				CustomType:          custom_types.DomainNameType{},
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
@@ -91,6 +107,8 @@ func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Description:         "The local part of the identity.",
 				MarkdownDescription: "The local part of the identity.",
 				Required:            true,
+				Optional:            false,
+				Computed:            false,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
 				},
@@ -98,18 +116,13 @@ func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"id": schema.StringAttribute{
-				Description:         "Contains the value 'local_part@domain_name/identity'.",
-				MarkdownDescription: "Contains the value `local_part@domain_name/identity`.",
-				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			"address": schema.StringAttribute{
 				Description:         "Contains the email address of the identity 'identity@domain_name' as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
 				MarkdownDescription: "Contains the email address of the identity `identity@domain_name` as returned by the Migadu API. The Migadu API always returns the punycode version of a domain.",
+				Required:            false,
+				Optional:            false,
 				Computed:            true,
+				CustomType:          custom_types.EmailAddressType{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -117,36 +130,42 @@ func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			"name": schema.StringAttribute{
 				Description:         "The name of the identity.",
 				MarkdownDescription: "The name of the identity.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_send": schema.BoolAttribute{
 				Description:         "Whether the identity is allowed to send emails.",
 				MarkdownDescription: "Whether the identity is allowed to send emails.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_receive": schema.BoolAttribute{
 				Description:         "Whether the identity is allowed to receive emails.",
 				MarkdownDescription: "Whether the identity is allowed to receive emails.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_access_imap": schema.BoolAttribute{
 				Description:         "Whether the identity is allowed to use IMAP.",
 				MarkdownDescription: "Whether the identity is allowed to use IMAP.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_access_pop3": schema.BoolAttribute{
 				Description:         "Whether the identity is allowed to use POP3.",
 				MarkdownDescription: "Whether the identity is allowed to use POP3.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"may_access_manage_sieve": schema.BoolAttribute{
 				Description:         "Whether the identity is allowed to manage the mail sieve.",
 				MarkdownDescription: "Whether the identity is allowed to manage the mail sieve.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
@@ -154,6 +173,8 @@ func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Description:         "The password of the identity.",
 				MarkdownDescription: "The password of the identity.",
 				Required:            true,
+				Optional:            false,
+				Computed:            false,
 				Sensitive:           true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -162,47 +183,46 @@ func (r *identityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			"footer_active": schema.BoolAttribute{
 				Description:         "Whether the footer of the identity is active.",
 				MarkdownDescription: "Whether the footer of the identity is active.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"footer_plain_body": schema.StringAttribute{
 				Description:         "The footer of the identity in 'text/plain' format.",
 				MarkdownDescription: "The footer of the identity in `text/plain` format.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 			"footer_html_body": schema.StringAttribute{
 				Description:         "The footer of the identity in 'text/html' format.",
 				MarkdownDescription: "The footer of the identity in `text/html` format.",
+				Required:            false,
 				Optional:            true,
 				Computed:            true,
 			},
 		},
 	}
 }
-func (r *identityResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
+func (r *IdentityResource) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
+	if request.ProviderData == nil {
 		return
 	}
 
-	migaduClient, ok := req.ProviderData.(*client.MigaduClient)
-
-	if !ok {
-		resp.Diagnostics.AddError(
+	if migaduClient, ok := request.ProviderData.(*client.MigaduClient); ok {
+		r.MigaduClient = migaduClient
+	} else {
+		response.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *client.MigaduClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *client.MigaduClient, got: %T. Please report this issue to the provider developers.", request.ProviderData),
 		)
-		return
 	}
-
-	r.migaduClient = migaduClient
 }
 
-func (r *identityResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan identityResourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *IdentityResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var plan IdentityResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -220,17 +240,14 @@ func (r *identityResource) Create(ctx context.Context, req resource.CreateReques
 		FooterHtmlBody:       plan.FooterHtmlBody.ValueString(),
 	}
 
-	createdIdentity, err := r.migaduClient.CreateIdentity(ctx, plan.DomainName.ValueString(), plan.LocalPart.ValueString(), identity)
+	createdIdentity, err := r.MigaduClient.CreateIdentity(ctx, plan.DomainName.ValueString(), plan.LocalPart.ValueString(), identity)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error creating identity",
-			fmt.Sprintf("Could not create identity %s: %v", createIdentityID(plan.LocalPart, plan.DomainName, plan.Identity), err),
-		)
+		response.Diagnostics.Append(IdentityCreateError(err))
 		return
 	}
 
-	plan.ID = types.StringValue(createIdentityID(plan.LocalPart, plan.DomainName, plan.Identity))
-	plan.Address = types.StringValue(createdIdentity.Address)
+	plan.ID = types.StringValue(CreateIdentityID(plan.LocalPart, plan.DomainName, plan.Identity))
+	plan.Address = custom_types.NewEmailAddressValue(createdIdentity.Address)
 	plan.Name = types.StringValue(createdIdentity.Name)
 	plan.MaySend = types.BoolValue(createdIdentity.MaySend)
 	plan.MayReceive = types.BoolValue(createdIdentity.MayReceive)
@@ -241,39 +258,31 @@ func (r *identityResource) Create(ctx context.Context, req resource.CreateReques
 	plan.FooterPlainBody = types.StringValue(createdIdentity.FooterPlainBody)
 	plan.FooterHtmlBody = types.StringValue(createdIdentity.FooterHtmlBody)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *identityResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state identityResourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *IdentityResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var state IdentityResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	identity, err := r.migaduClient.GetIdentity(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString(), state.Identity.ValueString())
+	identity, err := r.MigaduClient.GetIdentity(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString(), state.Identity.ValueString())
 	if err != nil {
 		var requestError *client.RequestError
 		if errors.As(err, &requestError) {
 			if requestError.StatusCode == http.StatusNotFound {
-				resp.State.RemoveResource(ctx)
+				response.State.RemoveResource(ctx)
 				return
 			}
 		}
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Could not read identity %s", createIdentityID(state.LocalPart, state.DomainName, state.Identity)),
-			fmt.Sprintf("Client error was: %v", err),
-		)
+		response.Diagnostics.Append(IdentityReadError(err))
 		return
 	}
 
-	state.ID = types.StringValue(createIdentityID(state.LocalPart, state.DomainName, state.Identity))
-	state.Address = types.StringValue(identity.Address)
+	state.ID = types.StringValue(CreateIdentityID(state.LocalPart, state.DomainName, state.Identity))
+	state.Address = custom_types.NewEmailAddressValue(identity.Address)
 	state.Name = types.StringValue(identity.Name)
 	state.MaySend = types.BoolValue(identity.MaySend)
 	state.MayReceive = types.BoolValue(identity.MayReceive)
@@ -284,18 +293,13 @@ func (r *identityResource) Read(ctx context.Context, req resource.ReadRequest, r
 	state.FooterPlainBody = types.StringValue(identity.FooterPlainBody)
 	state.FooterHtmlBody = types.StringValue(identity.FooterHtmlBody)
 
-	diags = resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *identityResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan identityResourceModel
-	diags := req.Plan.Get(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *IdentityResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var plan IdentityResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -312,17 +316,14 @@ func (r *identityResource) Update(ctx context.Context, req resource.UpdateReques
 		FooterHtmlBody:       plan.FooterHtmlBody.ValueString(),
 	}
 
-	updatedIdentity, err := r.migaduClient.UpdateIdentity(ctx, plan.DomainName.ValueString(), plan.LocalPart.ValueString(), plan.Identity.ValueString(), identity)
+	updatedIdentity, err := r.MigaduClient.UpdateIdentity(ctx, plan.DomainName.ValueString(), plan.LocalPart.ValueString(), plan.Identity.ValueString(), identity)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating identity",
-			fmt.Sprintf("Could not update identity %s: %v", createIdentityID(plan.LocalPart, plan.DomainName, plan.Identity), err),
-		)
+		response.Diagnostics.Append(IdentityUpdateError(err))
 		return
 	}
 
-	plan.ID = types.StringValue(createIdentityID(plan.LocalPart, plan.DomainName, plan.Identity))
-	plan.Address = types.StringValue(updatedIdentity.Address)
+	plan.ID = types.StringValue(CreateIdentityID(plan.LocalPart, plan.DomainName, plan.Identity))
+	plan.Address = custom_types.NewEmailAddressValue(updatedIdentity.Address)
 	plan.Name = types.StringValue(updatedIdentity.Name)
 	plan.MaySend = types.BoolValue(updatedIdentity.MaySend)
 	plan.MayReceive = types.BoolValue(updatedIdentity.MayReceive)
@@ -333,46 +334,41 @@ func (r *identityResource) Update(ctx context.Context, req resource.UpdateReques
 	plan.FooterPlainBody = types.StringValue(updatedIdentity.FooterPlainBody)
 	plan.FooterHtmlBody = types.StringValue(updatedIdentity.FooterHtmlBody)
 
-	diags = resp.State.Set(ctx, plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *identityResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state identityResourceModel
-	diags := req.State.Get(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+func (r *IdentityResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var state IdentityResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := r.migaduClient.DeleteIdentity(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString(), state.Identity.ValueString())
+	_, err := r.MigaduClient.DeleteIdentity(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString(), state.Identity.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error deleting identity",
-			fmt.Sprintf("Could not delete identity %s: %v", createIdentityID(state.LocalPart, state.DomainName, state.Identity), err),
-		)
+		response.Diagnostics.Append(IdentityDeleteError(err))
 		return
 	}
 }
 
-func (r *identityResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, "@")
+func (r *IdentityResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	idParts := strings.Split(request.ID, "@")
+
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		response.Diagnostics.Append(IdentityImportError(request.ID))
+		return
+	}
 
 	localPart := idParts[0]
 	domainPart := strings.Split(idParts[1], "/")
-	domainName := domainPart[0]
-	identity := domainPart[1]
 
-	if localPart == "" || domainName == "" || identity == "" {
-		resp.Diagnostics.AddError(
-			"Error importing identity",
-			fmt.Sprintf("Expected import identifier with format: 'local_part@domain_name/identity' Got: '%q'", req.ID),
-		)
+	if len(domainPart) != 2 || domainPart[0] == "" || domainPart[1] == "" {
+		response.Diagnostics.Append(IdentityImportError(request.ID))
 		return
 	}
+
+	domainName := domainPart[0]
+	identity := domainPart[1]
 
 	tflog.Trace(ctx, "parsed import ID", map[string]interface{}{
 		"local_part":  localPart,
@@ -380,13 +376,9 @@ func (r *identityResource) ImportState(ctx context.Context, req resource.ImportS
 		"identity":    identity,
 	})
 
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("local_part"), localPart)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_name"), domainName)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("identity"), identity)...)
-}
-
-func createIdentityID(localPart, domainName, identity types.String) string {
-	return fmt.Sprintf("%s@%s/%s", localPart.ValueString(), domainName.ValueString(), identity.ValueString())
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("local_part"), localPart)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("domain_name"), domainName)...)
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("identity"), identity)...)
 }
