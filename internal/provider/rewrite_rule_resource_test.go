@@ -11,7 +11,7 @@ import (
 	"context"
 	"fmt"
 	fwresource "github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/metio/terraform-provider-migadu/internal/provider"
 	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"github.com/metio/terraform-provider-migadu/migadu/simulator"
