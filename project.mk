@@ -93,7 +93,7 @@ lint: out/go-lint-sentinel ## lint all Go code
 
 .PHONY: update
 update: ## update all dependencies
-	go get -u
+	go get -t -u ./...
 	go mod tidy
 
 .PHONY: clean
