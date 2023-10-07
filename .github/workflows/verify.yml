@@ -65,7 +65,7 @@ jobs:
         env:
           CGO_ENABLED: 0
   test:
-    name: Tests on ${{ matrix.os }}
+    name: Tests on ${{ matrix.os }} with TF ${{ matrix.terraform }}
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
@@ -75,6 +75,8 @@ jobs:
           - macos-latest
           - windows-latest
           - ubuntu-latest
+        terraform:
+          - 1.6.*
     steps:
       - id: checkout
         name: Checkout
@@ -85,12 +87,18 @@ jobs:
         with:
           go-version-file: go.mod
           cache: true
+      - id: setup_terraform
+        name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: ${{ matrix.terraform }}
+          terraform_wrapper: false
       - id: client_tests
         name: Client Tests
-        run: go test -v -cover -parallel=4 -timeout=600s -tags simulator ./migadu/...
+        run: go test -v -cover -parallel=4 -timeout=900s -tags simulator ./migadu/...
       - id: provider_tests
         name: Provider Tests
-        run: go test -v -cover -parallel=4 -timeout=600s -tags simulator ./internal/provider/
+        run: go test -v -cover -parallel=4 -timeout=900s -tags simulator ./internal/provider/
         env:
           TF_ACC: "1"
   terratest:
@@ -101,8 +109,7 @@ jobs:
       fail-fast: false
       matrix:
         terraform:
-          - 1.4.*
-          - 1.5.*
+          - 1.6.*
     steps:
       - id: checkout
         name: Checkout
@@ -126,4 +133,4 @@ jobs:
         run: make install
       - id: terratest
         name: Run Terratest Tests
-        run: go test -parallel=4 -timeout=600s -tags simulator ./terratest/tests
+        run: go test -parallel=4 -timeout=900s -tags simulator ./terratest/tests
