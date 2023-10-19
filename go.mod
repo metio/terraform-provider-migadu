@@ -6,7 +6,7 @@ module github.com/metio/terraform-provider-migadu
 go 1.21
 
 require (
-	github.com/gruntwork-io/terratest v0.45.0
+	github.com/gruntwork-io/terratest v0.46.1
 	github.com/hashicorp/terraform-plugin-docs v0.16.0
 	github.com/hashicorp/terraform-plugin-framework v1.4.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.5.1
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/net v0.16.0
+	golang.org/x/net v0.17.0
 )
 
 require (
