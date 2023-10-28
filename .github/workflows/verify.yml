@@ -88,6 +88,8 @@ jobs:
       - id: setup_terraform
         name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
       - id: client_tests
         name: Client Tests
         run: go test -v -cover -parallel=4 -timeout=900s -tags simulator ./migadu/...
@@ -115,6 +117,8 @@ jobs:
       - id: setup_terraform
         name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_wrapper: false
       - id: install
         name: Install Provider
         run: make install
