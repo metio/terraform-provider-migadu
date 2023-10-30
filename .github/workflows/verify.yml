@@ -87,7 +87,7 @@ jobs:
           cache: true
       - id: setup_terraform
         name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
       - id: client_tests
@@ -116,7 +116,7 @@ jobs:
           cache: true
       - id: setup_terraform
         name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
       - id: install
