@@ -1,5 +1,3 @@
-//go:build simulator
-
 /*
  * SPDX-FileCopyrightText: The terraform-provider-migadu Authors
  * SPDX-License-Identifier: 0BSD
@@ -10,8 +8,8 @@ package acceptance_test
 import (
 	"fmt"
 	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/metio/terraform-provider-migadu/migadu/model"
-	"github.com/metio/terraform-provider-migadu/migadu/simulator"
+	"github.com/metio/migadu-client.go/model"
+	"github.com/metio/migadu-client.go/simulator"
 	"github.com/stretchr/testify/assert"
 	"net/http/httptest"
 	"strconv"

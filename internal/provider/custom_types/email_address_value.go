@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/metio/terraform-provider-migadu/migadu/idn"
+	"github.com/metio/migadu-client.go/idn"
 	"strings"
 )
 

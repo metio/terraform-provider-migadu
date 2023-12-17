@@ -21,9 +21,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/metio/migadu-client.go/client"
+	"github.com/metio/migadu-client.go/model"
 	"github.com/metio/terraform-provider-migadu/internal/provider/custom_types"
-	"github.com/metio/terraform-provider-migadu/migadu/client"
-	"github.com/metio/terraform-provider-migadu/migadu/model"
 	"net/http"
 	"strings"
 )
