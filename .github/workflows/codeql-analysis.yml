@@ -4,7 +4,7 @@
 name: CodeQL
 on:
   schedule:
-    - cron: 42 3 * * SAT
+    - cron: 42 4 * * MON
 jobs:
   analyze:
     name: Analyze
