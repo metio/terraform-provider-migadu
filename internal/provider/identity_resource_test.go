@@ -1,5 +1,3 @@
-//go:build simulator
-
 /*
  * SPDX-FileCopyrightText: The terraform-provider-migadu Authors
  * SPDX-License-Identifier: 0BSD
@@ -10,8 +8,8 @@ package provider_test
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/metio/terraform-provider-migadu/migadu/model"
-	"github.com/metio/terraform-provider-migadu/migadu/simulator"
+	"github.com/metio/migadu-client.go/model"
+	"github.com/metio/migadu-client.go/simulator"
 	"net/http"
 	"net/http/httptest"
 	"regexp"

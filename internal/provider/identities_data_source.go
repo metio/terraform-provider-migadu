@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/metio/migadu-client.go/client"
 	"github.com/metio/terraform-provider-migadu/internal/provider/custom_types"
-	"github.com/metio/terraform-provider-migadu/migadu/client"
 )
 
 var (

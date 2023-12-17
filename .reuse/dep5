@@ -14,7 +14,3 @@ License: 0BSD
 Files: examples/*
 Copyright: The terraform-provider-migadu Authors
 License: 0BSD
-
-Files: http/*
-Copyright: The terraform-provider-migadu Authors
-License: 0BSD

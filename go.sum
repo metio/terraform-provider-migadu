@@ -495,6 +495,9 @@ github.com/mattn/go-isatty v0.0.19/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D
 github.com/mattn/go-runewidth v0.0.4/go.mod h1:LwmH8dsx7+W8Uxz3IHJYH5QSwggIsqBzpuz5H//U1FU=
 github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326 h1:ofNAzWCcyTALn2Zv40+8XitdzCgXY6e9qvXwN9W0YXg=
 github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326/go.mod h1:9fxibJccNxU2cnpIKLRRFA7zX7qhkJIQWBb449FYHOo=
+github.com/metio/migadu-client.go v0.0.0-20231217080526-021cb63b07b8 h1:oldJjvSMh/7QL8HuqPLMCJGspBBPkr2DAp/ffbD7Wi8=
+github.com/metio/migadu-client.go v0.0.0-20231217080526-021cb63b07b8/go.mod h1:w8z4udGpw+oE3T15KGelOhotMOdQpMNDptsHDRjpgu8=
+github.com/metio/migadu-client.go v1.20231217.912/go.mod h1:w8z4udGpw+oE3T15KGelOhotMOdQpMNDptsHDRjpgu8=
 github.com/mitchellh/cli v1.1.5 h1:OxRIeJXpAMztws/XHlN2vu6imG5Dpq+j61AzAX5fLng=
 github.com/mitchellh/cli v1.1.5/go.mod h1:v8+iFts2sPIKUV1ltktPXMCC8fumSKFItNcD2cLtRR4=
 github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFWgYaq1OVrnRcwhnw=
