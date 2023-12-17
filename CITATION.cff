@@ -12,9 +12,9 @@ authors:
 url: https://registry.terraform.io/providers/metio/migadu/
 license: 0BSD
 keywords:
-  - migadu
   - email
   - go
   - make
+  - migadu
   - terraform
   - terraform-provider

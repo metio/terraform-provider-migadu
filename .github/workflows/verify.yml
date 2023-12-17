@@ -3,32 +3,8 @@
 
 name: Verify Commits
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - .github/workflows/verify.yml
-      - go.mod
-      - go.sum
-      - main.go
-      - docs/**
-      - examples/**
-      - internal/**
-      - migadu/**
-      - terratest/**
-      - tools/**
   pull_request:
     branches: [ main ]
-    paths:
-      - .github/workflows/verify.yml
-      - go.mod
-      - go.sum
-      - main.go
-      - docs/**
-      - examples/**
-      - internal/**
-      - migadu/**
-      - terratest/**
-      - tools/**
 jobs:
   build:
     name: Build Project
@@ -90,12 +66,9 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
-      - id: client_tests
-        name: Client Tests
-        run: go test -v -cover -parallel=4 -timeout=900s -tags simulator ./migadu/...
       - id: provider_tests
         name: Provider Tests
-        run: go test -v -cover -parallel=4 -timeout=900s -tags simulator ./internal/provider/
+        run: go test -v -cover -parallel=4 -timeout=900s -tags simulator ./internal/provider/...
         env:
           TF_ACC: "1"
   terratest:
