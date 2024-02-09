@@ -3,5 +3,3 @@
 
 run:
   timeout: 5m
-  build-tags:
-    - simulator

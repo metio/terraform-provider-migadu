@@ -25,10 +25,6 @@ output "delegations" {
   value = data.migadu_mailbox.mailbox.delegations
 }
 
-output "identities" {
-  value = data.migadu_mailbox.mailbox.identities
-}
-
 output "auto_respond_active" {
   value = data.migadu_mailbox.mailbox.auto_respond_active
 }
