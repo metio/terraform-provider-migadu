@@ -73,9 +73,7 @@ func (v EmailAddressSetValue) SetSemanticEquals(ctx context.Context, newValuable
 }
 
 func (v EmailAddressSetValue) contains(ctx context.Context, other attr.Value) bool {
-	otherEmail, ok := other.(EmailAddressValue)
-
-	if ok {
+	if otherEmail, ok := other.(EmailAddressValue); ok {
 		for _, elem := range v.Elements() {
 			if email, ok := elem.(EmailAddressValue); ok {
 				if equal, _ := email.StringSemanticEquals(ctx, otherEmail); equal {
