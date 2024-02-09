@@ -64,7 +64,6 @@ type MailboxResourceModel struct {
 	SenderAllowList       custom_types.EmailAddressSetValue `tfsdk:"sender_allowlist"`
 	RecipientDenyList     custom_types.EmailAddressSetValue `tfsdk:"recipient_denylist"`
 	Delegations           custom_types.EmailAddressSetValue `tfsdk:"delegations"`
-	Identities            custom_types.EmailAddressSetValue `tfsdk:"identities"`
 	AutoRespondActive     types.Bool                        `tfsdk:"auto_respond_active"`
 	AutoRespondSubject    types.String                      `tfsdk:"auto_respond_subject"`
 	AutoRespondBody       types.String                      `tfsdk:"auto_respond_body"`
@@ -302,18 +301,6 @@ func (r *MailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 					},
 				},
 			},
-			"identities": schema.SetAttribute{
-				Description:         "The identities of the mailbox.",
-				MarkdownDescription: "The identities of the mailbox.",
-				Required:            false,
-				Optional:            true,
-				Computed:            true,
-				CustomType: custom_types.EmailAddressSetType{
-					SetType: types.SetType{
-						ElemType: custom_types.EmailAddressType{},
-					},
-				},
-			},
 			"auto_respond_active": schema.BoolAttribute{
 				Description:         "Whether an automatic response is active in this mailbox.",
 				MarkdownDescription: "Whether an automatic response is active in this mailbox.",
@@ -443,16 +430,6 @@ func (r *MailboxResource) Create(ctx context.Context, request resource.CreateReq
 		}
 	}
 
-	var identities []string
-	if plan.Identities.IsUnknown() {
-		plan.Identities = custom_types.NewEmailAddressSetNull()
-	} else {
-		response.Diagnostics.Append(plan.Identities.ElementsAs(ctx, &identities, false)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-	}
-
 	mailbox := &model.Mailbox{
 		LocalPart:             plan.LocalPart.ValueString(),
 		Name:                  plan.Name.ValueString(),
@@ -474,7 +451,6 @@ func (r *MailboxResource) Create(ctx context.Context, request resource.CreateReq
 		SenderAllowList:       senderAllowList,
 		RecipientDenyList:     recipientDenyList,
 		Delegations:           delegations,
-		Identities:            identities,
 		AutoRespondActive:     plan.AutoRespondActive.ValueBool(),
 		AutoRespondSubject:    plan.AutoRespondSubject.ValueString(),
 		AutoRespondBody:       plan.AutoRespondBody.ValueString(),
@@ -593,20 +569,6 @@ func (r *MailboxResource) Read(ctx context.Context, request resource.ReadRequest
 		state.Delegations = delegations
 	}
 
-	identities, diags := custom_types.NewEmailAddressSetValueFrom(ctx, mailbox.Identities)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	identitiesEqual, diags := state.Identities.SetSemanticEquals(ctx, identities)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	if !identitiesEqual {
-		state.Identities = identities
-	}
-
 	state.ID = custom_types.NewEmailAddressValue(CreateMailboxID(state.LocalPart, state.DomainName))
 	state.Address = custom_types.NewEmailAddressValue(mailbox.Address)
 	state.Name = types.StringValue(mailbox.Name)
@@ -687,16 +649,6 @@ func (r *MailboxResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 	}
 
-	var identities []string
-	if plan.Identities.IsUnknown() {
-		plan.Identities = custom_types.NewEmailAddressSetNull()
-	} else {
-		response.Diagnostics.Append(plan.Identities.ElementsAs(ctx, &identities, false)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-	}
-
 	mailbox := &model.Mailbox{
 		Name:                  plan.Name.ValueString(),
 		IsInternal:            plan.IsInternal.ValueBool(),
@@ -716,7 +668,6 @@ func (r *MailboxResource) Update(ctx context.Context, request resource.UpdateReq
 		SenderAllowList:       senderAllowList,
 		RecipientDenyList:     recipientDenyList,
 		Delegations:           delegations,
-		Identities:            identities,
 		AutoRespondActive:     plan.AutoRespondActive.ValueBool(),
 		AutoRespondSubject:    plan.AutoRespondSubject.ValueString(),
 		AutoRespondBody:       plan.AutoRespondBody.ValueString(),

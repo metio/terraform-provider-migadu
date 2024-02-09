@@ -68,7 +68,7 @@ jobs:
           terraform_wrapper: false
       - id: provider_tests
         name: Provider Tests
-        run: go test -v -cover -parallel=4 -timeout=900s -tags simulator ./internal/provider/...
+        run: go test -v -cover -parallel=4 -timeout=900s ./internal/provider/...
         env:
           TF_ACC: "1"
   terratest:
@@ -97,4 +97,4 @@ jobs:
         run: make install
       - id: terratest
         name: Run Terratest Tests
-        run: go test -parallel=4 -timeout=900s -tags simulator ./terratest/tests
+        run: go test -parallel=4 -timeout=900s ./terratest/tests

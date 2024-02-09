@@ -59,7 +59,6 @@ resource "migadu_mailbox" "idn" {
 - `footer_active` (Boolean) Whether the footer of this mailbox is active.
 - `footer_html_body` (String) The footer of this mailbox in text/html format.
 - `footer_plain_body` (String) The footer of this mailbox in text/plain format.
-- `identities` (Set of String) The identities of the mailbox.
 - `is_internal` (Boolean) Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.
 - `may_access_imap` (Boolean) Whether this mailbox is allowed to use IMAP.
 - `may_access_manage_sieve` (Boolean) Whether this mailbox is allowed to manage the mail sieve.

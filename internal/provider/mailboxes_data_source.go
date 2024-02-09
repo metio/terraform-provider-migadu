@@ -64,7 +64,6 @@ type MailboxModel struct {
 	FooterPlainBody       types.String                      `tfsdk:"footer_plain_body"`
 	FooterHtmlBody        types.String                      `tfsdk:"footer_html_body"`
 	Delegations           custom_types.EmailAddressSetValue `tfsdk:"delegations"`
-	Identities            custom_types.EmailAddressSetValue `tfsdk:"identities"`
 }
 
 func (d *MailboxesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
@@ -315,18 +314,6 @@ func (d *MailboxesDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 								},
 							},
 						},
-						"identities": schema.SetAttribute{
-							Description:         "The identities of this mailbox.",
-							MarkdownDescription: "The identities of this mailbox.",
-							Required:            false,
-							Optional:            false,
-							Computed:            true,
-							CustomType: custom_types.EmailAddressSetType{
-								SetType: types.SetType{
-									ElemType: custom_types.EmailAddressType{},
-								},
-							},
-						},
 					},
 				},
 			},
@@ -387,12 +374,6 @@ func (d *MailboxesDataSource) Read(ctx context.Context, request datasource.ReadR
 			return
 		}
 
-		identities, diags := custom_types.NewEmailAddressSetValueFrom(ctx, mailbox.Identities)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
 		model := MailboxModel{
 			LocalPart:             types.StringValue(mailbox.LocalPart),
 			DomainName:            custom_types.NewDomainNameValue(mailbox.DomainName),
@@ -421,7 +402,6 @@ func (d *MailboxesDataSource) Read(ctx context.Context, request datasource.ReadR
 			FooterPlainBody:       types.StringValue(mailbox.FooterPlainBody),
 			FooterHtmlBody:        types.StringValue(mailbox.FooterHtmlBody),
 			Delegations:           delegations,
-			Identities:            identities,
 		}
 		data.Mailboxes = append(data.Mailboxes, model)
 	}

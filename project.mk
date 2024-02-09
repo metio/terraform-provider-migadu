@@ -8,7 +8,7 @@ VERSION       = 9999.99.99
 OS_ARCH       ?= linux_amd64
 XDG_DATA_HOME ?= ~/.local/share
 
-out/${PROVIDER}: $(shell find internal -type f -name '*.go' -and -not -name '*test.go') $(shell find migadu -type f -name '*.go' -and -not -name '*test.go')
+out/${PROVIDER}: $(shell find internal -type f -name '*.go' -and -not -name '*test.go')
 	mkdir --parents $(@D)
 	go build -o out/${PROVIDER}
 
@@ -31,17 +31,17 @@ out/terratest-lock-sentinel: out/install-sentinel
 
 out/terratests-run-sentinel: out/terratest-lock-sentinel $(shell find terratest -type f -name '*.go') $(shell find terratest -type f -name '*.tf')
 	mkdir --parents $(@D)
-	gotestsum --format=testname -- -timeout=120s -parallel=4 -tags=simulator ./terratest/tests
+	gotestsum --format=testname -- -timeout=120s -parallel=4 ./terratest/tests
 	touch $@
 
-out/tests-sentinel: $(shell find internal -type f -name '*.go') $(shell find migadu -type f -name '*.go')
+out/tests-sentinel: $(shell find internal -type f -name '*.go')
 	mkdir --parents $(@D)
-	gotestsum --format=testname -- -v -cover -timeout=120s -parallel=4 -tags=simulator ./internal/provider ./migadu/...
+	gotestsum --format=testname -- -v -cover -timeout=120s -parallel=4 ./internal/provider
 	touch $@
 
-out/coverage.out: $(shell find internal -type f -name '*.go') $(shell find migadu -type f -name '*.go')
+out/coverage.out: $(shell find internal -type f -name '*.go')
 	mkdir --parents $(@D)
-	gotestsum --format=testname -- -v -cover -coverprofile=out/coverage.out -timeout=120s -parallel=4 -tags=simulator ./internal/provider ./migadu/...
+	gotestsum --format=testname -- -v -cover -coverprofile=out/coverage.out -timeout=120s -parallel=4 ./internal/provider
 
 out/coverage.html: out/coverage.out
 	go tool cover -html=out/coverage.out -o out/coverage.html
@@ -73,14 +73,14 @@ terratests: out/terratests-run-sentinel ## run all terratest tests
 
 .PHONY: terratest
 terratest: out/terratest-lock-sentinel ## run specific terratest tests
-	go test -v -timeout=120s -parallel=4 -tags simulator -run $(filter-out $@,$(MAKECMDGOALS)) ./terratest/tests
+	go test -v -timeout=120s -parallel=4 -run $(filter-out $@,$(MAKECMDGOALS)) ./terratest/tests
 
 .PHONY: tests
 tests: out/tests-sentinel ## run the unit tests
 
 .PHONY: test
 test: ## run specific unit tests
-	go test -v -timeout=120s -tags simulator -run $(filter-out $@,$(MAKECMDGOALS)) ./internal/provider ./migadu/...
+	go test -v -timeout=120s -run $(filter-out $@,$(MAKECMDGOALS)) ./internal/provider
 
 .PHONY: coverage
 coverage: out/coverage.html ## generate coverage report

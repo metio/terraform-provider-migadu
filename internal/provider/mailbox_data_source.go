@@ -59,7 +59,6 @@ type MailboxDataSourceModel struct {
 	FooterPlainBody       types.String                      `tfsdk:"footer_plain_body"`
 	FooterHtmlBody        types.String                      `tfsdk:"footer_html_body"`
 	Delegations           custom_types.EmailAddressSetValue `tfsdk:"delegations"`
-	Identities            custom_types.EmailAddressSetValue `tfsdk:"identities"`
 }
 
 func (d *MailboxDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
@@ -297,18 +296,6 @@ func (d *MailboxDataSource) Schema(_ context.Context, _ datasource.SchemaRequest
 					},
 				},
 			},
-			"identities": schema.SetAttribute{
-				Description:         "The identities of the mailbox.",
-				MarkdownDescription: "The identities of the mailbox.",
-				Required:            false,
-				Optional:            false,
-				Computed:            true,
-				CustomType: custom_types.EmailAddressSetType{
-					SetType: types.SetType{
-						ElemType: custom_types.EmailAddressType{},
-					},
-				},
-			},
 		},
 	}
 }
@@ -365,12 +352,6 @@ func (d *MailboxDataSource) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	identities, diags := custom_types.NewEmailAddressSetValueFrom(ctx, mailbox.Identities)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	data.ID = custom_types.NewEmailAddressValue(fmt.Sprintf("%s@%s", data.LocalPart.ValueString(), data.DomainName.ValueString()))
 	data.Address = custom_types.NewEmailAddressValue(mailbox.Address)
 	data.Name = types.StringValue(mailbox.Name)
@@ -397,7 +378,6 @@ func (d *MailboxDataSource) Read(ctx context.Context, request datasource.ReadReq
 	data.SenderAllowList = senderAllowList
 	data.RecipientDenyList = recipientDenyList
 	data.Delegations = delegations
-	data.Identities = identities
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

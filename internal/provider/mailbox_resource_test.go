@@ -387,24 +387,6 @@ func TestMailboxResource_Configuration_Success(t *testing.T) {
 				Delegations: []string{"other@example.com"},
 			},
 		},
-		{
-			testcase: "identities",
-			configuration: `
-				name        = "Some Name"
-				domain_name = "example.com"
-				local_part  = "test"
-				password    = "secret"
-				identities = ["other@example.com"]
-			`,
-			want: model.Mailbox{
-				Name:       "Some Name",
-				DomainName: "example.com",
-				LocalPart:  "test",
-				Address:    "test@example.com",
-				Password:   "secret",
-				Identities: []string{"other@example.com"},
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.testcase, func(t *testing.T) {
@@ -428,7 +410,6 @@ func TestMailboxResource_Configuration_Success(t *testing.T) {
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "password", tt.want.Password),
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "password_recovery_email", tt.want.PasswordRecoveryEmail),
 							resource.TestCheckResourceAttr("migadu_mailbox.test", "delegations.#", strconv.Itoa(len(tt.want.Delegations))),
-							resource.TestCheckResourceAttr("migadu_mailbox.test", "identities.#", strconv.Itoa(len(tt.want.Identities))),
 						),
 					},
 				},

@@ -52,7 +52,6 @@ Read-Only:
 - `footer_active` (Boolean) Whether the footer of this mailbox is active.
 - `footer_html_body` (String) The footer of this mailbox in text/html format.
 - `footer_plain_body` (String) The footer of this mailbox in text/plain format.
-- `identities` (Set of String) The identities of this mailbox.
 - `is_internal` (Boolean) Whether this mailbox is internal only. An internal mailbox can only receive emails from Migadu servers.
 - `local_part` (String) The local part of the mailbox.
 - `may_access_imap` (Boolean) Whether this mailbox is allowed to use IMAP.
