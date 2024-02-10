@@ -24,7 +24,7 @@ resource "migadu_identity" "mailbox" {
   domain_name  = "example.com"
   local_part   = "some-mailbox"
   identity     = "some-identity"
-  password_use = "mailbox" # use mailbox password
+  password_use = "mailbox" # use identity user and mailbox password
 }
 
 # application specific password
@@ -32,6 +32,6 @@ resource "migadu_identity" "custom" {
   domain_name  = "example.com"
   local_part   = "some-mailbox"
   identity     = "some-identity"
-  password_use = "custom" # use custom user/password
+  password_use = "custom" # use identity user/password
   password     = "Sup3r_s3cr3T"
 }

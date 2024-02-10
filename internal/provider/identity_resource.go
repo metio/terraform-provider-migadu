@@ -174,9 +174,9 @@ func (r *IdentityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			"password": schema.StringAttribute{
 				Description:         "The password of the identity.",
 				MarkdownDescription: "The password of the identity.",
-				Required:            true,
-				Optional:            false,
-				Computed:            false,
+				Required:            false,
+				Optional:            true,
+				Computed:            true,
 				Sensitive:           true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
@@ -190,7 +190,14 @@ func (r *IdentityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Computed:            true,
 				Default:             stringdefault.StaticString("none"),
 				Validators: []validator.String{
-					stringvalidator.OneOf("none", "mailbox", "custom"),
+					stringvalidator.Any(
+						stringvalidator.All(
+							stringvalidator.OneOf("none", "mailbox"),
+							stringvalidator.ConflictsWith(path.MatchRoot("password"))),
+						stringvalidator.All(
+							stringvalidator.OneOf("custom"),
+							stringvalidator.AlsoRequires(path.MatchRoot("password"))),
+					),
 				},
 			},
 			"footer_active": schema.BoolAttribute{
@@ -237,6 +244,10 @@ func (r *IdentityResource) Create(ctx context.Context, request resource.CreateRe
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	if plan.Password.IsUnknown() {
+		plan.Password = types.StringNull()
 	}
 
 	identity := &model.Identity{
@@ -315,6 +326,10 @@ func (r *IdentityResource) Update(ctx context.Context, request resource.UpdateRe
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	if plan.Password.IsUnknown() {
+		plan.Password = types.StringNull()
 	}
 
 	identity := &model.Identity{
