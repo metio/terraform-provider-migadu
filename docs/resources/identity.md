@@ -39,7 +39,7 @@ resource "migadu_identity" "mailbox" {
   domain_name  = "example.com"
   local_part   = "some-mailbox"
   identity     = "some-identity"
-  password_use = "mailbox" # use mailbox password
+  password_use = "mailbox" # use identity user and mailbox password
 }
 
 # application specific password
@@ -47,7 +47,7 @@ resource "migadu_identity" "custom" {
   domain_name  = "example.com"
   local_part   = "some-mailbox"
   identity     = "some-identity"
-  password_use = "custom" # use custom user/password
+  password_use = "custom" # use identity user/password
   password     = "Sup3r_s3cr3T"
 }
 ```
@@ -60,7 +60,6 @@ resource "migadu_identity" "custom" {
 - `domain_name` (String) The domain name of the mailbox/identity.
 - `identity` (String) The local part of the identity.
 - `local_part` (String) The local part of the mailbox that owns the identity.
-- `password` (String, Sensitive) The password of the identity.
 
 ### Optional
 
@@ -73,6 +72,7 @@ resource "migadu_identity" "custom" {
 - `may_receive` (Boolean) Whether the identity is allowed to receive emails.
 - `may_send` (Boolean) Whether the identity is allowed to send emails.
 - `name` (String) The name of the identity.
+- `password` (String, Sensitive) The password of the identity.
 - `password_use` (String) Configures the password use of the identity. Use `none` if you just need to be able to send using a specific `From` identity, but still authenticate with the mailbox address and password. Use `mailbox` if you want an alternative address but linked to the same mailbox using the same password. Use `custom` if you need an application specific password (e.g. your phone), shared mailbox with individual passwords or sandboxing of accounts for specific services.
 
 ### Read-Only
