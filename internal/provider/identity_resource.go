@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -52,6 +53,7 @@ type IdentityResourceModel struct {
 	MayAccessPop3        types.Bool                     `tfsdk:"may_access_pop3"`
 	MayAccessManageSieve types.Bool                     `tfsdk:"may_access_manage_sieve"`
 	Password             types.String                   `tfsdk:"password"`
+	PasswordUse          types.String                   `tfsdk:"password_use"`
 	FooterActive         types.Bool                     `tfsdk:"footer_active"`
 	FooterPlainBody      types.String                   `tfsdk:"footer_plain_body"`
 	FooterHtmlBody       types.String                   `tfsdk:"footer_html_body"`
@@ -180,6 +182,17 @@ func (r *IdentityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 					stringvalidator.LengthAtLeast(1),
 				},
 			},
+			"password_use": schema.StringAttribute{
+				Description:         "Configures the password use of the identity. Use 'none' if you just need to be able to send using a specific 'From' identity, but still authenticate with the mailbox address and password. Use 'mailbox' if you want an alternative address but linked to the same mailbox using the same password. Use 'custom' if you need an application specific password (e.g. your phone), shared mailbox with individual passwords or sandboxing of accounts for specific services.",
+				MarkdownDescription: "Configures the password use of the identity. Use `none` if you just need to be able to send using a specific `From` identity, but still authenticate with the mailbox address and password. Use `mailbox` if you want an alternative address but linked to the same mailbox using the same password. Use `custom` if you need an application specific password (e.g. your phone), shared mailbox with individual passwords or sandboxing of accounts for specific services.",
+				Required:            false,
+				Optional:            true,
+				Computed:            true,
+				Default:             stringdefault.StaticString("none"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("none", "mailbox", "custom"),
+				},
+			},
 			"footer_active": schema.BoolAttribute{
 				Description:         "Whether the footer of the identity is active.",
 				MarkdownDescription: "Whether the footer of the identity is active.",
@@ -235,6 +248,7 @@ func (r *IdentityResource) Create(ctx context.Context, request resource.CreateRe
 		MayAccessPop3:        plan.MayAccessPop3.ValueBool(),
 		MayAccessManageSieve: plan.MayAccessManageSieve.ValueBool(),
 		Password:             plan.Password.ValueString(),
+		PasswordUse:          plan.PasswordUse.ValueString(),
 		FooterActive:         plan.FooterActive.ValueBool(),
 		FooterPlainBody:      plan.FooterPlainBody.ValueString(),
 		FooterHtmlBody:       plan.FooterHtmlBody.ValueString(),
@@ -311,6 +325,7 @@ func (r *IdentityResource) Update(ctx context.Context, request resource.UpdateRe
 		MayAccessPop3:        plan.MayAccessPop3.ValueBool(),
 		MayAccessManageSieve: plan.MayAccessManageSieve.ValueBool(),
 		Password:             plan.Password.ValueString(),
+		PasswordUse:          plan.PasswordUse.ValueString(),
 		FooterActive:         plan.FooterActive.ValueBool(),
 		FooterPlainBody:      plan.FooterPlainBody.ValueString(),
 		FooterHtmlBody:       plan.FooterHtmlBody.ValueString(),

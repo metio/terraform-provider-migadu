@@ -32,16 +32,18 @@ func TestIdentityResource_API_Success(t *testing.T) {
 			localPart: "test",
 			state:     []model.Identity{},
 			send: model.Identity{
-				LocalPart: "other",
-				Name:      "Some Name",
-				Password:  "secret",
+				LocalPart:   "other",
+				Name:        "Some Name",
+				Password:    "secret",
+				PasswordUse: "none",
 			},
 			want: model.Identity{
-				LocalPart:  "other",
-				DomainName: "example.com",
-				Address:    "other@example.com",
-				Name:       "Some Name",
-				Password:   "secret",
+				LocalPart:   "other",
+				DomainName:  "example.com",
+				Address:     "other@example.com",
+				Name:        "Some Name",
+				Password:    "secret",
+				PasswordUse: "none",
 			},
 			updatedName: "Different Name",
 		},
@@ -57,16 +59,39 @@ func TestIdentityResource_API_Success(t *testing.T) {
 				},
 			},
 			send: model.Identity{
-				LocalPart: "other",
-				Name:      "Some Name",
-				Password:  "secret",
+				LocalPart:   "other",
+				Name:        "Some Name",
+				Password:    "secret",
+				PasswordUse: "none",
 			},
 			want: model.Identity{
-				LocalPart:  "other",
-				DomainName: "example.com",
-				Address:    "other@example.com",
-				Name:       "Some Name",
-				Password:   "secret",
+				LocalPart:   "other",
+				DomainName:  "example.com",
+				Address:     "other@example.com",
+				Name:        "Some Name",
+				Password:    "secret",
+				PasswordUse: "none",
+			},
+			updatedName: "Different Name",
+		},
+		{
+			name:      "custom-password",
+			domain:    "example.com",
+			localPart: "test",
+			state:     []model.Identity{},
+			send: model.Identity{
+				LocalPart:   "other",
+				Name:        "Some Name",
+				Password:    "secret",
+				PasswordUse: "custom",
+			},
+			want: model.Identity{
+				LocalPart:   "other",
+				DomainName:  "example.com",
+				Address:     "other@example.com",
+				Name:        "Some Name",
+				Password:    "secret",
+				PasswordUse: "custom",
 			},
 			updatedName: "Different Name",
 		},
@@ -82,18 +107,20 @@ func TestIdentityResource_API_Success(t *testing.T) {
 					{
 						Config: providerConfig(server.URL) + fmt.Sprintf(`
 							resource "migadu_identity" "test" {
-								domain_name = "%s"
-								local_part  = "%s"
-								identity    = "%s"
-								password    = "%s"
-								name        = "%s"
+								domain_name  = "%s"
+								local_part   = "%s"
+								identity     = "%s"
+								password     = "%s"
+								password_use = "%s"
+								name         = "%s"
 							}
-						`, tt.domain, tt.localPart, tt.send.LocalPart, tt.send.Password, tt.send.Name),
+						`, tt.domain, tt.localPart, tt.send.LocalPart, tt.send.Password, tt.send.PasswordUse, tt.send.Name),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							resource.TestCheckResourceAttr("migadu_identity.test", "domain_name", tt.domain),
 							resource.TestCheckResourceAttr("migadu_identity.test", "local_part", tt.localPart),
 							resource.TestCheckResourceAttr("migadu_identity.test", "identity", tt.want.LocalPart),
 							resource.TestCheckResourceAttr("migadu_identity.test", "password", tt.want.Password),
+							resource.TestCheckResourceAttr("migadu_identity.test", "password_use", tt.want.PasswordUse),
 							resource.TestCheckResourceAttr("migadu_identity.test", "address", tt.want.Address),
 							resource.TestCheckResourceAttr("migadu_identity.test", "name", tt.want.Name),
 							resource.TestCheckResourceAttr("migadu_identity.test", "id", fmt.Sprintf("%s@%s/%s", tt.localPart, tt.domain, tt.send.LocalPart)),
@@ -104,24 +131,27 @@ func TestIdentityResource_API_Success(t *testing.T) {
 						ImportState:       true,
 						ImportStateVerify: true,
 						ImportStateVerifyIgnore: []string{
-							"password", // Migadu API does not allow reading passwords
+							"password",     // Migadu API does not allow reading passwords
+							"password_use", // Migadu API does not allow reading passwords
 						},
 					},
 					{
 						Config: providerConfig(server.URL) + fmt.Sprintf(`
 							resource "migadu_identity" "test" {
-								domain_name = "%s"
-								local_part  = "%s"
-								identity    = "%s"
-								password    = "%s"
-								name        = "%s"
+								domain_name  = "%s"
+								local_part   = "%s"
+								identity     = "%s"
+								password     = "%s"
+								password_use = "%s"
+								name         = "%s"
 							}
-						`, tt.domain, tt.localPart, tt.send.LocalPart, tt.send.Password, tt.updatedName),
+						`, tt.domain, tt.localPart, tt.send.LocalPart, tt.send.Password, tt.send.PasswordUse, tt.updatedName),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							resource.TestCheckResourceAttr("migadu_identity.test", "domain_name", tt.domain),
 							resource.TestCheckResourceAttr("migadu_identity.test", "local_part", tt.localPart),
 							resource.TestCheckResourceAttr("migadu_identity.test", "identity", tt.want.LocalPart),
 							resource.TestCheckResourceAttr("migadu_identity.test", "password", tt.want.Password),
+							resource.TestCheckResourceAttr("migadu_identity.test", "password_use", tt.want.PasswordUse),
 							resource.TestCheckResourceAttr("migadu_identity.test", "address", tt.want.Address),
 							resource.TestCheckResourceAttr("migadu_identity.test", "name", tt.updatedName),
 							resource.TestCheckResourceAttr("migadu_identity.test", "id", fmt.Sprintf("%s@%s/%s", tt.localPart, tt.domain, tt.send.LocalPart)),
@@ -250,6 +280,17 @@ func TestIdentityResource_Configuration_Errors(t *testing.T) {
 				identity    = "some"
 			`,
 			error: `The argument "password" is required, but no definition was found`,
+		},
+		{
+			name: "wrong-password-use",
+			configuration: `
+				domain_name  = "example.com"
+				local_part   = "test"
+				identity     = "some"
+				password     = "secret"
+				password_use = "invalid"
+			`,
+			error: `Attribute password_use value must be one of: \["none" "mailbox" "custom"\]`,
 		},
 	}
 	for _, tt := range tests {
