@@ -132,9 +132,12 @@ func (r *IdentityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 			"name": schema.StringAttribute{
 				Description:         "The name of the identity.",
 				MarkdownDescription: "The name of the identity.",
-				Required:            false,
-				Optional:            true,
-				Computed:            true,
+				Required:            true,
+				Optional:            false,
+				Computed:            false,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"may_send": schema.BoolAttribute{
 				Description:         "Whether the identity is allowed to send emails.",

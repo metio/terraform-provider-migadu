@@ -17,6 +17,7 @@ resource "migadu_identity" "example" {
   domain_name = "example.com"
   local_part  = "some-mailbox"
   identity    = "some-identity"
+  name        = "Some Name"
 }
 
 # international domain names are supported
@@ -24,6 +25,7 @@ resource "migadu_identity" "idn" {
   domain_name = "bücher.example"
   local_part  = "some-mailbox"
   identity    = "some-identity"
+  name        = "Some Name"
 }
 
 # Sender persona, not used for authentication
@@ -31,6 +33,7 @@ resource "migadu_identity" "sender_persona" {
   domain_name  = "example.com"
   local_part   = "some-mailbox"
   identity     = "some-identity"
+  name         = "Some Name"
   password_use = "none" # use mailbox user/password
 }
 
@@ -39,6 +42,7 @@ resource "migadu_identity" "mailbox" {
   domain_name  = "example.com"
   local_part   = "some-mailbox"
   identity     = "some-identity"
+  name         = "Some Name"
   password_use = "mailbox" # use identity user and mailbox password
 }
 
@@ -47,6 +51,7 @@ resource "migadu_identity" "custom" {
   domain_name  = "example.com"
   local_part   = "some-mailbox"
   identity     = "some-identity"
+  name         = "Some Name"
   password_use = "custom" # use identity user/password
   password     = "Sup3r_s3cr3T"
 }
@@ -60,6 +65,7 @@ resource "migadu_identity" "custom" {
 - `domain_name` (String) The domain name of the mailbox/identity.
 - `identity` (String) The local part of the identity.
 - `local_part` (String) The local part of the mailbox that owns the identity.
+- `name` (String) The name of the identity.
 
 ### Optional
 
@@ -71,7 +77,6 @@ resource "migadu_identity" "custom" {
 - `may_access_pop3` (Boolean) Whether the identity is allowed to use POP3.
 - `may_receive` (Boolean) Whether the identity is allowed to receive emails.
 - `may_send` (Boolean) Whether the identity is allowed to send emails.
-- `name` (String) The name of the identity.
 - `password` (String, Sensitive) The password of the identity.
 - `password_use` (String) Configures the password use of the identity. Use `none` if you just need to be able to send using a specific `From` identity, but still authenticate with the mailbox address and password. Use `mailbox` if you want an alternative address but linked to the same mailbox using the same password. Use `custom` if you need an application specific password (e.g. your phone), shared mailbox with individual passwords or sandboxing of accounts for specific services.
 
