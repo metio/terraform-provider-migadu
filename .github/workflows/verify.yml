@@ -71,8 +71,8 @@ jobs:
         run: go test -v -cover -parallel=4 -timeout=900s ./internal/provider/...
         env:
           TF_ACC: "1"
-  terratest:
-    name: Terratest Tests
+  terraform-tests:
+    name: Terraform Tests
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -92,6 +92,33 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_wrapper: false
+      - id: install
+        name: Install Provider
+        run: make install
+      - id: terratest
+        name: Run Terratest Tests
+        run: go test -parallel=4 -timeout=900s ./terratest/tests
+  opentofu-tests:
+    name: OpenTofu Tests
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout
+        name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: setup_go
+        name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - id: setup_tofu
+        name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_wrapper: false
       - id: install
         name: Install Provider
         run: make install
