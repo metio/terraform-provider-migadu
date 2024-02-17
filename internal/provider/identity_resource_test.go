@@ -559,7 +559,7 @@ func TestIdentityResource_Configuration_Errors(t *testing.T) {
 				password     = "secret"
 				password_use = "invalid"
 			`,
-			error: `Attribute password_use value must be one of: \["none" "mailbox"\]`,
+			error: `Attribute password_use value must be one of: \["none" "mailbox" "custom"\]`,
 		},
 		{
 			name: "no-custom-password",

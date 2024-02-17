@@ -22,6 +22,7 @@ import (
 	"github.com/metio/migadu-client.go/client"
 	"github.com/metio/migadu-client.go/model"
 	"github.com/metio/terraform-provider-migadu/internal/provider/custom_types"
+	"github.com/metio/terraform-provider-migadu/internal/provider/custom_validators"
 	"net/http"
 	"strings"
 )
@@ -193,14 +194,7 @@ func (r *IdentityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 				Computed:            true,
 				Default:             stringdefault.StaticString("none"),
 				Validators: []validator.String{
-					stringvalidator.Any(
-						stringvalidator.All(
-							stringvalidator.OneOf("none", "mailbox"),
-							stringvalidator.ConflictsWith(path.MatchRoot("password"))),
-						stringvalidator.All(
-							stringvalidator.OneOf("custom"),
-							stringvalidator.AlsoRequires(path.MatchRoot("password"))),
-					),
+					custom_validators.PasswordUse(),
 				},
 			},
 			"footer_active": schema.BoolAttribute{
