@@ -8,8 +8,8 @@ package custom_types
 import (
 	"context"
 	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
@@ -17,7 +17,22 @@ import (
 var (
 	_ basetypes.SetValuable                   = (*EmailAddressSetValue)(nil)
 	_ basetypes.SetValuableWithSemanticEquals = (*EmailAddressSetValue)(nil)
+	_ xattr.ValidateableAttribute             = (*EmailAddressSetValue)(nil)
 )
+
+func NewEmailAddressSetValueFrom(ctx context.Context, emails []string) (EmailAddressSetValue, diag.Diagnostics) {
+	setValue, diagnostics := basetypes.NewSetValueFrom(ctx, EmailAddressType{}, emails)
+	return EmailAddressSetValue{
+		SetValue: setValue,
+	}, diagnostics
+}
+
+func NewEmailAddressSetNull() EmailAddressSetValue {
+	setValue := basetypes.NewSetNull(EmailAddressType{})
+	return EmailAddressSetValue{
+		SetValue: setValue,
+	}
+}
 
 type EmailAddressSetValue struct {
 	basetypes.SetValue
@@ -84,4 +99,34 @@ func (v EmailAddressSetValue) contains(ctx context.Context, other attr.Value) bo
 	}
 
 	return false
+}
+
+func (v EmailAddressSetValue) ValidateAttribute(ctx context.Context, request xattr.ValidateAttributeRequest, response *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
+	}
+
+	elements := v.Elements()
+	for outerIndex, outerValue := range elements {
+		if outerValue.IsNull() || outerValue.IsUnknown() {
+			continue
+		}
+
+		outerEmail := outerValue.(EmailAddressValue)
+		outerEmail.ValidateAttribute(ctx, request, response)
+
+		for innerIndex := outerIndex + 1; innerIndex < len(elements); innerIndex++ {
+			innerEmail := elements[innerIndex].(EmailAddressValue)
+
+			if equal, _ := innerEmail.StringSemanticEquals(ctx, outerEmail); !equal {
+				continue
+			}
+
+			response.Diagnostics.AddAttributeError(
+				request.Path,
+				"Duplicate Set Element",
+				fmt.Sprintf("This attribute contains duplicate values of: %s", innerEmail.ValueString()),
+			)
+		}
+	}
 }

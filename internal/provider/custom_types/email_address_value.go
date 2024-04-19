@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/metio/migadu-client.go/idn"
@@ -18,7 +19,15 @@ import (
 var (
 	_ basetypes.StringValuable                   = (*EmailAddressValue)(nil)
 	_ basetypes.StringValuableWithSemanticEquals = (*EmailAddressValue)(nil)
+	_ xattr.ValidateableAttribute                = (*EmailAddressValue)(nil)
 )
+
+// NewEmailAddressValue creates an email with a known value.
+func NewEmailAddressValue(value string) EmailAddressValue {
+	return EmailAddressValue{
+		StringValue: basetypes.NewStringValue(value),
+	}
+}
 
 type EmailAddressValue struct {
 	basetypes.StringValue
@@ -81,4 +90,23 @@ func normalizeEmail(email string) (string, error) {
 	normalized = strings.TrimSpace(normalized)
 	normalized = strings.ToLower(normalized)
 	return idn.ConvertEmailToASCII(normalized)
+}
+
+func (v EmailAddressValue) ValidateAttribute(_ context.Context, request xattr.ValidateAttributeRequest, response *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() || len(v.ValueString()) == 0 {
+		return
+	}
+
+	valueParts := strings.Split(v.ValueString(), "@")
+
+	if len(valueParts) != 2 || len(valueParts[0]) == 0 || len(valueParts[1]) == 0 {
+		response.Diagnostics.AddAttributeError(
+			request.Path,
+			"Invalid Email Address String Value",
+			"An email must match the format 'local_part@domain'.\n\n"+
+				"Path: "+request.Path.String()+"\n"+
+				"Given Value: "+v.ValueString(),
+		)
+		return
+	}
 }

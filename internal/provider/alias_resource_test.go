@@ -378,7 +378,7 @@ func TestAliasResource_Configuration_Errors(t *testing.T) {
 				domain_name  = "example.com"
 				destinations = ["someone@hoß.de", "someone@xn--ho-hia.de"]
 			`,
-			ErrorRegex: `This attribute contains duplicate values of: "someone@xn--ho-hia.de"`,
+			ErrorRegex: `This attribute contains duplicate values of: someone@xn--ho-hia.de`,
 		},
 		"invalid-domain-name": {
 			Configuration: `

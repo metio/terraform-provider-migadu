@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"golang.org/x/net/idna"
@@ -18,7 +19,15 @@ import (
 var (
 	_ basetypes.StringValuable                   = (*DomainNameValue)(nil)
 	_ basetypes.StringValuableWithSemanticEquals = (*DomainNameValue)(nil)
+	_ xattr.ValidateableAttribute                = (*DomainNameValue)(nil)
 )
+
+// NewDomainNameValue creates a domain name with a known value.
+func NewDomainNameValue(value string) DomainNameValue {
+	return DomainNameValue{
+		StringValue: basetypes.NewStringValue(value),
+	}
+}
 
 type DomainNameValue struct {
 	basetypes.StringValue
@@ -81,4 +90,23 @@ func normalizeDomain(domain string) (string, error) {
 	normalized = strings.TrimSpace(normalized)
 	normalized = strings.ToLower(normalized)
 	return idna.ToASCII(normalized)
+}
+
+func (v DomainNameValue) ValidateAttribute(_ context.Context, request xattr.ValidateAttributeRequest, response *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
+	}
+
+	_, err := idna.Lookup.ToASCII(v.ValueString())
+	if err != nil {
+		response.Diagnostics.AddAttributeError(
+			request.Path,
+			"Invalid Domain Name String Value",
+			"Domain names must be convertible to ASCII.\n\n"+
+				"Path: "+request.Path.String()+"\n"+
+				"Given Value: "+v.ValueString()+"\n"+
+				"Error: "+err.Error(),
+		)
+		return
+	}
 }
