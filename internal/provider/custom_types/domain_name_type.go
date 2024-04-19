@@ -9,17 +9,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"golang.org/x/net/idna"
 )
 
 var (
 	_ basetypes.StringTypable = (*DomainNameType)(nil)
-	_ xattr.TypeWithValidate  = (*DomainNameType)(nil)
 )
 
 type DomainNameType struct {
@@ -64,41 +60,4 @@ func (t DomainNameType) ValueFromTerraform(ctx context.Context, in tftypes.Value
 
 func (t DomainNameType) ValueType(_ context.Context) attr.Value {
 	return DomainNameValue{}
-}
-
-func (t DomainNameType) Validate(_ context.Context, value tftypes.Value, valuePath path.Path) diag.Diagnostics {
-	if value.IsNull() || !value.IsKnown() {
-		return nil
-	}
-
-	var diags diag.Diagnostics
-	var valueString string
-
-	if err := value.As(&valueString); err != nil {
-		diags.AddAttributeError(
-			valuePath,
-			"Invalid Terraform Value",
-			"An unexpected error occurred while attempting to convert a Terraform value to a string. "+
-				"This generally is an issue with the provider schema implementation. "+
-				"Please contact the provider developers.\n\n"+
-				"Path: "+valuePath.String()+"\n"+
-				"Error: "+err.Error(),
-		)
-		return diags
-	}
-
-	_, err := idna.Lookup.ToASCII(valueString)
-	if err != nil {
-		diags.AddAttributeError(
-			valuePath,
-			"Invalid Domain Name String Value",
-			"Domain names must be convertible to ASCII.\n\n"+
-				"Path: "+valuePath.String()+"\n"+
-				"Given Value: "+valueString+"\n"+
-				"Error: "+err.Error(),
-		)
-		return diags
-	}
-
-	return diags
 }
