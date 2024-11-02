@@ -9,3 +9,9 @@ updates:
       interval: daily
     assignees:
       - sebhoss
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    assignees:
+      - sebhoss
