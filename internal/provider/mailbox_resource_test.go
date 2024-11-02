@@ -478,7 +478,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 				domain_name = "example.com"
 				local_part  = "test"
 			`,
-			ErrorRegex: `At least one attribute out of \[password\] must be specified`,
+			ErrorRegex: `At least one attribute out of \[password,password_recovery_email\]`,
 		},
 		"empty-password-recovery-email": {
 			Configuration: `
@@ -495,7 +495,7 @@ func TestMailboxResource_Configuration_Errors(t *testing.T) {
 				domain_name = "example.com"
 				local_part  = "test"
 			`,
-			ErrorRegex: `At least one attribute out of \[password_recovery_email\] must be specified`,
+			ErrorRegex: `At least one attribute out of \[password_recovery_email,password\]`,
 		},
 		"empty-name": {
 			Configuration: `
