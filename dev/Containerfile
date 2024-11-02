@@ -3,6 +3,6 @@
 
 FROM docker.io/metio/devcontainers-go:latest
 
-RUN go install github.com/hashicorp/terraform@main
+COPY --from=docker.io/hashicorp/terraform:latest /bin/terraform /usr/bin/terraform
 RUN go install gotest.tools/gotestsum@latest
 RUN go install github.com/golangci/golangci-lint/cmd/golangci-lint@master

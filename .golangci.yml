@@ -2,4 +2,8 @@
 # SPDX-License-Identifier: 0BSD
 
 run:
-  timeout: 5m
+    timeout: 5m
+output:
+    formats:
+     - format: colored-line-number
+       path: stdout
