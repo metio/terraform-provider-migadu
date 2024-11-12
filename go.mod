@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.25.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.10.0
-	github.com/metio/migadu-client.go v1.20241008.541
+	github.com/metio/migadu-client.go v1.20241112.540
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/net v0.31.0
 )
