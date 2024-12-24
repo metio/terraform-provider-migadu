@@ -162,8 +162,8 @@ github.com/mattn/go-runewidth v0.0.9 h1:Lm995f3rfxdpd6TSmuVCHVb/QhupuXlYr8sCI/Qd
 github.com/mattn/go-runewidth v0.0.9/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
 github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326 h1:ofNAzWCcyTALn2Zv40+8XitdzCgXY6e9qvXwN9W0YXg=
 github.com/mattn/go-zglob v0.0.2-0.20190814121620-e3c945676326/go.mod h1:9fxibJccNxU2cnpIKLRRFA7zX7qhkJIQWBb449FYHOo=
-github.com/metio/migadu-client.go v1.20241210.543 h1:uezexbLsK0/go8i7tO7C+0RZjLH+32es2J9ckl8pLf0=
-github.com/metio/migadu-client.go v1.20241210.543/go.mod h1:U0wir38JuvQUyynYbfbnYFHnmBXLAG5PbD3NxUZ91/Q=
+github.com/metio/migadu-client.go v1.20241224.540 h1:LFo1e714rbkasBNZdLLnpPI6KnERc0WXll23AMPFpnA=
+github.com/metio/migadu-client.go v1.20241224.540/go.mod h1:AyjRx0e0m5hkMrhqcII0lB9Eh3j7OY4Zo57e1kZzJV0=
 github.com/mitchellh/copystructure v1.0.0/go.mod h1:SNtv71yrdKgLRyLFxmLdkAbkKEFWgYaq1OVrnRcwhnw=
 github.com/mitchellh/copystructure v1.2.0 h1:vpKXTN4ewci03Vljg/q9QvCGUDttBOGBIa15WveJJGw=
 github.com/mitchellh/copystructure v1.2.0/go.mod h1:qLl+cE2AmVv+CoeAwDPye/v+N2HKCj9FbZEVFJRxO9s=
