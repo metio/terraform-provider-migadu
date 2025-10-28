@@ -59,6 +59,8 @@ resource "migadu_rewrite_rule" "idn" {
 
 Import is supported using the following syntax:
 
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
 ```shell
 # migadu_rewrite_rule resources can be imported by specifying the domain
 # name and the name of the rewrite rule to import.

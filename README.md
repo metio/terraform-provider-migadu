@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: The terraform-provider-migadu Authors
 SPDX-License-Identifier: 0BSD
  -->
 
-# terraform-provider-migadu [![Chat](https://img.shields.io/badge/matrix-%23talk.metio:matrix.org-brightgreen.svg?style=social&label=Matrix)](https://matrix.to/#/#talk.metio:matrix.org)
+# terraform-provider-migadu
 
 [Terraform](https://www.terraform.io/) provider for the [Migadu](https://www.migadu.com/api/) API.
 
