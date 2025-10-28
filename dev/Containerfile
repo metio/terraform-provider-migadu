@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: The terraform-provider-migadu Authors
 # SPDX-License-Identifier: 0BSD
 
-FROM docker.io/metio/devcontainers-go:latest
+FROM docker.io/library/golang:latest
 
 COPY --from=docker.io/hashicorp/terraform:latest /bin/terraform /usr/bin/terraform
 RUN go install gotest.tools/gotestsum@latest
