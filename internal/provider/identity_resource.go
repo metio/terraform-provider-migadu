@@ -311,6 +311,10 @@ func (r *IdentityResource) Read(ctx context.Context, request resource.ReadReques
 	state.MayAccessImap = types.BoolValue(identity.MayAccessImap)
 	state.MayAccessPop3 = types.BoolValue(identity.MayAccessPop3)
 	state.MayAccessManageSieve = types.BoolValue(identity.MayAccessManageSieve)
+	state.PasswordUse = types.StringValue(identity.PasswordUse)
+	if state.Password.IsUnknown() {
+		state.Password = types.StringNull()
+	}
 	state.FooterActive = types.BoolValue(identity.FooterActive)
 	state.FooterPlainBody = types.StringValue(identity.FooterPlainBody)
 	state.FooterHtmlBody = types.StringValue(identity.FooterHtmlBody)
@@ -357,6 +361,7 @@ func (r *IdentityResource) Update(ctx context.Context, request resource.UpdateRe
 	plan.MayAccessImap = types.BoolValue(updatedIdentity.MayAccessImap)
 	plan.MayAccessPop3 = types.BoolValue(updatedIdentity.MayAccessPop3)
 	plan.MayAccessManageSieve = types.BoolValue(updatedIdentity.MayAccessManageSieve)
+	plan.PasswordUse = types.StringValue(updatedIdentity.PasswordUse)
 	plan.FooterActive = types.BoolValue(updatedIdentity.FooterActive)
 	plan.FooterPlainBody = types.StringValue(updatedIdentity.FooterPlainBody)
 	plan.FooterHtmlBody = types.StringValue(updatedIdentity.FooterHtmlBody)

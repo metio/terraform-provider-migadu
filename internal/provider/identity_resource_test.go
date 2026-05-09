@@ -110,8 +110,7 @@ func TestIdentityResource_API_Success_With_Password(t *testing.T) {
 						ImportState:       true,
 						ImportStateVerify: true,
 						ImportStateVerifyIgnore: []string{
-							"password",     // Migadu API does not allow reading passwords
-							"password_use", // Migadu API does not allow reading passwords
+							"password", // Migadu API does not allow reading passwords
 						},
 					},
 					{
@@ -273,9 +272,6 @@ func TestIdentityResource_API_Success_Without_Password(t *testing.T) {
 						ResourceName:      "migadu_identity.test",
 						ImportState:       true,
 						ImportStateVerify: true,
-						ImportStateVerifyIgnore: []string{
-							"password_use", // Migadu API does not allow reading passwords
-						},
 					},
 					{
 						Config: providerConfig(server.URL) + fmt.Sprintf(`
@@ -389,9 +385,6 @@ func TestIdentityResource_API_Success_With_Default_PasswordUse(t *testing.T) {
 						ResourceName:      "migadu_identity.test",
 						ImportState:       true,
 						ImportStateVerify: true,
-						ImportStateVerifyIgnore: []string{
-							"password_use", // Migadu API does not allow reading passwords
-						},
 					},
 					{
 						Config: providerConfig(server.URL) + fmt.Sprintf(`
