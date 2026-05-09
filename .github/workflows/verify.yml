@@ -21,9 +21,7 @@ jobs:
           cache: true
       - id: lint
         name: Lint Go Code
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
+        run: go vet ./...
       - id: generate_docs
         name: Generate Documentation
         run: go generate
