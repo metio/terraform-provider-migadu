@@ -28,10 +28,12 @@ var (
 type MigaduProvider struct{}
 
 type MigaduProviderModel struct {
-	Endpoint types.String `tfsdk:"endpoint"`
-	Token    types.String `tfsdk:"token"`
-	Username types.String `tfsdk:"username"`
-	Timeout  types.Int64  `tfsdk:"timeout"`
+	Endpoint     types.String `tfsdk:"endpoint"`
+	Token        types.String `tfsdk:"token"`
+	Username     types.String `tfsdk:"username"`
+	Timeout      types.Int64  `tfsdk:"timeout"`
+	RateLimit    types.Int64  `tfsdk:"rate_limit"`
+	RateInterval types.String `tfsdk:"rate_interval"`
 }
 
 func New() provider.Provider {
@@ -67,6 +69,16 @@ func (p *MigaduProvider) Schema(_ context.Context, _ provider.SchemaRequest, res
 			"timeout": schema.Int64Attribute{
 				Description:         "The timeout to apply for HTTP requests in seconds. Can be specified with the 'MIGADU_TIMEOUT' environment variable. Defaults to '10'.",
 				MarkdownDescription: "The timeout to apply for HTTP requests in seconds. Can be specified with the `MIGADU_TIMEOUT` environment variable. Defaults to `10`.",
+				Optional:            true,
+			},
+			"rate_limit": schema.Int64Attribute{
+				Description:         "The maximum number of API requests allowed per 'rate_interval'. Can be specified with the 'MIGADU_RATE_LIMIT' environment variable. Defaults to '60'. Set to '0' to disable client-side rate limiting.",
+				MarkdownDescription: "The maximum number of API requests allowed per `rate_interval`. Can be specified with the `MIGADU_RATE_LIMIT` environment variable. Defaults to `60`. Set to `0` to disable client-side rate limiting.",
+				Optional:            true,
+			},
+			"rate_interval": schema.StringAttribute{
+				Description:         "The interval over which 'rate_limit' requests are allowed, as a Go duration string (e.g. '2m', '30s'). Can be specified with the 'MIGADU_RATE_INTERVAL' environment variable. Defaults to '2m'.",
+				MarkdownDescription: "The interval over which `rate_limit` requests are allowed, as a Go duration string (e.g. `2m`, `30s`). Can be specified with the `MIGADU_RATE_INTERVAL` environment variable. Defaults to `2m`.",
 				Optional:            true,
 			},
 		},
@@ -118,6 +130,24 @@ func (p *MigaduProvider) Configure(ctx context.Context, request provider.Configu
 		)
 	}
 
+	if config.RateLimit.IsUnknown() {
+		response.Diagnostics.AddAttributeError(
+			path.Root("rate_limit"),
+			"Unknown Migadu API Rate Limit",
+			"The provider cannot create the Migadu API client as there is an unknown configuration value for the Migadu API rate limit. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the MIGADU_RATE_LIMIT environment variable.",
+		)
+	}
+
+	if config.RateInterval.IsUnknown() {
+		response.Diagnostics.AddAttributeError(
+			path.Root("rate_interval"),
+			"Unknown Migadu API Rate Interval",
+			"The provider cannot create the Migadu API client as there is an unknown configuration value for the Migadu API rate interval. "+
+				"Either target apply the source of the value first, set the value statically in the configuration, or use the MIGADU_RATE_INTERVAL environment variable.",
+		)
+	}
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -126,6 +156,8 @@ func (p *MigaduProvider) Configure(ctx context.Context, request provider.Configu
 	username := os.Getenv("MIGADU_USERNAME")
 	token := os.Getenv("MIGADU_TOKEN")
 	timeout := os.Getenv("MIGADU_TIMEOUT")
+	rateLimit := os.Getenv("MIGADU_RATE_LIMIT")
+	rateInterval := os.Getenv("MIGADU_RATE_INTERVAL")
 
 	if !config.Endpoint.IsNull() {
 		endpoint = config.Endpoint.ValueString()
@@ -143,12 +175,28 @@ func (p *MigaduProvider) Configure(ctx context.Context, request provider.Configu
 		timeout = strconv.FormatInt(config.Timeout.ValueInt64(), 10)
 	}
 
+	if !config.RateLimit.IsNull() {
+		rateLimit = strconv.FormatInt(config.RateLimit.ValueInt64(), 10)
+	}
+
+	if !config.RateInterval.IsNull() {
+		rateInterval = config.RateInterval.ValueString()
+	}
+
 	if endpoint == "" {
 		endpoint = "https://api.migadu.com/v1/"
 	}
 
 	if timeout == "" {
 		timeout = "10"
+	}
+
+	if rateLimit == "" {
+		rateLimit = "60"
+	}
+
+	if rateInterval == "" {
+		rateInterval = "2m"
 	}
 
 	if username == "" {
@@ -180,6 +228,36 @@ func (p *MigaduProvider) Configure(ctx context.Context, request provider.Configu
 		)
 	}
 
+	rateLimitValue, err := strconv.Atoi(rateLimit)
+	if err != nil {
+		response.Diagnostics.AddAttributeError(
+			path.Root("rate_limit"),
+			"Invalid Migadu API Rate Limit",
+			"The supplied rate limit value cannot be parsed into an integer: "+err.Error(),
+		)
+	} else if rateLimitValue < 0 {
+		response.Diagnostics.AddAttributeError(
+			path.Root("rate_limit"),
+			"Invalid Migadu API Rate Limit",
+			"The supplied rate limit value must not be negative. Set it to '0' to disable client-side rate limiting.",
+		)
+	}
+
+	rateIntervalDuration, err := time.ParseDuration(rateInterval)
+	if err != nil {
+		response.Diagnostics.AddAttributeError(
+			path.Root("rate_interval"),
+			"Invalid Migadu API Rate Interval",
+			"The supplied rate interval value cannot be parsed into a duration: "+err.Error(),
+		)
+	} else if rateLimitValue > 0 && rateIntervalDuration <= 0 {
+		response.Diagnostics.AddAttributeError(
+			path.Root("rate_interval"),
+			"Invalid Migadu API Rate Interval",
+			"The supplied rate interval value must be positive when rate limiting is enabled.",
+		)
+	}
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -188,12 +266,19 @@ func (p *MigaduProvider) Configure(ctx context.Context, request provider.Configu
 	ctx = tflog.SetField(ctx, "migadu_username", username)
 	ctx = tflog.SetField(ctx, "migadu_token", token)
 	ctx = tflog.SetField(ctx, "migadu_timeout", timeout)
+	ctx = tflog.SetField(ctx, "migadu_rate_limit", rateLimit)
+	ctx = tflog.SetField(ctx, "migadu_rate_interval", rateInterval)
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "migadu_username")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "migadu_token")
 
 	tflog.Debug(ctx, "Creating Migadu client")
 
-	c, err := client.New(&endpoint, &username, &token, duration)
+	var opts []client.Option
+	if rateLimitValue > 0 {
+		opts = append(opts, client.WithRateLimit(rateLimitValue, rateIntervalDuration))
+	}
+
+	c, err := client.New(&endpoint, &username, &token, duration, opts...)
 	if err != nil {
 		response.Diagnostics.AddError(
 			"Unable to Create Migadu API Client",
