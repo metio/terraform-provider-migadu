@@ -181,6 +181,26 @@ func (r *RewriteRuleResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
+	// The Migadu API ignores order_num on create and always appends new
+	// rules, but honors order_num on update. Apply an explicitly
+	// configured order with a follow-up update. Track the created rule
+	// in state first so it is not orphaned if the update fails.
+	if !plan.OrderNum.IsUnknown() && plan.OrderNum.ValueInt64() != createdRewrite.OrderNum {
+		requestedOrderNum := plan.OrderNum.ValueInt64()
+		plan.ID = types.StringValue(CreateRewriteRuleID(plan.DomainName, plan.Name))
+		plan.Name = types.StringValue(createdRewrite.Name)
+		plan.LocalPartRule = types.StringValue(createdRewrite.LocalPartRule)
+		plan.OrderNum = types.Int64Value(createdRewrite.OrderNum)
+		response.Diagnostics.Append(response.State.Set(ctx, plan)...)
+
+		rewrite.OrderNum = requestedOrderNum
+		createdRewrite, err = r.MigaduClient.UpdateRewriteRule(ctx, plan.DomainName.ValueString(), createdRewrite.Name, rewrite)
+		if err != nil {
+			response.Diagnostics.Append(RewriteRuleCreateError(err))
+			return
+		}
+	}
+
 	plan.ID = types.StringValue(CreateRewriteRuleID(plan.DomainName, plan.Name))
 	plan.Name = types.StringValue(createdRewrite.Name)
 	plan.LocalPartRule = types.StringValue(createdRewrite.LocalPartRule)
