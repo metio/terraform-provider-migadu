@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -113,9 +113,11 @@ func (r *RewriteRuleResource) Schema(_ context.Context, _ resource.SchemaRequest
 				Required:            false,
 				Optional:            true,
 				Computed:            true,
-				Default:             int64default.StaticInt64(0),
 				Validators: []validator.Int64{
 					int64validator.AtLeast(0),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
 				},
 			},
 			"destinations": schema.SetAttribute{
@@ -177,6 +179,26 @@ func (r *RewriteRuleResource) Create(ctx context.Context, request resource.Creat
 	if err != nil {
 		response.Diagnostics.Append(RewriteRuleCreateError(err))
 		return
+	}
+
+	// The Migadu API ignores order_num on create and always appends new
+	// rules, but honors order_num on update. Apply an explicitly
+	// configured order with a follow-up update. Track the created rule
+	// in state first so it is not orphaned if the update fails.
+	if !plan.OrderNum.IsUnknown() && plan.OrderNum.ValueInt64() != createdRewrite.OrderNum {
+		requestedOrderNum := plan.OrderNum.ValueInt64()
+		plan.ID = types.StringValue(CreateRewriteRuleID(plan.DomainName, plan.Name))
+		plan.Name = types.StringValue(createdRewrite.Name)
+		plan.LocalPartRule = types.StringValue(createdRewrite.LocalPartRule)
+		plan.OrderNum = types.Int64Value(createdRewrite.OrderNum)
+		response.Diagnostics.Append(response.State.Set(ctx, plan)...)
+
+		rewrite.OrderNum = requestedOrderNum
+		createdRewrite, err = r.MigaduClient.UpdateRewriteRule(ctx, plan.DomainName.ValueString(), createdRewrite.Name, rewrite)
+		if err != nil {
+			response.Diagnostics.Append(RewriteRuleCreateError(err))
+			return
+		}
 	}
 
 	plan.ID = types.StringValue(CreateRewriteRuleID(plan.DomainName, plan.Name))
