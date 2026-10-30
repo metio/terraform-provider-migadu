@@ -7,13 +7,14 @@ package provider_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/metio/migadu-client.go/model"
-	"github.com/metio/migadu-client.go/simulator"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/metio/migadu-client.go/model"
+	"github.com/metio/migadu-client.go/simulator"
 )
 
 func TestIdentityResource_API_Success_With_Password(t *testing.T) {

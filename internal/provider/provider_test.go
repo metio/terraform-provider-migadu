@@ -8,12 +8,13 @@ package provider_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	internal "github.com/metio/terraform-provider-migadu/internal/provider"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestMigaduProvider_Metadata(t *testing.T) {
@@ -36,11 +37,9 @@ func providerConfig(endpoint string) string {
 	`, endpoint)
 }
 
-var (
-	testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-		"migadu": providerserver.NewProtocol6WithError(internal.New()),
-	}
-)
+var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"migadu": providerserver.NewProtocol6WithError(internal.New()),
+}
 
 type ConfigurationErrorTestCase struct {
 	Configuration string

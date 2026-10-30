@@ -9,6 +9,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -23,8 +26,6 @@ import (
 	"github.com/metio/migadu-client.go/model"
 	"github.com/metio/terraform-provider-migadu/internal/provider/custom_types"
 	"github.com/metio/terraform-provider-migadu/internal/provider/custom_validators"
-	"net/http"
-	"strings"
 )
 
 var (
@@ -221,6 +222,7 @@ func (r *IdentityResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 		},
 	}
 }
+
 func (r *IdentityResource) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
 	if request.ProviderData == nil {
 		return

@@ -9,6 +9,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -22,8 +25,6 @@ import (
 	"github.com/metio/migadu-client.go/client"
 	"github.com/metio/migadu-client.go/model"
 	"github.com/metio/terraform-provider-migadu/internal/provider/custom_types"
-	"net/http"
-	"strings"
 )
 
 var (
@@ -353,6 +354,7 @@ func (r *MailboxResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 		},
 	}
 }
+
 func (r *MailboxResource) Configure(_ context.Context, request resource.ConfigureRequest, response *resource.ConfigureResponse) {
 	if request.ProviderData == nil {
 		return

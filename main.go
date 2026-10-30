@@ -8,9 +8,10 @@ package main
 import (
 	"context"
 	"flag"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/metio/terraform-provider-migadu/internal/provider"
-	"log"
 )
 
 // Run the documentation generation tool

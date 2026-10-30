@@ -7,12 +7,13 @@ package acceptance_test
 
 import (
 	"fmt"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/metio/migadu-client.go/model"
 	"github.com/metio/migadu-client.go/simulator"
 	"github.com/stretchr/testify/assert"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestIdentityDataSource(t *testing.T) {
@@ -119,14 +120,14 @@ func TestIdentityDataSource(t *testing.T) {
 				},
 			})
 
-			defer terraform.Destroy(t, terraformOptions)
-			terraform.InitAndApplyAndIdempotent(t, terraformOptions)
+			defer terraform.DestroyContext(t, t.Context(), terraformOptions)
+			terraform.InitAndApplyAndIdempotentContext(t, t.Context(), terraformOptions)
 
-			assert.Equal(t, fmt.Sprintf("%s@%s/%s", testCase.localPart, testCase.domain, testCase.identity), terraform.Output(t, terraformOptions, "id"), "id")
-			assert.Equal(t, testCase.domain, terraform.Output(t, terraformOptions, "domain_name"), "domain_name")
-			assert.Equal(t, testCase.localPart, terraform.Output(t, terraformOptions, "local_part"), "local_part")
-			assert.Equal(t, testCase.identity, terraform.Output(t, terraformOptions, "identity"), "identity")
-			assert.Equal(t, testCase.want.Address, terraform.Output(t, terraformOptions, "address"), "address")
+			assert.Equal(t, fmt.Sprintf("%s@%s/%s", testCase.localPart, testCase.domain, testCase.identity), terraform.OutputContext(t, t.Context(), terraformOptions, "id"), "id")
+			assert.Equal(t, testCase.domain, terraform.OutputContext(t, t.Context(), terraformOptions, "domain_name"), "domain_name")
+			assert.Equal(t, testCase.localPart, terraform.OutputContext(t, t.Context(), terraformOptions, "local_part"), "local_part")
+			assert.Equal(t, testCase.identity, terraform.OutputContext(t, t.Context(), terraformOptions, "identity"), "identity")
+			assert.Equal(t, testCase.want.Address, terraform.OutputContext(t, t.Context(), terraformOptions, "address"), "address")
 		})
 	}
 }

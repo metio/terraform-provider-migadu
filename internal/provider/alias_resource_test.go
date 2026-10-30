@@ -7,15 +7,16 @@ package provider_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/metio/migadu-client.go/model"
-	"github.com/metio/migadu-client.go/simulator"
-	"github.com/metio/terraform-provider-migadu/internal/provider"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/metio/migadu-client.go/model"
+	"github.com/metio/migadu-client.go/simulator"
+	"github.com/metio/terraform-provider-migadu/internal/provider"
 )
 
 func TestAliasResource_API_Success(t *testing.T) {

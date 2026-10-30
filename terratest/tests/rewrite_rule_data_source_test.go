@@ -7,12 +7,13 @@ package acceptance_test
 
 import (
 	"fmt"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/metio/migadu-client.go/model"
 	"github.com/metio/migadu-client.go/simulator"
 	"github.com/stretchr/testify/assert"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestRewriteDataSource(t *testing.T) {
@@ -118,14 +119,14 @@ func TestRewriteDataSource(t *testing.T) {
 				},
 			})
 
-			defer terraform.Destroy(t, terraformOptions)
-			terraform.InitAndApplyAndIdempotent(t, terraformOptions)
+			defer terraform.DestroyContext(t, t.Context(), terraformOptions)
+			terraform.InitAndApplyAndIdempotentContext(t, t.Context(), terraformOptions)
 
-			assert.Equal(t, fmt.Sprintf("%s/%s", testCase.domain, testCase.name), terraform.Output(t, terraformOptions, "id"), "id")
-			assert.Equal(t, testCase.domain, terraform.Output(t, terraformOptions, "domain_name"), "domain_name")
-			assert.Equal(t, testCase.name, terraform.Output(t, terraformOptions, "name"), "name")
-			assert.Equal(t, testCase.want.LocalPartRule, terraform.Output(t, terraformOptions, "local_part_rule"), "local_part_rule")
-			assert.Equal(t, fmt.Sprintf("%v", testCase.want.OrderNum), terraform.Output(t, terraformOptions, "order_num"), "order_num")
+			assert.Equal(t, fmt.Sprintf("%s/%s", testCase.domain, testCase.name), terraform.OutputContext(t, t.Context(), terraformOptions, "id"), "id")
+			assert.Equal(t, testCase.domain, terraform.OutputContext(t, t.Context(), terraformOptions, "domain_name"), "domain_name")
+			assert.Equal(t, testCase.name, terraform.OutputContext(t, t.Context(), terraformOptions, "name"), "name")
+			assert.Equal(t, testCase.want.LocalPartRule, terraform.OutputContext(t, t.Context(), terraformOptions, "local_part_rule"), "local_part_rule")
+			assert.Equal(t, fmt.Sprintf("%v", testCase.want.OrderNum), terraform.OutputContext(t, t.Context(), terraformOptions, "order_num"), "order_num")
 		})
 	}
 }

@@ -7,14 +7,15 @@ package provider_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/metio/migadu-client.go/model"
-	"github.com/metio/migadu-client.go/simulator"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
 	"strconv"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/metio/migadu-client.go/model"
+	"github.com/metio/migadu-client.go/simulator"
 )
 
 func TestMailboxResource_API_Success_Using_Password(t *testing.T) {

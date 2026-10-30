@@ -8,15 +8,16 @@ package provider_test
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"regexp"
+	"testing"
+
 	fwdatasource "github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/metio/migadu-client.go/model"
 	"github.com/metio/migadu-client.go/simulator"
 	"github.com/metio/terraform-provider-migadu/internal/provider"
-	"net/http"
-	"net/http/httptest"
-	"regexp"
-	"testing"
 )
 
 func TestRewriteRuleDataSource_Schema(t *testing.T) {

@@ -8,15 +8,14 @@ package custom_types
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-var (
-	_ basetypes.SetTypable = (*EmailAddressSetType)(nil)
-)
+var _ basetypes.SetTypable = (*EmailAddressSetType)(nil)
 
 type EmailAddressSetType struct {
 	basetypes.SetType
@@ -48,7 +47,6 @@ func (t EmailAddressSetType) ValueFromSet(_ context.Context, in basetypes.SetVal
 
 func (t EmailAddressSetType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	attrValue, err := t.SetType.ValueFromTerraform(ctx, in)
-
 	if err != nil {
 		return nil, err
 	}

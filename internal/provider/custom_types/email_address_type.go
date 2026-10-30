@@ -8,15 +8,14 @@ package custom_types
 import (
 	"context"
 	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
-var (
-	_ basetypes.StringTypable = (*EmailAddressType)(nil)
-)
+var _ basetypes.StringTypable = (*EmailAddressType)(nil)
 
 type EmailAddressType struct {
 	basetypes.StringType
@@ -40,7 +39,6 @@ func (t EmailAddressType) ValueFromString(_ context.Context, in basetypes.String
 
 func (t EmailAddressType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	attrValue, err := t.StringType.ValueFromTerraform(ctx, in)
-
 	if err != nil {
 		return nil, err
 	}

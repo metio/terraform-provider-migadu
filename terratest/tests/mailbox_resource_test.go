@@ -7,13 +7,14 @@ package acceptance_test
 
 import (
 	"fmt"
+	"net/http/httptest"
+	"strconv"
+	"testing"
+
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/metio/migadu-client.go/model"
 	"github.com/metio/migadu-client.go/simulator"
 	"github.com/stretchr/testify/assert"
-	"net/http/httptest"
-	"strconv"
-	"testing"
 )
 
 func TestMailboxResource_Using_Password(t *testing.T) {
@@ -89,15 +90,15 @@ func TestMailboxResource_Using_Password(t *testing.T) {
 				},
 			})
 
-			defer terraform.Destroy(t, terraformOptions)
-			terraform.InitAndApplyAndIdempotent(t, terraformOptions)
+			defer terraform.DestroyContext(t, t.Context(), terraformOptions)
+			terraform.InitAndApplyAndIdempotentContext(t, t.Context(), terraformOptions)
 
-			assert.Equal(t, fmt.Sprintf("%s@%s", testCase.localPart, testCase.domain), terraform.Output(t, terraformOptions, "id"), "id")
-			assert.Equal(t, testCase.domain, terraform.Output(t, terraformOptions, "domain_name"), "domain_name")
-			assert.Equal(t, testCase.localPart, terraform.Output(t, terraformOptions, "local_part"), "local_part")
-			assert.Equal(t, testCase.want.Address, terraform.Output(t, terraformOptions, "address"), "address")
-			assert.Equal(t, testCase.want.ExpiresOn, terraform.Output(t, terraformOptions, "expires_on"), "expires_on")
-			assert.Equal(t, strconv.FormatBool(testCase.want.Expirable), terraform.Output(t, terraformOptions, "expirable"), "expirable")
+			assert.Equal(t, fmt.Sprintf("%s@%s", testCase.localPart, testCase.domain), terraform.OutputContext(t, t.Context(), terraformOptions, "id"), "id")
+			assert.Equal(t, testCase.domain, terraform.OutputContext(t, t.Context(), terraformOptions, "domain_name"), "domain_name")
+			assert.Equal(t, testCase.localPart, terraform.OutputContext(t, t.Context(), terraformOptions, "local_part"), "local_part")
+			assert.Equal(t, testCase.want.Address, terraform.OutputContext(t, t.Context(), terraformOptions, "address"), "address")
+			assert.Equal(t, testCase.want.ExpiresOn, terraform.OutputContext(t, t.Context(), terraformOptions, "expires_on"), "expires_on")
+			assert.Equal(t, strconv.FormatBool(testCase.want.Expirable), terraform.OutputContext(t, t.Context(), terraformOptions, "expirable"), "expirable")
 		})
 	}
 }
@@ -178,16 +179,16 @@ func TestMailboxResource_Using_RecoveryEmail(t *testing.T) {
 				},
 			})
 
-			defer terraform.Destroy(t, terraformOptions)
-			terraform.InitAndApplyAndIdempotent(t, terraformOptions)
+			defer terraform.DestroyContext(t, t.Context(), terraformOptions)
+			terraform.InitAndApplyAndIdempotentContext(t, t.Context(), terraformOptions)
 
-			assert.Equal(t, fmt.Sprintf("%s@%s", testCase.localPart, testCase.domain), terraform.Output(t, terraformOptions, "id"), "id")
-			assert.Equal(t, testCase.domain, terraform.Output(t, terraformOptions, "domain_name"), "domain_name")
-			assert.Equal(t, testCase.localPart, terraform.Output(t, terraformOptions, "local_part"), "local_part")
-			assert.Equal(t, testCase.want.Address, terraform.Output(t, terraformOptions, "address"), "address")
-			assert.Equal(t, testCase.want.PasswordRecoveryEmail, terraform.Output(t, terraformOptions, "password_recovery_email"), "password_recovery_email")
-			assert.Equal(t, testCase.want.ExpiresOn, terraform.Output(t, terraformOptions, "expires_on"), "expires_on")
-			assert.Equal(t, strconv.FormatBool(testCase.want.Expirable), terraform.Output(t, terraformOptions, "expirable"), "expirable")
+			assert.Equal(t, fmt.Sprintf("%s@%s", testCase.localPart, testCase.domain), terraform.OutputContext(t, t.Context(), terraformOptions, "id"), "id")
+			assert.Equal(t, testCase.domain, terraform.OutputContext(t, t.Context(), terraformOptions, "domain_name"), "domain_name")
+			assert.Equal(t, testCase.localPart, terraform.OutputContext(t, t.Context(), terraformOptions, "local_part"), "local_part")
+			assert.Equal(t, testCase.want.Address, terraform.OutputContext(t, t.Context(), terraformOptions, "address"), "address")
+			assert.Equal(t, testCase.want.PasswordRecoveryEmail, terraform.OutputContext(t, t.Context(), terraformOptions, "password_recovery_email"), "password_recovery_email")
+			assert.Equal(t, testCase.want.ExpiresOn, terraform.OutputContext(t, t.Context(), terraformOptions, "expires_on"), "expires_on")
+			assert.Equal(t, strconv.FormatBool(testCase.want.Expirable), terraform.OutputContext(t, t.Context(), terraformOptions, "expirable"), "expirable")
 		})
 	}
 }

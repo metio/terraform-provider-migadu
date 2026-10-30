@@ -48,12 +48,15 @@ out/coverage.html: out/coverage.out
 
 out/go-format-sentinel: $(shell find . -type f -name '*.go')
 	mkdir --parents $(@D)
-	gofmt -s -w -e .
+	gofumpt -w .
 	touch $@
 
 out/go-lint-sentinel: $(shell find . -type f -name '*.go')
 	mkdir --parents $(@D)
-	golangci-lint run
+	go vet ./...
+	staticcheck ./...
+	gosec -quiet ./...
+	govulncheck ./...
 	touch $@
 
 out/tf-format-sentinel: $(shell find ./examples -type f -name '*.tf') $(shell find ./terratest -type f -name '*.tf')

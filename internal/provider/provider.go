@@ -8,6 +8,10 @@ package provider
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -16,14 +20,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/metio/migadu-client.go/client"
-	"os"
-	"strconv"
-	"time"
 )
 
-var (
-	_ provider.Provider = (*MigaduProvider)(nil)
-)
+var _ provider.Provider = (*MigaduProvider)(nil)
 
 type MigaduProvider struct{}
 
