@@ -112,7 +112,7 @@ func TestIdentityDataSource(t *testing.T) {
 
 			terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 				TerraformDir: "../data-sources/migadu_identity",
-				Vars: map[string]interface{}{
+				Vars: map[string]any{
 					"endpoint":    server.URL,
 					"domain_name": testCase.domain,
 					"local_part":  testCase.localPart,

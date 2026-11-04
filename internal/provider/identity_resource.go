@@ -294,8 +294,7 @@ func (r *IdentityResource) Read(ctx context.Context, request resource.ReadReques
 
 	identity, err := r.MigaduClient.GetIdentity(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString(), state.Identity.ValueString())
 	if err != nil {
-		var requestError *client.RequestError
-		if errors.As(err, &requestError) {
+		if requestError, ok := errors.AsType[*client.RequestError](err); ok {
 			if requestError.StatusCode == http.StatusNotFound {
 				response.State.RemoveResource(ctx)
 				return
@@ -404,7 +403,7 @@ func (r *IdentityResource) ImportState(ctx context.Context, request resource.Imp
 	domainName := domainPart[0]
 	identity := domainPart[1]
 
-	tflog.Trace(ctx, "parsed import ID", map[string]interface{}{
+	tflog.Trace(ctx, "parsed import ID", map[string]any{
 		"local_part":  localPart,
 		"domain_name": domainName,
 		"identity":    identity,

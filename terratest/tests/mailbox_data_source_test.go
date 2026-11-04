@@ -119,7 +119,7 @@ func TestMailboxDataSource(t *testing.T) {
 
 			terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 				TerraformDir: "../data-sources/migadu_mailbox",
-				Vars: map[string]interface{}{
+				Vars: map[string]any{
 					"endpoint":    server.URL,
 					"local_part":  testCase.localPart,
 					"domain_name": testCase.domain,

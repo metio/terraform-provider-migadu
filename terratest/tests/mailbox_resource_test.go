@@ -83,7 +83,7 @@ func TestMailboxResource_Using_Password(t *testing.T) {
 
 			terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 				TerraformDir: "../resources/migadu_mailbox/password",
-				Vars: map[string]interface{}{
+				Vars: map[string]any{
 					"endpoint":    server.URL,
 					"domain_name": testCase.domain,
 					"local_part":  testCase.localPart,
@@ -172,7 +172,7 @@ func TestMailboxResource_Using_RecoveryEmail(t *testing.T) {
 
 			terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 				TerraformDir: "../resources/migadu_mailbox/invitation",
-				Vars: map[string]interface{}{
+				Vars: map[string]any{
 					"endpoint":    server.URL,
 					"domain_name": testCase.domain,
 					"local_part":  testCase.localPart,

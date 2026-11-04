@@ -112,7 +112,7 @@ func TestRewriteDataSource(t *testing.T) {
 
 			terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 				TerraformDir: "../data-sources/migadu_rewrite_rule",
-				Vars: map[string]interface{}{
+				Vars: map[string]any{
 					"endpoint":    server.URL,
 					"domain_name": testCase.domain,
 					"name":        testCase.name,

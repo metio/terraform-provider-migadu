@@ -198,8 +198,7 @@ func (r *RewriteRuleResource) Read(ctx context.Context, request resource.ReadReq
 
 	rewrite, err := r.MigaduClient.GetRewriteRule(ctx, state.DomainName.ValueString(), state.Name.ValueString())
 	if err != nil {
-		var requestError *client.RequestError
-		if errors.As(err, &requestError) {
+		if requestError, ok := errors.AsType[*client.RequestError](err); ok {
 			if requestError.StatusCode == http.StatusNotFound {
 				response.State.RemoveResource(ctx)
 				return
@@ -285,7 +284,7 @@ func (r *RewriteRuleResource) ImportState(ctx context.Context, request resource.
 
 	domainName := idParts[0]
 	name := idParts[1]
-	tflog.Trace(ctx, "parsed import ID", map[string]interface{}{
+	tflog.Trace(ctx, "parsed import ID", map[string]any{
 		"domain_name": domainName,
 		"name":        name,
 	})

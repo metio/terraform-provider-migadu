@@ -504,8 +504,7 @@ func (r *MailboxResource) Read(ctx context.Context, request resource.ReadRequest
 
 	mailbox, err := r.MigaduClient.GetMailbox(ctx, state.DomainName.ValueString(), state.LocalPart.ValueString())
 	if err != nil {
-		var requestError *client.RequestError
-		if errors.As(err, &requestError) {
+		if requestError, ok := errors.AsType[*client.RequestError](err); ok {
 			if requestError.StatusCode == http.StatusNotFound {
 				response.State.RemoveResource(ctx)
 				return
@@ -736,7 +735,7 @@ func (r *MailboxResource) ImportState(ctx context.Context, request resource.Impo
 
 	localPart := idParts[0]
 	domainName := idParts[1]
-	tflog.Trace(ctx, "parsed import ID", map[string]interface{}{
+	tflog.Trace(ctx, "parsed import ID", map[string]any{
 		"local_part":  localPart,
 		"domain_name": domainName,
 	})
