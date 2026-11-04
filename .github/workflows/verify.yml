@@ -1,39 +1,35 @@
 # SPDX-FileCopyrightText: The terraform-provider-migadu Authors
 # SPDX-License-Identifier: 0BSD
 
-name: Verify Commits
+name: Verify
 on:
   merge_group:
   pull_request:
-    branches: [ main ]
+    branches: [main]
 permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build Project
+  go:
+    name: Golang
+    uses: metio/ci/.github/workflows/golang.yml@c6ac7dae6ccea6e23d014aaf3620b3770dfae402 # metio/ci#94
+    with:
+      packages: . ./internal/...
+  docs:
+    name: Documentation
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
     steps:
       - id: checkout
         name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
       - id: toolchain
         name: Set up Toolchain
         uses: metio/ci/breto@bfcb1a4d37c4fd4d5d9c27181191dcad0d04f90c # 2026.11.1211658
         with:
           registries: github:metio/toolchains
-      - id: lint
-        name: Lint Go Code
-        run: |
-          go vet ./...
-          staticcheck ./...
-          gosec -quiet ./...
-          unformatted="$(gofumpt -l .)"
-          if [ -n "$unformatted" ]; then echo "$unformatted"; exit 1; fi
-      - id: vulnerabilities
-        name: Check Vulnerabilities
-        run: govulncheck ./...
       - id: generate_docs
         name: Generate Documentation
         run: go generate
@@ -42,14 +38,9 @@ jobs:
         run: |
           git diff --compact-summary --exit-code || \
             (echo "*** Unexpected differences after code generation. Run 'make docs' and commit."; exit 1)
-      - id: build
-        name: Build Provider
-        run: go build -v ./...
-        env:
-          CGO_ENABLED: 0
   test:
     name: Tests on ${{ matrix.os }}
-    needs: build
+    needs: go
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -81,7 +72,7 @@ jobs:
           TF_ACC: "1"
   terraform-tests:
     name: Terraform Tests
-    needs: build
+    needs: go
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -109,7 +100,7 @@ jobs:
         run: go test -parallel=4 -timeout=900s ./terratest/tests
   opentofu-tests:
     name: OpenTofu Tests
-    needs: build
+    needs: go
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -137,7 +128,7 @@ jobs:
         run: go test -parallel=4 -timeout=900s ./terratest/tests
   verify:
     name: Verify
-    needs: [build, test, terraform-tests, opentofu-tests]
+    needs: [go, docs, test, terraform-tests, opentofu-tests]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
