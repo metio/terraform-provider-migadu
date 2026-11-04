@@ -4,7 +4,7 @@
 name: Release
 on:
   schedule:
-    - cron: 20 9 * * 6
+    - cron: 20 9 * * 2
   workflow_dispatch:
 permissions:
   contents: read

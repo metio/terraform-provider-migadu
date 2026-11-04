@@ -35,6 +35,3 @@ override.tf.json
 .terraformrc
 terraform.rc
 http/http-client.private.env.json
-.cache/
-.config/
-.terraform.d/
