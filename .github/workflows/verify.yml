@@ -27,7 +27,7 @@ jobs:
           persist-credentials: false
       - id: toolchain
         name: Set up Toolchain
-        uses: metio/ci/breto@bfcb1a4d37c4fd4d5d9c27181191dcad0d04f90c # 2026.11.1211658
+        uses: metio/ci/breto@00adafd0fe1924f57325d9dd264d5d731fb099ad # 2026.11.4082509
         with:
           registries: github:metio/toolchains
       - id: generate_docs
