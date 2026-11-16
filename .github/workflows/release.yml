@@ -81,7 +81,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: metio/ci/breto@bfcb1a4d37c4fd4d5d9c27181191dcad0d04f90c # 2026.11.1211658
+      - uses: metio/ci/breto@ee1344847682b2c1a1c5b5413da59be084662645 # 2026.11.16053738
         with:
           registries: github:metio/toolchains
       - name: Build Provider
